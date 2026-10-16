@@ -75,6 +75,82 @@ const SEO_PAGES = [
   }
 ];
 
+// Generación programática de Long-Tail SEO (búsquedas exactas sin competencia donde el usuario entra directo a calcular)
+const AUTONOMO_BRACKETS = [1500, 2000, 2500, 3500, 4000, 5000];
+for (const fact of AUTONOMO_BRACKETS) {
+  const gastos = Math.round(fact * 0.1);
+  const cuota = fact <= 1700 ? 294 : fact <= 2500 ? 310 : 370;
+  const base = Math.max(0, fact - gastos - cuota);
+  const irpf = Math.round(base * 0.18);
+  const neto = base - irpf;
+  SEO_PAGES.push({
+    slug: `sueldo-neto-autonomo-${fact}-euros.html`,
+    title: `Cuánto Queda Neto a un Autónomo que Factura ${fact}€ al Mes en España (2026)`,
+    h1: `Si facturas ${fact}€ al mes como autónomo, ¿cuánto te queda limpio?`,
+    lead: `Cálculo exacto para ${fact}€/mes de facturación en 2026 descontando cuota de Seguridad Social (${cuota}€), gastos deducibles y retención de IRPF.`,
+    calcLink: "index.html#autonomo",
+    bodyHtml: `
+      <p>Si eres autónomo o freelancer en España y facturas <strong>${fact} € al mes (sin IVA)</strong>, este es el desglose mensual real que entra limpio en tu cuenta:</p>
+      <ul style="margin: 1rem 0 1.5rem 1.25rem; color: #cbd5e1;">
+        <li><strong>Facturación bruta (sin IVA):</strong> ${fact} €</li>
+        <li><strong>Gastos deducibles estimados (10%):</strong> -${gastos} €</li>
+        <li><strong>Cuota Seguridad Social orientativa:</strong> -${cuota} €</li>
+        <li><strong>Provisión IRPF (18%):</strong> -${irpf} €</li>
+        <li><strong>💰 Sueldo Neto Real Limpio:</strong> <strong style="color:#10b981;">${neto} € / mes</strong> (${neto * 12} € / año)</li>
+      </ul>
+      <p>Consejo práctico: Abre una cuenta gratuita en <strong>Revolut</strong> y mueve automáticamente los ${cuota + irpf} € de impuestos cada mes a una hucha separada para no quedarte sin liquidez en el trimestre.</p>
+    `
+  });
+}
+
+const HIPOTECA_BRACKETS = [120000, 150000, 200000, 250000, 300000];
+for (const precio of HIPOTECA_BRACKETS) {
+  const entrada = Math.round(precio * 0.25);
+  const prestamo = Math.round(precio * 1.1 - entrada);
+  const r = 0.031 / 12;
+  const n = 300;
+  const cuota = Math.round((prestamo * (r * Math.pow(1 + r, n))) / (Math.pow(1 + r, n) - 1));
+  SEO_PAGES.push({
+    slug: `cuota-hipoteca-${precio}-euros.html`,
+    title: `Cuánto se Paga de Hipoteca por un Piso de ${precio.toLocaleString("es-ES")}€ en 2026`,
+    h1: `Cuota mensual y ahorro necesario para una hipoteca de ${precio.toLocaleString("es-ES")} €`,
+    lead: `Simulación completa a 25 años para una vivienda de ${precio.toLocaleString("es-ES")}€: entrada necesaria, gastos de compra (10%) y cuota mensual al 3,1%.`,
+    calcLink: "index.html#hipoteca",
+    bodyHtml: `
+      <p>Para comprar una vivienda de <strong>${precio.toLocaleString("es-ES")} €</strong> en 2026, los bancos suelen financiar el 80% del precio, por lo que necesitas contar con el 20% de entrada más un 10% aproximado para impuestos (ITP/IVA y notaría):</p>
+      <ul style="margin: 1rem 0 1.5rem 1.25rem; color: #cbd5e1;">
+        <li><strong>Precio de la vivienda:</strong> ${precio.toLocaleString("es-ES")} €</li>
+        <li><strong>Ahorro recomendado (entrada + gastos):</strong> ${entrada.toLocaleString("es-ES")} €</li>
+        <li><strong>Importe del préstamo hipotecario:</strong> ${prestamo.toLocaleString("es-ES")} €</li>
+        <li><strong>🏠 Cuota mensual estimada (25 años al 3,1%):</strong> <strong style="color:#10b981;">${cuota} € / mes</strong></li>
+      </ul>
+    `
+  });
+}
+
+const INVERSION_BRACKETS = [50, 100, 200, 300, 500];
+for (const mensual of INVERSION_BRACKETS) {
+  const r = 0.08 / 12;
+  let s10 = 1000, s20 = 1000;
+  for (let i = 0; i < 120; i++) s10 = s10 * (1 + r) + mensual;
+  for (let i = 0; i < 240; i++) s20 = s20 * (1 + r) + mensual;
+  SEO_PAGES.push({
+    slug: `invertir-${mensual}-euros-al-mes.html`,
+    title: `Cuánto Ganas si Inviertes ${mensual}€ al Mes (Interés Compuesto y DCA 2026)`,
+    h1: `Cómo invertir ${mensual}€ al mes y cuánto dinero acumularás en 10 y 20 años`,
+    lead: `Tabla de rentabilidad real aportando ${mensual}€/mes mediante interés compuesto y compras periódicas (DCA) al 8% anual.`,
+    calcLink: "index.html#compuesto",
+    bodyHtml: `
+      <p>Empezar un plan de ahorro automatizado (DCA) de <strong>${mensual} € al mes</strong> partiendo de 1.000 € iniciales con una rentabilidad media del 8% anual genera este crecimiento exponencial:</p>
+      <ul style="margin: 1rem 0 1.5rem 1.25rem; color: #cbd5e1;">
+        <li><strong>A los 10 años:</strong> Habrás aportado ${(1000 + mensual * 120).toLocaleString("es-ES")} € y tendrás <strong style="color:#10b981;">${Math.round(s10).toLocaleString("es-ES")} €</strong>.</li>
+        <li><strong>A los 20 años:</strong> Habrás aportado ${(1000 + mensual * 240).toLocaleString("es-ES")} € y tendrás <strong style="color:#10b981;">${Math.round(s20).toLocaleString("es-ES")} €</strong>.</li>
+      </ul>
+      <p>Puedes automatizar tus compras periódicas en <strong>Bitget (Código promocional: KQBSNNRF)</strong> y separar tu ahorro mensual automáticamente con las huchas gratuitas de <strong>Revolut</strong>.</p>
+    `
+  });
+}
+
 function buildSeoPageHtml(page) {
   return `<!DOCTYPE html>
 <html lang="es">
@@ -230,6 +306,21 @@ async function run() {
     fs.writeFileSync(path.join(__dirname, page.slug), buildSeoPageHtml(page));
     allUrls.push(`${SITE_URL}/${page.slug}`);
   }
+
+  // 2b. Generar Directorio Hub de Enlazado Interno (para indexación rápida de las 20+ páginas long-tail)
+  const dirLinks = SEO_PAGES.map(
+    (p) => `<li style="margin-bottom:0.55rem;"><a href="${p.slug}" style="color:#10b981;font-weight:600;">${p.title}</a></li>`
+  ).join("\n");
+  const dirHtml = buildSeoPageHtml({
+    slug: "directorio-guias.html",
+    title: "Directorio de Tablas y Guías Financieras: Autónomos, Hipotecas, Interés Compuesto y Cripto",
+    h1: "Todas las Tablas de Cálculo Financiero (España 2026)",
+    lead: "Consulta directamente nuestras simulaciones exactas por tramo de sueldo de autónomo, precio de vivienda y aportación mensual de inversión.",
+    calcLink: "index.html",
+    bodyHtml: `<ul style="margin: 1rem 0 1.5rem 1.25rem;">\n${dirLinks}\n</ul>`
+  });
+  fs.writeFileSync(path.join(__dirname, "directorio-guias.html"), dirHtml);
+  allUrls.push(`${SITE_URL}/directorio-guias.html`);
 
   // 3. Actualizar sitemap.xml con todas las URLs
   const sitemapXml = `<?xml version="1.0" encoding="UTF-8"?>
