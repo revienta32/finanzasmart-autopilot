@@ -162,7 +162,53 @@
     </div>
 
     <div class="card" style="margin-bottom: 1.5rem;">
-      <h2>4. Hoja de Ruta de 12 Meses + Reserva Fiscal IVA/IRPF + Plan Take-Profit Cripto (Pack Pro)</h2>
+      <h2>4. Simulador Fiscal Autónomos: Modelo 303 (IVA), Modelo 130 (IRPF) y Tramo Real Seg. Social</h2>
+      <div class="grid" style="margin-top: 0.75rem; margin-bottom: 0.5rem;">
+        <div>
+          <label>Facturación Mensual sin IVA (€)</label>
+          <input type="number" id="fis-ingresos" value="2800" />
+          <label>Gastos Deducibles con Factura sin IVA (€)</label>
+          <input type="number" id="fis-gastos" value="400" />
+        </div>
+        <div>
+          <label>% Facturas con Retención IRPF en factura (0%, 7% o 15%)</label>
+          <input type="number" id="fis-retencion" value="15" min="0" max="15" />
+          <label>Cuota Real Seguridad Social (según tus rendimientos netos)</label>
+          <div class="big-num blue" id="out-cuota-ss">310 € / mes</div>
+        </div>
+        <div>
+          <label>Liquidación Trimestral Hacienda (Mod. 303 IVA + Mod. 130 IRPF)</label>
+          <div class="big-num amber" id="out-trimestre-hacienda">1.638 € / trim.</div>
+          <label>Dinero que debes apartar cada mes en tu Hucha Fiscal</label>
+          <div class="big-num green" id="out-hucha-mensual">856 € / mes</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-bottom: 1.5rem;">
+      <h2>5. Estrategia Take-Profit Cripto + Cálculo Impuestos IRPF España (19% / 21% / 23%)</h2>
+      <div class="grid" style="margin-top: 0.75rem; margin-bottom: 0.5rem;">
+        <div>
+          <label>Capital Invertido en Cripto / Bitget (€)</label>
+          <input type="number" id="cri-inversion" value="3000" />
+          <label>Multiplicador Objetivo del Ciclo (ej. 2.5x = +150%)</label>
+          <input type="number" id="cri-mult" value="2.5" step="0.1" min="1.1" />
+        </div>
+        <div>
+          <label>Valor Total de Cartera al Vender</label>
+          <div class="big-num blue" id="out-cri-bruto">7.500 €</div>
+          <label>Impuesto IRPF del Ahorro Exacto (Tramos 19% - 23%)</label>
+          <div class="big-num amber" id="out-cri-irpf">855 €</div>
+        </div>
+        <div>
+          <label>Beneficio Neto Real Limpio tras Hacienda</label>
+          <div class="big-num green" id="out-cri-neto">+3.645 €</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-bottom: 1.5rem;">
+      <h2>6. Hoja de Ruta 12 Meses + Cuadro Trimestral Hacienda + Salida Cripto (Pack Pro)</h2>
       <div id="roadmap-container" class="locked-blur">
         <table>
           <thead>
@@ -171,7 +217,7 @@
               <th>Ahorro Acumulado</th>
               <th>Fondo de Emergencia</th>
               <th>Capital Invertido (8% anual)</th>
-              <th>Reserva Impuestos (IVA/IRPF)</th>
+              <th>Hucha Fiscal Acumulada (IVA+IRPF)</th>
               <th>Meta Take-Profit Cripto (+35%)</th>
             </tr>
           </thead>
@@ -183,8 +229,46 @@
 
   <script>
     const fmt = new Intl.NumberFormat("es-ES", { style: "currency", currency: "EUR", maximumFractionDigits: 0 });
-    const fields = ["in-sueldo", "in-extra", "in-fijos", "in-ocio"];
+    const fields = ["in-sueldo", "in-extra", "in-fijos", "in-ocio", "fis-ingresos", "fis-gastos", "fis-retencion", "cri-inversion", "cri-mult"];
     let isProUnlocked = localStorage.getItem("pf_pro_unlocked") === "true";
+
+    // Tramos oficiales orientativos Seguridad Social Autónomos por rendimiento neto mensual
+    function calcCuotaAutonomoReal(rendNeto) {
+      if (rendNeto <= 670) return 200;
+      if (rendNeto <= 900) return 220;
+      if (rendNeto <= 1166) return 260;
+      if (rendNeto <= 1300) return 291;
+      if (rendNeto <= 1700) return 294;
+      if (rendNeto <= 1850) return 350;
+      if (rendNeto <= 2030) return 370;
+      if (rendNeto <= 2330) return 390;
+      if (rendNeto <= 2760) return 415;
+      if (rendNeto <= 3190) return 440;
+      if (rendNeto <= 3620) return 465;
+      if (rendNeto <= 4050) return 490;
+      return 530;
+    }
+
+    // Escala oficial del IRPF del Ahorro en España (Ganancias Patrimoniales Cripto/Acciones)
+    function calcIrpfAhorroEspana(ganancia) {
+      if (ganancia <= 0) return 0;
+      let resto = ganancia;
+      let impuesto = 0;
+      const tramos = [
+        { limite: 6000, tipo: 0.19 },
+        { limite: 44000, tipo: 0.21 }, // de 6.000 a 50.000
+        { limite: 150000, tipo: 0.23 }, // de 50.000 a 200.000
+        { limite: 100000, tipo: 0.27 }, // de 200.000 a 300.000
+        { limite: Infinity, tipo: 0.28 }
+      ];
+      for (const t of tramos) {
+        if (resto <= 0) break;
+        const baseTramo = Math.min(resto, t.limite);
+        impuesto += baseTramo * t.tipo;
+        resto -= baseTramo;
+      }
+      return Math.round(impuesto);
+    }
 
     function applyProState() {
       if (isProUnlocked) {
@@ -338,14 +422,41 @@
       for (let i = 0; i < 120; i++) inv10 = inv10 * (1 + r) + ahorroReal;
       document.getElementById("out-10y").textContent = fmt.format(inv10);
 
+      // 4. Cálculo real Fiscal Autónomos (Tramo SS + Modelo 303 IVA + Modelo 130 IRPF)
+      const fisIngresos = +document.getElementById("fis-ingresos").value || 0;
+      const fisGastos = +document.getElementById("fis-gastos").value || 0;
+      const fisRetPct = (+document.getElementById("fis-retencion").value || 0) / 100;
+      const rendPrevio = Math.max(0, fisIngresos - fisGastos);
+      const cuotaSS = calcCuotaAutonomoReal(rendPrevio * 0.93); // 7% gastos difícil justificación
+      const rendNetoReal = Math.max(0, fisIngresos - fisGastos - cuotaSS);
+      const ivaTrimestral303 = Math.max(0, (fisIngresos * 0.21 - fisGastos * 0.21) * 3);
+      const irpfTrimestral130 = Math.max(0, (rendNetoReal * 0.20 - fisIngresos * fisRetPct) * 3);
+      const totalTrimestreHacienda = Math.round(ivaTrimestral303 + irpfTrimestral130);
+      const huchaFiscalMensual = Math.round(totalTrimestreHacienda / 3 + cuotaSS);
+
+      document.getElementById("out-cuota-ss").textContent = fmt.format(cuotaSS) + " / mes";
+      document.getElementById("out-trimestre-hacienda").textContent = fmt.format(totalTrimestreHacienda) + " / trim.";
+      document.getElementById("out-hucha-mensual").textContent = fmt.format(huchaFiscalMensual) + " / mes";
+
+      // 5. Cálculo real Take-Profit Cripto + Escala IRPF del Ahorro España (19% - 28%)
+      const criInv = +document.getElementById("cri-inversion").value || 0;
+      const criMult = +document.getElementById("cri-mult").value || 1;
+      const criBruto = Math.round(criInv * criMult);
+      const criGanancia = Math.max(0, criBruto - criInv);
+      const criIrpf = calcIrpfAhorroEspana(criGanancia);
+      const criNeto = criGanancia - criIrpf;
+
+      document.getElementById("out-cri-bruto").textContent = fmt.format(criBruto);
+      document.getElementById("out-cri-irpf").textContent = "-" + fmt.format(criIrpf);
+      document.getElementById("out-cri-neto").textContent = "+" + fmt.format(criNeto);
+
       const tbody = document.getElementById("tabla-meses");
       tbody.innerHTML = "";
       let acum = 0, inv = 0, reservaFiscal = 0;
-      const reservaMensual = Math.round(sueldo * 0.25);
       for (let m = 1; m <= 12; m++) {
         acum += ahorroReal;
         inv = inv * (1 + r) + ahorroReal;
-        reservaFiscal += reservaMensual;
+        reservaFiscal += huchaFiscalMensual;
         const takeProfit = Math.round(inv * 1.35);
         const tr = document.createElement("tr");
         tr.dataset.mes = m;
