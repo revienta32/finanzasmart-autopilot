@@ -1,0 +1,22 @@
+name: CEO Daily Autopilot (24/7 Cloud Growth)
+
+on:
+  schedule:
+    # Se ejecuta automáticamente todos los días a las 10:00 UTC en los servidores de GitHub (con tu PC apagado)
+    - cron: "0 10 * * *"
+  workflow_dispatch:
+
+jobs:
+  daily-growth:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Run CEO Autopilot (Generate SEO pages + Publish Cloud Articles + Ping Search Engines)
+        run: node autopilot-ceo.js

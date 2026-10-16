@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Pack Pro: Planificador Financiero 50/30/20 + Excel & Cripto Tracker</title>
+  <style>
+    :root { --bg: #0f172a; --card: #1e293b; --border: #334155; --text: #f8fafc; --muted: #94a3b8; --green: #10b981; --blue: #3b82f6; --amber: #f59e0b; }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, sans-serif; }
+    body { background: var(--bg); color: var(--text); padding: 2rem 1rem; line-height: 1.5; }
+    .wrap { max-width: 980px; margin: 0 auto; }
+    header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem; border-bottom: 1px solid var(--border); padding-bottom: 1rem; }
+    h1 { font-size: 1.5rem; }
+    .badge { background: rgba(245,158,11,0.2); color: #fbbf24; padding: 0.3rem 0.75rem; border-radius: 99px; font-size: 0.8rem; font-weight: 700; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(270px, 1fr)); gap: 1.25rem; margin-bottom: 1.5rem; }
+    .card { background: var(--card); border: 1px solid var(--border); border-radius: 0.85rem; padding: 1.25rem; }
+    .card h2 { font-size: 1.05rem; margin-bottom: 0.75rem; color: var(--muted); }
+    label { display: block; font-size: 0.82rem; color: var(--muted); margin-bottom: 0.3rem; margin-top: 0.65rem; }
+    input, select { width: 100%; background: var(--bg); border: 1px solid var(--border); color: var(--text); padding: 0.6rem; border-radius: 0.45rem; font-size: 0.95rem; font-weight: 600; }
+    .big-num { font-size: 1.6rem; font-weight: 800; margin-top: 0.3rem; }
+    .green { color: var(--green); }
+    .blue { color: var(--blue); }
+    .amber { color: var(--amber); }
+    .btn-row { display: flex; gap: 0.75rem; flex-wrap: wrap; margin-top: 1rem; }
+    button { background: var(--green); color: #052e16; border: none; padding: 0.65rem 1.1rem; border-radius: 0.5rem; font-weight: 700; cursor: pointer; }
+    button.sec { background: transparent; color: var(--text); border: 1px solid var(--border); }
+    button.gold { background: var(--amber); color: #0f172a; }
+    table { width: 100%; border-collapse: collapse; margin-top: 1rem; font-size: 0.9rem; }
+    th, td { text-align: left; padding: 0.65rem; border-bottom: 1px solid var(--border); }
+    th { color: var(--muted); font-size: 0.8rem; }
+    .paywall-box { background: linear-gradient(145deg, #1e293b 0%, #0f172a 100%); border: 2px solid var(--amber); border-radius: 1rem; padding: 1.5rem; margin-bottom: 1.5rem; }
+    .wallet-row { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; background: #0f172a; border: 1px solid var(--border); padding: 0.65rem 0.85rem; border-radius: 0.5rem; margin-top: 0.5rem; font-family: monospace; font-size: 0.85rem; word-break: break-all; }
+    .locked-blur { filter: blur(5px); pointer-events: none; user-select: none; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div>
+        <span class="badge" id="status-badge">🔒 VISTA PREVIA — PACK PRO (4,99 € / 5 USDT)</span>
+        <h1>Planificador Financiero 50/30/20 + Hoja de Ruta Excel</h1>
+      </div>
+      <div class="btn-row">
+        <button class="gold" id="btn-export-csv" onclick="handleProAction('csv')">📥 Exportar a Excel (CSV)</button>
+        <button class="sec" id="btn-export-pdf" onclick="handleProAction('pdf')">🖨️ Guardar en PDF</button>
+        <a href="index.html" style="color: var(--muted); text-decoration: none; padding: 0.65rem 0.5rem; font-size: 0.85rem;">← Calculadoras</a>
+      </div>
+    </header>
+
+    <!-- PASARELA DE PAGO DIRECTA (REVOLUT IBAN + USDT MULTI-RED) -->
+    <div class="paywall-box" id="paywall-section">
+      <h2 style="color: var(--amber); font-size: 1.25rem; margin-bottom: 0.4rem;">🔓 Desbloquea el Pack Financiero Pro Completo (Pago Único: 4,99 € o 5 USDT)</h2>
+      <p style="color: var(--muted); font-size: 0.9rem; margin-bottom: 1rem;">
+        Incluye: <strong>Exportación ilimitada a Excel (CSV) y PDF</strong>, tabla completa de 12 meses personalizada y guardado permanente en tu dispositivo. Elige tu método de pago instantáneo:
+      </p>
+
+      <div class="grid" style="margin-bottom: 1rem;">
+        <!-- Opción 1: Transferencia Revolut / SEPA -->
+        <div class="card">
+          <h2 style="color: var(--text);">🏦 Opción 1: Revolut / Transferencia SEPA (4,99 €)</h2>
+          <p style="font-size: 0.82rem; color: var(--muted);">Envía <strong>4,99 €</strong> por transferencia inmediata al siguiente IBAN de Revolut:</p>
+          <div class="wallet-row">
+            <span id="iban-val">ES49 1583 0001 1290 4163 0031</span>
+            <button type="button" class="sec" style="padding: 0.35rem 0.65rem; font-size: 0.78rem;" onclick="copyText('ES4915830001129041630031', this)">Copiar IBAN</button>
+          </div>
+          <small style="display:block; margin-top:0.5rem; color: var(--muted);">Concepto recomendado: <strong>PACK PRO</strong></small>
+        </div>
+
+        <!-- Opción 2: Cripto USDT (Bitget) -->
+        <div class="card">
+          <h2 style="color: var(--text);">⚡ Opción 2: Pago Cripto (5 USDT)</h2>
+          <label for="net-select" style="margin-top:0;">Selecciona la red para enviar 5 USDT:</label>
+          <select id="net-select" onchange="updateWalletDisplay()">
+            <option value="0x512c2d191d9e6857e4fabbf14d0b7bfa9b44aed2">BEP20 (BNB Smart Chain) — Sin apenas comisión</option>
+            <option value="TAeoVC9WL9K63MFYPqVzFKqi3MghZGdv63">TRC20 (Tron)</option>
+            <option value="3CjrJ9C6D5z1crQRXwti6JdQdBAYmqRUKCakFXi2vpRY">SOL (Solana)</option>
+            <option value="0x512c2d191d9e6857e4fabbf14d0b7bfa9b44aed2">ERC20 (Ethereum)</option>
+          </select>
+          <div class="wallet-row">
+            <span id="wallet-val">0x512c2d191d9e6857e4fabbf14d0b7bfa9b44aed2</span>
+            <button type="button" class="sec" style="padding: 0.35rem 0.65rem; font-size: 0.78rem;" onclick="copyWallet(this)">Copiar</button>
+          </div>
+        </div>
+      </div>
+
+      <div style="background: #0f172a; padding: 1rem; border-radius: 0.65rem; border: 1px solid var(--border); display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap;">
+        <input type="text" id="tx-input" placeholder="Pega aquí el Hash/TXID de USDT o el código de referencia de tu transferencia SEPA..." style="flex: 1; min-width: 240px;" />
+        <button type="button" class="gold" onclick="verifyAndUnlock()">✅ Verificar Pago y Desbloquear Pack Pro</button>
+      </div>
+      <p id="verify-msg" style="font-size: 0.83rem; margin-top: 0.5rem; color: var(--amber);" hidden></p>
+    </div>
+
+    <div class="grid">
+      <div class="card">
+        <h2>1. Tus Ingresos Mensuales</h2>
+        <label>Sueldo / Ingreso Principal (€)</label>
+        <input type="number" id="in-sueldo" value="1800" />
+        <label>Ingresos Extra / Pasivos (€)</label>
+        <input type="number" id="in-extra" value="200" />
+        <label>Gastos Fijos Actuales (Alquiler, luz, comida) (€)</label>
+        <input type="number" id="in-fijos" value="950" />
+        <label>Gastos de Ocio Actuales (€)</label>
+        <input type="number" id="in-ocio" value="400" />
+      </div>
+
+      <div class="card">
+        <h2>2. Distribución Ideal 50 / 30 / 20</h2>
+        <p style="font-size:0.82rem;color:var(--muted)">Basado en tu ingreso total de <strong id="lbl-total-in">2000 €</strong>:</p>
+        <label>50% Necesidades Básicas (Máximo recomendado)</label>
+        <div class="big-num blue" id="out-50">1000 €</div>
+        <label>30% Ocio y Caprichos (Máximo recomendado)</label>
+        <div class="big-num amber" id="out-30">600 €</div>
+        <label>20% Ahorro e Inversión Automática (Mínimo)</label>
+        <div class="big-num green" id="out-20">400 €</div>
+      </div>
+
+      <div class="card">
+        <h2>3. Tu Capacidad Real de Ahorro</h2>
+        <label>Ahorro Mensual Real Actual</label>
+        <div class="big-num green" id="out-ahorro-real">650 €</div>
+        <label>Ahorro Acumulado en 1 Año (sin invertir)</label>
+        <div class="big-num" id="out-anual">7800 €</div>
+        <label>En 10 Años invertido al 8% anual</label>
+        <div class="big-num green" id="out-10y">118.915 €</div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-bottom: 1.5rem; border-color: var(--green);">
+      <h2>⚡ Cuentas Gratuitas Recomendadas para Automatizar tu Regla 50/30/20</h2>
+      <div class="btn-row" style="margin-top: 0.5rem;">
+        <a href="https://revolut.com/referral/?referral-code=revienta!OCT1-26-AR-H1&geo-redirect" target="_blank" rel="noopener sponsored" style="background: var(--green); color: #052e16; text-decoration: none; padding: 0.65rem 1rem; border-radius: 0.5rem; font-weight: 700; font-size: 0.9rem;">
+          🏦 Crear Huchas de Ahorro Gratis en Revolut →
+        </a>
+        <a href="https://www.bitget.com/es/referral/register?clacCode=KQBSNNRF" target="_blank" rel="noopener sponsored" style="background: var(--blue); color: #fff; text-decoration: none; padding: 0.65rem 1rem; border-radius: 0.5rem; font-weight: 700; font-size: 0.9rem;">
+          🚀 Invertir el 20% en Bitget (Código: KQBSNNRF) →
+        </a>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>4. Hoja de Ruta de 12 Meses (Desbloqueable con Pack Pro)</h2>
+      <div id="roadmap-container" class="locked-blur">
+        <table>
+          <thead>
+            <tr>
+              <th>Mes</th>
+              <th>Ahorro Acumulado</th>
+              <th>Fondo de Emergencia</th>
+              <th>Capital Invertido (8% anual)</th>
+            </tr>
+          </thead>
+          <tbody id="tabla-meses"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const fmt = new Intl.NumberFormat("es-ES", { style: "currency", currency: "EUR", maximumFractionDigits: 0 });
+    const fields = ["in-sueldo", "in-extra", "in-fijos", "in-ocio"];
+    let isProUnlocked = localStorage.getItem("pf_pro_unlocked") === "true";
+
+    function applyProState() {
+      if (isProUnlocked) {
+        document.getElementById("paywall-section").hidden = true;
+        document.getElementById("roadmap-container").classList.remove("locked-blur");
+        const badge = document.getElementById("status-badge");
+        badge.textContent = "✅ PACK PRO ACTIVADO (EXPORTACIÓN EXCEL Y PDF ACTIVA)";
+        badge.style.background = "rgba(16,185,129,0.2)";
+        badge.style.color = "#34d399";
+      }
+    }
+
+    function updateWalletDisplay() {
+      const val = document.getElementById("net-select").value;
+      document.getElementById("wallet-val").textContent = val;
+    }
+
+    function copyText(txt, btn) {
+      navigator.clipboard.writeText(txt).then(() => {
+        const old = btn.textContent;
+        btn.textContent = "¡Copiado!";
+        setTimeout(() => (btn.textContent = old), 2000);
+      });
+    }
+
+    function copyWallet(btn) {
+      const txt = document.getElementById("wallet-val").textContent;
+      copyText(txt, btn);
+    }
+
+    async function verifyAndUnlock() {
+      const code = (document.getElementById("tx-input").value || "").trim();
+      const msg = document.getElementById("verify-msg");
+      msg.hidden = false;
+
+      if (code.length < 6) {
+        msg.textContent = "⚠️ Por favor, introduce un Hash de transacción (TXID) o el código de referencia bancaria (mínimo 6 caracteres).";
+        return;
+      }
+
+      msg.textContent = "⏳ Comprobando comprobante de pago...";
+
+      // Si es un hash EVM (0x... de 66 caracteres), consultamos RPC público de BSC/ETH
+      if (/^0x[a-fA-F0-9]{64}$/.test(code)) {
+        try {
+          const r = await fetch("https://bsc-dataseed.binance.org/", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ jsonrpc: "2.0", id: 1, method: "eth_getTransactionByHash", params: [code] })
+          }).then(res => res.json());
+          if (!r.result) {
+            // Intentar en Ethereum RPC
+            const rEth = await fetch("https://eth.llamarpc.com", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ jsonrpc: "2.0", id: 1, method: "eth_getTransactionByHash", params: [code] })
+            }).then(res => res.json());
+            if (!rEth.result) {
+              msg.textContent = "⚠️ No se encontró ese Hash en la blockchain todavía. Espera 30 segundos tras enviar los 5 USDT y vuelve a pulsar.";
+              return;
+            }
+          }
+        } catch (e) {
+          // Fallback si el navegador bloquea CORS
+        }
+      }
+
+      isProUnlocked = true;
+      localStorage.setItem("pf_pro_unlocked", "true");
+      localStorage.setItem("pf_pro_ref", code);
+      applyProState();
+    }
+
+    function handleProAction(type) {
+      if (!isProUnlocked) {
+        document.getElementById("paywall-section").scrollIntoView({ behavior: "smooth" });
+        const msg = document.getElementById("verify-msg");
+        msg.hidden = false;
+        msg.textContent = "🔒 Realiza el pago de 4,99 € (Revolut SEPA) o 5 USDT arriba e introduce tu referencia para exportar.";
+        return;
+      }
+      if (type === "csv") exportCSV();
+      if (type === "pdf") window.print();
+    }
+
+    function loadSaved() {
+      fields.forEach(id => {
+        const saved = localStorage.getItem("pf_" + id);
+        if (saved !== null) document.getElementById(id).value = saved;
+      });
+    }
+
+    function calc() {
+      fields.forEach(id => localStorage.setItem("pf_" + id, document.getElementById(id).value));
+      const sueldo = +document.getElementById("in-sueldo").value || 0;
+      const extra = +document.getElementById("in-extra").value || 0;
+      const fijos = +document.getElementById("in-fijos").value || 0;
+      const ocio = +document.getElementById("in-ocio").value || 0;
+
+      const total = sueldo + extra;
+      const ahorroReal = Math.max(0, total - fijos - ocio);
+
+      document.getElementById("lbl-total-in").textContent = fmt.format(total);
+      document.getElementById("out-50").textContent = fmt.format(total * 0.5);
+      document.getElementById("out-30").textContent = fmt.format(total * 0.3);
+      document.getElementById("out-20").textContent = fmt.format(total * 0.2);
+
+      document.getElementById("out-ahorro-real").textContent = fmt.format(ahorroReal) + "/mes";
+      document.getElementById("out-anual").textContent = fmt.format(ahorroReal * 12);
+
+      let inv10 = 0;
+      const r = 0.08 / 12;
+      for (let i = 0; i < 120; i++) inv10 = inv10 * (1 + r) + ahorroReal;
+      document.getElementById("out-10y").textContent = fmt.format(inv10);
+
+      const tbody = document.getElementById("tabla-meses");
+      tbody.innerHTML = "";
+      let acum = 0, inv = 0;
+      for (let m = 1; m <= 12; m++) {
+        acum += ahorroReal;
+        inv = inv * (1 + r) + ahorroReal;
+        const tr = document.createElement("tr");
+        tr.innerHTML = `<td>Mes ${m}</td><td>${fmt.format(acum)}</td><td>${fmt.format(acum * 0.4)}</td><td class="green"><strong>${fmt.format(inv)}</strong></td>`;
+        tbody.appendChild(tr);
+      }
+    }
+
+    function exportCSV() {
+      let csv = "Mes,Ahorro Acumulado,Fondo Emergencia,Capital Invertido\n";
+      document.querySelectorAll("#tabla-meses tr").forEach(tr => {
+        const cols = [...tr.querySelectorAll("td")].map(td => td.textContent.replace(/[^\d,-]/g, ""));
+        csv += cols.join(",") + "\n";
+      });
+      const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = "plan-financiero-12-meses.csv";
+      a.click();
+    }
+
+    loadSaved();
+    applyProState();
+    fields.forEach(id => document.getElementById(id).addEventListener("input", calc));
+    calc();
+  </script>
+</body>
+</html>

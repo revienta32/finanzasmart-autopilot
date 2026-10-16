@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FinanzaSmart | Calculadoras de Interés Compuesto, Hipoteca, Sueldo Neto y DCA</title>
+  <meta name="description" content="Calculadoras financieras gratuitas: calcula tu interés compuesto, cuota de hipoteca, rentabilidad de alquiler, sueldo neto de autónomo y ahorro DCA en segundos." />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="container topbar-inner">
+      <div class="brand">
+        <span class="brand-icon">📈</span>
+        <div>
+          <strong id="site-title">FinanzaSmart</strong>
+          <span class="brand-tag">Herramientas 100% Gratuitas</span>
+        </div>
+      </div>
+      <nav class="tabs" role="tablist" aria-label="Calculadoras">
+        <button class="tab-btn active" data-tab="compuesto" role="tab">Interés Compuesto</button>
+        <button class="tab-btn" data-tab="hipoteca" role="tab">Hipoteca y Alquiler</button>
+        <button class="tab-btn" data-tab="autonomo" role="tab">Neto Autónomo / Freelance</button>
+        <button class="tab-btn" data-tab="dca" role="tab">Simulador DCA / Libertad</button>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container main-grid">
+    <!-- Panel Izquierdo: Calculadoras -->
+    <section class="calc-card">
+      <!-- 1. INTERÉS COMPUESTO -->
+      <div class="tab-panel active" id="panel-compuesto">
+        <h1>Calculadora de Interés Compuesto e Inflación</h1>
+        <p class="subtitle">Descubre cuánto crecerán tus ahorros mes a mes y cuánto dinero estás perdiendo si los dejas parados en el banco sin remunerar.</p>
+
+        <div class="form-grid">
+          <div class="field">
+            <label for="ic-inicial">Capital inicial (€)</label>
+            <input type="number" id="ic-inicial" value="2000" min="0" step="100" />
+          </div>
+          <div class="field">
+            <label for="ic-mensual">Aportación mensual (€)</label>
+            <input type="number" id="ic-mensual" value="150" min="0" step="10" />
+          </div>
+          <div class="field">
+            <label for="ic-tasa">Rentabilidad anual estimada (%)</label>
+            <input type="number" id="ic-tasa" value="8" min="0" max="50" step="0.5" />
+          </div>
+          <div class="field">
+            <label for="ic-anios">Plazo (años)</label>
+            <input type="number" id="ic-anios" value="15" min="1" max="60" step="1" />
+          </div>
+        </div>
+
+        <div class="results-grid">
+          <div class="stat-box highlight">
+            <span class="stat-label">Capital Final Estimado</span>
+            <strong class="stat-value" id="ic-res-total">0 €</strong>
+          </div>
+          <div class="stat-box">
+            <span class="stat-label">Total Aportado por Ti</span>
+            <strong class="stat-value" id="ic-res-aportado">0 €</strong>
+          </div>
+          <div class="stat-box success">
+            <span class="stat-label">Intereses Generados (Ganancia Pasiva)</span>
+            <strong class="stat-value" id="ic-res-intereses">0 €</strong>
+          </div>
+        </div>
+
+        <div class="bar-comparison">
+          <div class="bar-label-row">
+            <span>Proporción de tu dinero vs. Intereses ganados automáticamente</span>
+            <span id="ic-pct-intereses">0% ganancia</span>
+          </div>
+          <div class="progress-track">
+            <div class="progress-aportado" id="ic-bar-aportado" style="width: 50%"></div>
+            <div class="progress-interes" id="ic-bar-interes" style="width: 50%"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 2. HIPOTECA Y RENTABILIDAD ALQUILER -->
+      <div class="tab-panel" id="panel-hipoteca">
+        <h1>Calculadora de Cuota Hipotecaria y Rentabilidad de Inversión</h1>
+        <p class="subtitle">Calcula la cuota mensual exacta de una vivienda y averigua si sale rentable comprar para alquilar.</p>
+
+        <div class="form-grid">
+          <div class="field">
+            <label for="hip-precio">Precio de la vivienda (€)</label>
+            <input type="number" id="hip-precio" value="180000" min="10000" step="5000" />
+          </div>
+          <div class="field">
+            <label for="hip-ahorro">Ahorro aportado / Entrada (€)</label>
+            <input type="number" id="hip-ahorro" value="40000" min="0" step="1000" />
+          </div>
+          <div class="field">
+            <label for="hip-interes">Tipo de interés anual (%)</label>
+            <input type="number" id="hip-interes" value="3.1" min="0.1" max="20" step="0.1" />
+          </div>
+          <div class="field">
+            <label for="hip-anios">Plazo hipoteca (años)</label>
+            <input type="number" id="hip-anios" value="25" min="5" max="40" step="1" />
+          </div>
+          <div class="field">
+            <label for="hip-alquiler">Alquiler mensual estimado (€)</label>
+            <input type="number" id="hip-alquiler" value="950" min="0" step="25" />
+          </div>
+          <div class="field">
+            <label for="hip-gastos">Gastos anuales (IBI, comunidad, seguro) (€)</label>
+            <input type="number" id="hip-gastos" value="1400" min="0" step="100" />
+          </div>
+        </div>
+
+        <div class="results-grid">
+          <div class="stat-box highlight">
+            <span class="stat-label">Cuota Mensual Hipoteca</span>
+            <strong class="stat-value" id="hip-res-cuota">0 €</strong>
+          </div>
+          <div class="stat-box">
+            <span class="stat-label">Cashflow Mensual Neto</span>
+            <strong class="stat-value" id="hip-res-cashflow">0 €</strong>
+          </div>
+          <div class="stat-box success">
+            <span class="stat-label">Rentabilidad Bruta Anual</span>
+            <strong class="stat-value" id="hip-res-rentabilidad">0 %</strong>
+          </div>
+        </div>
+      </div>
+
+      <!-- 3. AUTÓNOMO / FREELANCE -->
+      <div class="tab-panel" id="panel-autonomo">
+        <h1>Calculadora de Sueldo Neto para Autónomos y Freelancers</h1>
+        <p class="subtitle">Calcula cuánto te queda limpio en el bolsillo después de IVA, IRPF y cuota de autónomos.</p>
+
+        <div class="form-grid">
+          <div class="field">
+            <label for="aut-facturacion">Facturación mensual (sin IVA) (€)</label>
+            <input type="number" id="aut-facturacion" value="3000" min="0" step="100" />
+          </div>
+          <div class="field">
+            <label for="aut-gastos">Gastos deducibles mensuales (€)</label>
+            <input type="number" id="aut-gastos" value="350" min="0" step="25" />
+          </div>
+          <div class="field">
+            <label for="aut-cuota">Cuota Seguridad Social (€)</label>
+            <input type="number" id="aut-cuota" value="310" min="80" step="10" />
+          </div>
+          <div class="field">
+            <label for="aut-irpf">Retención / Estimación IRPF (%)</label>
+            <input type="number" id="aut-irpf" value="18" min="7" max="47" step="1" />
+          </div>
+        </div>
+
+        <div class="results-grid">
+          <div class="stat-box highlight">
+            <span class="stat-label">Sueldo Neto Mensual Limpio</span>
+            <strong class="stat-value" id="aut-res-neto">0 €</strong>
+          </div>
+          <div class="stat-box">
+            <span class="stat-label">Impuestos + Cuota al Mes</span>
+            <strong class="stat-value" id="aut-res-impuestos">0 €</strong>
+          </div>
+          <div class="stat-box success">
+            <span class="stat-label">Beneficio Neto Anual</span>
+            <strong class="stat-value" id="aut-res-anual">0 €</strong>
+          </div>
+        </div>
+      </div>
+
+      <!-- 4. SIMULADOR LIBERTAD FINANCIERA (REGLA DEL 4%) -->
+      <div class="tab-panel" id="panel-dca">
+        <h1>Calculadora de Libertad Financiera (Regla del 4%)</h1>
+        <p class="subtitle">Averigua cuánto patrimonio necesitas acumular para vivir de rentas pasivas sin depender de un jefe.</p>
+
+        <div class="form-grid">
+          <div class="field">
+            <label for="lib-gasto">Gasto mensual que quieres cubrir (€)</label>
+            <input type="number" id="lib-gasto" value="1500" min="300" step="100" />
+          </div>
+          <div class="field">
+            <label for="lib-retiro">Tasa de retiro seguro anual (%)</label>
+            <input type="number" id="lib-retiro" value="4" min="2" max="8" step="0.5" />
+          </div>
+          <div class="field">
+            <label for="lib-actual">Patrimonio invertido actual (€)</label>
+            <input type="number" id="lib-actual" value="5000" min="0" step="500" />
+          </div>
+          <div class="field">
+            <label for="lib-ahorro">Ahorro mensual invertido (€)</label>
+            <input type="number" id="lib-ahorro" value="400" min="25" step="25" />
+          </div>
+        </div>
+
+        <div class="results-grid">
+          <div class="stat-box highlight">
+            <span class="stat-label">Meta de Libertad Financiera</span>
+            <strong class="stat-value" id="lib-res-meta">0 €</strong>
+          </div>
+          <div class="stat-box">
+            <span class="stat-label">Renta Pasiva Mensual Generada</span>
+            <strong class="stat-value" id="lib-res-renta">0 €</strong>
+          </div>
+          <div class="stat-box success">
+            <span class="stat-label">Tiempo Estimado (al 8% anual)</span>
+            <strong class="stat-value" id="lib-res-anios">0 años</strong>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Panel Derecho: Recomendación Monetizada (Afiliado contextual dinámico) -->
+    <aside class="affiliate-sidebar">
+      <div class="offer-card" id="offer-box">
+        <span class="offer-badge" id="offer-badge">🔥 Más popular</span>
+        <h2 id="offer-title">Cuenta Remunerada e Inversión</h2>
+        <p id="offer-desc">Haz que tu dinero trabaje por ti automáticamente.</p>
+        <a href="https://revolut.com/referral/?referral-code=revienta!OCT1-26-AR-H1&geo-redirect" target="_blank" rel="noopener sponsored" class="cta-button" id="offer-cta">
+          Abrir cuenta gratis en Revolut →
+        </a>
+        <small class="disclaimer">Herramienta gratuita financiada mediante enlaces recomendados sin coste extra para ti.</small>
+      </div>
+
+      <div class="offer-card" id="offer-box-secondary" style="background: linear-gradient(160deg, #1e293b 0%, #1e3a8a 100%); border-color: #3b82f6;">
+        <span class="offer-badge" id="sec-badge" style="background: rgba(59, 130, 246, 0.2); color: #93c5fd;">⚡ Bono Bitget (Código: KQBSNNRF)</span>
+        <h2 id="sec-title">Inversión Cripto, DCA y Copy Trading</h2>
+        <p id="sec-desc">Multiplica tu ahorro a largo plazo en Bitget. Usa el código <strong>KQBSNNRF</strong> al registrarte para activar tu bono.</p>
+        <a href="https://www.bitget.com/es/referral/register?clacCode=KQBSNNRF" target="_blank" rel="noopener sponsored" class="cta-button" id="sec-cta" style="background: #3b82f6; color: #ffffff;">
+          Registrarse en Bitget (Código: KQBSNNRF) →
+        </a>
+      </div>
+
+      <div class="share-card" style="border-color: #f59e0b;">
+        <h3>💎 Pack Pro: Planificador 50/30/20 + Excel</h3>
+        <p>Desbloquea nuestra plantilla interactiva con hoja de ruta a 12 meses y exportación a Excel/PDF por solo <strong>4,99 € / 5 USDT</strong>:</p>
+        <a href="producto-digital-pro.html" class="cta-button" style="background: #f59e0b; color: #0f172a; margin-bottom: 0.75rem;">
+          🔓 Obtener Pack Pro (4,99€ / USDT) →
+        </a>
+        <button type="button" class="share-btn" id="btn-copy-summary">📋 Copiar resumen de mi cálculo</button>
+        <span class="copy-feedback" id="copy-feedback" hidden>¡Copiado al portapapeles!</span>
+      </div>
+    </aside>
+  </main>
+
+  <section class="container" style="margin-bottom: 2.5rem;">
+    <div class="calc-card">
+      <h2 style="font-size: 1.25rem; margin-bottom: 0.85rem;">Preguntas Frecuentes sobre Ahorro, Interés Compuesto y Cripto (2026)</h2>
+      <p style="color: var(--muted); font-size: 0.9rem; margin-bottom: 0.75rem;">
+        <strong>¿Dónde guardar el fondo de emergencia sin comisiones?</strong> Automatizar el ahorro mensual mediante cuentas gratuitas con huchas y redondeo como <a href="https://revolut.com/referral/?referral-code=revienta!OCT1-26-AR-H1&geo-redirect" target="_blank" rel="noopener sponsored" style="color: var(--primary);">Revolut (Invitación Oficial)</a> permite separar gastos fijos de tu capital de inversión sin pagar mantenimiento.
+      </p>
+      <p style="color: var(--muted); font-size: 0.9rem; margin-bottom: 1rem;">
+        <strong>¿Cómo hacer DCA en Bitcoin o USDT Earn con comisiones bajas?</strong> Con la estrategia de compras periódicas (DCA) y Copy Trading en <a href="https://www.bitget.com/es/referral/register?clacCode=KQBSNNRF" target="_blank" rel="noopener sponsored" style="color: #60a5fa;">Bitget (Código promocional: KQBSNNRF)</a> puedes automatizar tus aportaciones mensuales reduciendo el impacto de la volatilidad.
+      </p>
+      <div style="border-top: 1px solid var(--card-border); padding-top: 0.85rem; display: flex; gap: 1rem; flex-wrap: wrap; font-size: 0.85rem;">
+        <a href="codigo-promocional-bitget-kqbsnnrf.html" style="color: var(--primary);">📌 Guía Código Promocional Bitget (KQBSNNRF)</a>
+        <a href="invitacion-revolut-cuenta-remunerada.html" style="color: var(--primary);">📌 Invitación Oficial Revolut 2026</a>
+        <a href="invertir-150-euros-al-mes-interes-compuesto.html" style="color: var(--primary);">📌 Qué pasa si inviertes 150€/mes</a>
+        <a href="cuanto-queda-neto-autonomo-2500-3000-euros.html" style="color: var(--primary);">📌 Sueldo Neto Autónomo 2.500€ - 3.000€</a>
+      </div>
+    </div>
+  </section>
+
+  <footer class="footer container">
+    <p>© 2026 <span id="footer-brand">FinanzaSmart</span> — Calculadoras orientativas con fines educativos.</p>
+  </footer>
+
+  <script src="afiliados.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

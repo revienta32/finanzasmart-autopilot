@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://finanzasmart-pro.surge.sh/sitemap.xml
