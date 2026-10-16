@@ -75,20 +75,14 @@ runApp(sandboxWindow, sandboxDocument, { replaceState() {} }, { clipboard: { wri
 // Verificar que #autonomo se activó por hash
 assert(getEl("panel-autonomo").classList.contains("active"), "El enrutamiento por hash #autonomo no activó el panel de autónomos");
 
-// Verificar resultados matemáticos exactos:
-// Interés compuesto: 2000 inicial + 150/mes al 8% durante 15 años (180 meses) -> Total aportado = 29.000 €, Total final = 58.520 €
-assert(getEl("ic-res-aportado").textContent.includes("29.000"), `Error en total aportado IC: ${getEl("ic-res-aportado").textContent}`);
-assert(getEl("ic-res-total").textContent.includes("58.520"), `Error en capital final IC: ${getEl("ic-res-total").textContent}`);
-
-// Hipoteca: 180.000€ + 10% gastos = 198.000€ - 40.000€ ahorro = 158.000€ préstamo a 25 años al 3.1% -> Cuota ~ 757 €/mes, Rentabilidad bruta = (950*12)/180000 = 6,3%
-assert(getEl("hip-res-cuota").textContent.includes("757"), `Error en cuota hipoteca: ${getEl("hip-res-cuota").textContent}`);
+// Verificar resultados matemáticos exactos (normalizando separador de miles de ICU):
+const norm = (s) => s.replace(/\./g, "");
+assert(norm(getEl("ic-res-aportado").textContent).includes("29000"), `Error en total aportado IC: ${getEl("ic-res-aportado").textContent}`);
+assert(norm(getEl("ic-res-total").textContent).includes("58520"), `Error en capital final IC: ${getEl("ic-res-total").textContent}`);
+assert(norm(getEl("hip-res-cuota").textContent).includes("757"), `Error en cuota hipoteca: ${getEl("hip-res-cuota").textContent}`);
 assert(getEl("hip-res-rentabilidad").textContent.includes("6.3"), `Error en rentabilidad hipoteca: ${getEl("hip-res-rentabilidad").textContent}`);
-
-// Autónomo: 3000 facturación - 350 gastos - 310 cuota = 2340 base * 18% IRPF (421,2€) -> Neto = 1.919 €
-assert(getEl("aut-res-neto").textContent.includes("1.919"), `Error en neto autónomo: ${getEl("aut-res-neto").textContent}`);
-
-// Libertad financiera: 1500€/mes (18.000€/año) al 4% retiro -> Meta = 450.000 €
-assert(getEl("lib-res-meta").textContent.includes("450.000"), `Error en meta libertad financiera: ${getEl("lib-res-meta").textContent}`);
+assert(norm(getEl("aut-res-neto").textContent).includes("1919"), `Error en neto autónomo: ${getEl("aut-res-neto").textContent}`);
+assert(norm(getEl("lib-res-meta").textContent).includes("450000"), `Error en meta libertad financiera: ${getEl("lib-res-meta").textContent}`);
 
 // 3. Verificar exportación Excel (UTF-8 BOM + punto y coma ';' para Excel en España)
 assert(proHtml.includes('\\uFEFF'), "El exportador Excel no incluye BOM UTF-8 (\\uFEFF) para acentos y símbolo € en Excel");
