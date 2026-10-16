@@ -9,6 +9,8 @@ on:
 jobs:
   daily-growth:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -20,3 +22,11 @@ jobs:
 
       - name: Run CEO Autopilot (Generate SEO pages + Publish Cloud Articles + Ping Search Engines)
         run: node autopilot-ceo.js
+
+      - name: Commit and push daily SEO updates
+        run: |
+          git config user.name "FinanzaSmart CEO Bot"
+          git config user.email "finanzasmart@users.noreply.github.com"
+          git add -A
+          git diff --staged --quiet || git commit -m "chore(autopilot): daily cloud SEO & Telegraph syndication"
+          git push

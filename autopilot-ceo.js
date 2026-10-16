@@ -148,7 +148,17 @@ async function publishTelegraphArticles() {
   if (!accRes.ok) return [];
   const token = accRes.result.access_token;
 
+  const todayStr = new Date().toISOString().slice(0, 10);
   const articles = [
+    {
+      title: `Resumen Financiero y Estrategia DCA (${todayStr}): Calculadora de Interés Compuesto y Cripto`,
+      nodes: [
+        { tag: "p", children: [`Actualización del ${todayStr}: Automatizar el ahorro mensual (Regla 50/30/20) y reinvertir intereses es la vía más segura para construir patrimonio sin depender de un único sueldo.`] },
+        { tag: "p", children: [{ tag: "a", attrs: { href: SITE_URL }, children: ["🧮 Simular tu Interés Compuesto, Hipoteca o Sueldo Neto en FinanzaSmart"] }] },
+        { tag: "p", children: [{ tag: "a", attrs: { href: REVOLUT_URL }, children: ["🏦 Abrir Cuenta Gratuita con Huchas en Revolut (Invitación Oficial)"] }] },
+        { tag: "p", children: [{ tag: "a", attrs: { href: BITGET_URL }, children: ["⚡ Activar Bono de Bienvenida en Bitget (Código: KQBSNNRF)"] }] }
+      ]
+    },
     {
       title: "Cómo Calcular tu Interés Compuesto y Automatizar tu Ahorro en 2026 (Herramienta Gratis)",
       nodes: [
