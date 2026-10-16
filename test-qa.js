@@ -82,7 +82,7 @@ assert(getEl("ic-res-total").textContent.includes("58.520"), `Error en capital f
 
 // Hipoteca: 180.000€ + 10% gastos = 198.000€ - 40.000€ ahorro = 158.000€ préstamo a 25 años al 3.1% -> Cuota ~ 757 €/mes, Rentabilidad bruta = (950*12)/180000 = 6,3%
 assert(getEl("hip-res-cuota").textContent.includes("757"), `Error en cuota hipoteca: ${getEl("hip-res-cuota").textContent}`);
-assert(getEl("hip-res-rentabilidad").textContent.includes("6,3"), `Error en rentabilidad hipoteca: ${getEl("hip-res-rentabilidad").textContent}`);
+assert(getEl("hip-res-rentabilidad").textContent.includes("6.3"), `Error en rentabilidad hipoteca: ${getEl("hip-res-rentabilidad").textContent}`);
 
 // Autónomo: 3000 facturación - 350 gastos - 310 cuota = 2340 base * 18% IRPF (421,2€) -> Neto = 1.919 €
 assert(getEl("aut-res-neto").textContent.includes("1.919"), `Error en neto autónomo: ${getEl("aut-res-neto").textContent}`);
