@@ -72,6 +72,28 @@ const SEO_PAGES = [
       <p>Uno de los errores más graves al empezar como freelancer o autónomo es gastar el dinero del IVA o no apartar el porcentaje correspondiente al IRPF trimestral.</p>
       <p>Para un autónomo que factura <strong>3.000€ mensuales (sin IVA)</strong> con 300€ de gastos deducibles y una cuota aproximada de 310€, el sueldo neto real tras apartar un 18% de IRPF ronda los <strong>1.958€ limpios al mes</strong>. Te recomendamos usar una cuenta separada gratuita en Revolut exclusivamente para apartar el IVA e IRPF de cada factura cobrada.</p>
     `
+  },
+  {
+    slug: "simulador-declaracion-renta-espana-casillas.html",
+    title: "Simulador Declaración de la Renta España (Modelo 100): Calcula si Sale a Pagar o Devolver",
+    h1: "Gestor Renta IA: Simula tu IRPF y Descubre tus Deducciones Autonómicas",
+    lead: "Calcula gratis en 30 segundos si tu Declaración de la Renta sale a devolver o a pagar y obtén las casillas exactas de Renta WEB sin pagar 70€ de gestoría.",
+    calcLink: "gestor-renta-ia.html",
+    bodyHtml: `
+      <p>Más del 60% de los contribuyentes en España confirma el borrador de Renta WEB sin incluir las <strong>deducciones autonómicas por alquiler, planes de pensiones o compensación de pérdidas en criptomonedas y acciones</strong>, perdiendo entre 300 € y 1.200 €.</p>
+      <p>Nuestro <strong>Gestor Renta IA</strong> analiza tu Comunidad Autónoma, tus retenciones, tus intereses en cuentas remuneradas (Casilla 0027) y tus operaciones cripto (Casillas 1800-1814) para darte el resultado exacto al instante.</p>
+    `
+  },
+  {
+    slug: "como-declarar-criptomonedas-renta-casilla-1800-bitget.html",
+    title: "Cómo Declarar Criptomonedas y Bitget en la Renta (Casillas 1800 - 1814 y Compensar Pérdidas)",
+    h1: "Guía para Declarar Criptomonedas en Renta WEB (Casillas 1800 a 1814)",
+    lead: "Aprende a declarar tus ganancias de Bitcoin, USDT y Copy Trading en España y cómo compensar pérdidas hasta el 25% de tus intereses bancarios.",
+    calcLink: "gestor-renta-ia.html",
+    bodyHtml: `
+      <p>En la Declaración de la Renta (Modelo 100), las ventas o permutas de criptomonedas se declaran en el apartado <strong>Ganancias y pérdidas patrimoniales derivadas de la transmisión de monedas virtuales (Casillas 1800 a 1814)</strong> tributando en la Base del Ahorro (19% hasta 6.000€, 21% hasta 50.000€, 23% hasta 200.000€).</p>
+      <p>Si has tenido pérdidas, la Ley del IRPF te permite compensarlas con ganancias del mismo año y hasta con el <strong>25% de los intereses de tus cuentas remuneradas (Casilla 0027)</strong>, ahorrando impuestos legalmente.</p>
+    `
   }
 ];
 

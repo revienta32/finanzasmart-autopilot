@@ -89,4 +89,12 @@ assert(proHtml.includes('\\uFEFF'), "El exportador Excel no incluye BOM UTF-8 (\
 assert(proHtml.includes("Mes;Ahorro Acumulado (€);Fondo de Emergencia 40% (€);Capital Invertido al 8% Anual (€);Reserva Fiscal IVA+IRPF (€);Objetivo Take-Profit Cripto +35% (€)"), "El exportador Excel no usa las 6 columnas con ';' como separador para España");
 assert(proHtml.includes("function selectTier("), "Falta selector de 3 niveles de producto (Decoy Pricing)");
 
-console.log("✅ QA TEST SUITE PASSED: 4/4 calculadoras, 3 niveles de producto, enrutamiento hash, pasarela cripto/SEPA y exportación Excel verificados sin errores.");
+// 4. Verificar Gestor Renta IA España (gestor-renta-ia.html)
+const rentaHtml = fs.readFileSync(path.join(__dirname, "gestor-renta-ia.html"), "utf8");
+const rentaScript = rentaHtml.split("<script>")[1].split("</script>")[0];
+new Function(rentaScript); // Verifica sintaxis JS limpia
+assert(rentaHtml.includes("Casillas 1800 - 1814"), "Faltan casillas oficiales de criptomonedas en gestor-renta-ia.html");
+assert(rentaHtml.includes("ES49 1583 0001 1290 4163 0031"), "Falta IBAN Revolut en gestor-renta-ia.html");
+assert(rentaHtml.includes("KQBSNNRF"), "Falta código Bitget en gestor-renta-ia.html");
+
+console.log("✅ QA TEST SUITE PASSED: 4/4 calculadoras, Gestor Renta IA (Modelo 100), 3 niveles de producto, enrutamiento hash, pasarela cripto/SEPA y exportación Excel verificados sin errores.");
