@@ -194,36 +194,55 @@
       const msg = document.getElementById("verify-msg");
       msg.hidden = false;
 
-      if (code.length < 6) {
-        msg.textContent = "⚠️ Por favor, introduce un Hash de transacción (TXID) o el código de referencia bancaria (mínimo 6 caracteres).";
+      const isEvmTx = /^0x[a-fA-F0-9]{64}$/.test(code);
+      const isTronTx = /^[a-fA-F0-9]{64}$/.test(code);
+      const isSolTx = /^[1-9A-HJ-NP-Za-km-z]{80,92}$/.test(code);
+      const isSepaRef = /^SEPA-[A-Z0-9-]{6,}$/i.test(code) || /^[A-Z0-9]{10,35}$/i.test(code);
+
+      if (!isEvmTx && !isTronTx && !isSolTx && !isSepaRef) {
+        msg.textContent = "⚠️ Introduce un Hash TXID válido de blockchain (64+ caracteres en BSC, Tron, Ethereum o Solana) o el ID de operación SEPA de tu banco (10+ caracteres alfanuméricos).";
         return;
       }
 
-      msg.textContent = "⏳ Comprobando comprobante de pago...";
+      msg.textContent = "⏳ Verificando transacción...";
 
-      // Si es un hash EVM (0x... de 66 caracteres), consultamos RPC público de BSC/ETH
-      if (/^0x[a-fA-F0-9]{64}$/.test(code)) {
-        try {
-          const r = await fetch("https://bsc-dataseed.binance.org/", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ jsonrpc: "2.0", id: 1, method: "eth_getTransactionByHash", params: [code] })
-          }).then(res => res.json());
-          if (!r.result) {
-            // Intentar en Ethereum RPC
-            const rEth = await fetch("https://eth.llamarpc.com", {
+      if (isEvmTx) {
+        const target = "0x512c2d191d9e6857e4fabbf14d0b7bfa9b44aed2";
+        let foundTx = null;
+        for (const rpc of ["https://bsc-dataseed.binance.org/", "https://eth.llamarpc.com"]) {
+          try {
+            const r = await fetch(rpc, {
               method: "POST",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({ jsonrpc: "2.0", id: 1, method: "eth_getTransactionByHash", params: [code] })
             }).then(res => res.json());
-            if (!rEth.result) {
-              msg.textContent = "⚠️ No se encontró ese Hash en la blockchain todavía. Espera 30 segundos tras enviar los 5 USDT y vuelve a pulsar.";
-              return;
+            if (r && r.result) {
+              foundTx = r.result;
+              break;
             }
-          }
-        } catch (e) {
-          // Fallback si el navegador bloquea CORS
+          } catch (_) {}
         }
+        if (!foundTx) {
+          msg.textContent = "⚠️ Ese Hash 0x... aún no figura confirmado en BSC ni Ethereum. Espera 30 segundos tras el envío de los 5 USDT y vuelve a intentarlo.";
+          return;
+        }
+        const txData = ((foundTx.input || "") + (foundTx.to || "")).toLowerCase();
+        if (!txData.includes(target.slice(2).toLowerCase())) {
+          msg.textContent = "⚠️ La transacción existe pero no tiene como destinatario la billetera oficial del Pack Pro.";
+          return;
+        }
+      } else if (isTronTx) {
+        try {
+          const r = await fetch("https://api.trongrid.io/wallet/gettransactionbyid", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ value: code })
+          }).then(res => res.json());
+          if (!r || !r.txID) {
+            msg.textContent = "⚠️ El TXID de Tron (TRC20) no se encontró en la red Tron. Verifica que esté confirmado.";
+            return;
+          }
+        } catch (_) {}
       }
 
       isProUnlocked = true;
@@ -237,10 +256,10 @@
         document.getElementById("paywall-section").scrollIntoView({ behavior: "smooth" });
         const msg = document.getElementById("verify-msg");
         msg.hidden = false;
-        msg.textContent = "🔒 Realiza el pago de 4,99 € (Revolut SEPA) o 5 USDT arriba e introduce tu referencia para exportar.";
+        msg.textContent = "🔒 Realiza el pago de 4,99 € (Revolut SEPA) o 5 USDT arriba e introduce tu referencia para desbloquear la exportación.";
         return;
       }
-      if (type === "csv") exportCSV();
+      if (type === "csv") exportExcelPro();
       if (type === "pdf") window.print();
     }
 
@@ -281,21 +300,46 @@
         acum += ahorroReal;
         inv = inv * (1 + r) + ahorroReal;
         const tr = document.createElement("tr");
+        tr.dataset.mes = m;
+        tr.dataset.acum = Math.round(acum);
+        tr.dataset.emergencia = Math.round(acum * 0.4);
+        tr.dataset.invertido = Math.round(inv);
         tr.innerHTML = `<td>Mes ${m}</td><td>${fmt.format(acum)}</td><td>${fmt.format(acum * 0.4)}</td><td class="green"><strong>${fmt.format(inv)}</strong></td>`;
         tbody.appendChild(tr);
       }
     }
 
-    function exportCSV() {
-      let csv = "Mes,Ahorro Acumulado,Fondo Emergencia,Capital Invertido\n";
+    function exportExcelPro() {
+      const sueldo = +document.getElementById("in-sueldo").value || 0;
+      const extra = +document.getElementById("in-extra").value || 0;
+      const fijos = +document.getElementById("in-fijos").value || 0;
+      const ocio = +document.getElementById("in-ocio").value || 0;
+      const total = sueldo + extra;
+      const ahorroReal = Math.max(0, total - fijos - ocio);
+
+      // Compatible al 100% con Excel en España (UTF-8 con BOM + separador ';' para columnas perfectas)
+      const lines = [
+        "PLANIFICADOR FINANCIERO PRO 50/30/20 - FINANZASMART",
+        `Ingresos Totales Mensuales (€);${total}`,
+        `Gastos Fijos Actuales (€);${fijos}`,
+        `Gastos Ocio Actuales (€);${ocio}`,
+        `Ahorro Mensual Real (€);${ahorroReal}`,
+        `Meta 50% Necesidades (€);${Math.round(total * 0.5)}`,
+        `Meta 30% Ocio (€);${Math.round(total * 0.3)}`,
+        `Meta 20% Inversión (€);${Math.round(total * 0.2)}`,
+        "",
+        "Mes;Ahorro Acumulado (€);Fondo de Emergencia 40% (€);Capital Invertido al 8% Anual (€)"
+      ];
+
       document.querySelectorAll("#tabla-meses tr").forEach(tr => {
-        const cols = [...tr.querySelectorAll("td")].map(td => td.textContent.replace(/[^\d,-]/g, ""));
-        csv += cols.join(",") + "\n";
+        lines.push(`Mes ${tr.dataset.mes};${tr.dataset.acum};${tr.dataset.emergencia};${tr.dataset.invertido}`);
       });
-      const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+
+      const csvContent = "\uFEFF" + lines.join("\r\n");
+      const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
       const a = document.createElement("a");
       a.href = URL.createObjectURL(blob);
-      a.download = "plan-financiero-12-meses.csv";
+      a.download = "Planificador-Financiero-Pro-50-30-20.csv";
       a.click();
     }
 

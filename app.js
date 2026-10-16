@@ -143,34 +143,55 @@
     calcLibertad();
   }
 
+  function activateTab(tabKey) {
+    if (!tabMapToOffer[tabKey]) return;
+    document.querySelectorAll(".tab-btn").forEach((b) => {
+      b.classList.toggle("active", b.dataset.tab === tabKey);
+    });
+    document.querySelectorAll(".tab-panel").forEach((p) => {
+      p.classList.toggle("active", p.id === `panel-${tabKey}`);
+    });
+    activeTab = tabKey;
+    updateOfferCard(activeTab);
+  }
+
   // Eventos de pestañas
   document.querySelectorAll(".tab-btn").forEach((btn) => {
     btn.addEventListener("click", () => {
-      document.querySelectorAll(".tab-btn").forEach((b) => b.classList.remove("active"));
-      document.querySelectorAll(".tab-panel").forEach((p) => p.classList.remove("active"));
-      btn.classList.add("active");
-      activeTab = btn.dataset.tab;
-      document.getElementById(`panel-${activeTab}`).classList.add("active");
-      updateOfferCard(activeTab);
+      activateTab(btn.dataset.tab);
+      if (history.replaceState) {
+        history.replaceState(null, "", `#${btn.dataset.tab}`);
+      }
     });
   });
+
+  // Soporte de navegación directa por hash (#hipoteca, #autonomo, #dca, #compuesto)
+  const initialHash = (window.location.hash || "").replace("#", "").trim();
+  if (tabMapToOffer[initialHash]) {
+    activateTab(initialHash);
+  } else {
+    updateOfferCard(activeTab);
+  }
 
   // Eventos de inputs
   document.querySelectorAll("input").forEach((inp) => {
     inp.addEventListener("input", recalculateAll);
   });
 
-  // Botón de compartir viral
+  // Botón de compartir viral con URL pública garantizada
   document.getElementById("btn-copy-summary").addEventListener("click", () => {
+    const shareUrl = window.location.protocol.startsWith("http")
+      ? window.location.href
+      : `https://finanzasmart-pro.surge.sh/#${activeTab}`;
     let texto = "";
     if (activeTab === "compuesto") {
-      texto = `📈 Si invierto ${document.getElementById("ic-mensual").value}€/mes durante ${document.getElementById("ic-anios").value} años, acumularé ${document.getElementById("ic-res-total").textContent} (${document.getElementById("ic-res-intereses").textContent} solo en intereses pasivos). Calcula el tuyo gratis en: ${window.location.href}`;
+      texto = `📈 Si invierto ${document.getElementById("ic-mensual").value}€/mes durante ${document.getElementById("ic-anios").value} años, acumularé ${document.getElementById("ic-res-total").textContent} (${document.getElementById("ic-res-intereses").textContent} solo en intereses pasivos). Calcula el tuyo gratis en: ${shareUrl}`;
     } else if (activeTab === "hipoteca") {
-      texto = `🏠 Mi simulación de hipoteca sale a ${document.getElementById("hip-res-cuota").textContent} con un cashflow de alquiler de ${document.getElementById("hip-res-cashflow").textContent}. Simula la tuya en: ${window.location.href}`;
+      texto = `🏠 Mi simulación de hipoteca sale a ${document.getElementById("hip-res-cuota").textContent} con un cashflow de alquiler de ${document.getElementById("hip-res-cashflow").textContent}. Simula la tuya en: ${shareUrl}`;
     } else if (activeTab === "autonomo") {
-      texto = `💼 Facturando ${document.getElementById("aut-facturacion").value}€/mes como autónomo, el sueldo neto limpio es de ${document.getElementById("aut-res-neto").textContent}. Calcula el tuyo en: ${window.location.href}`;
+      texto = `💼 Facturando ${document.getElementById("aut-facturacion").value}€/mes como autónomo, el sueldo neto limpio es de ${document.getElementById("aut-res-neto").textContent}. Calcula el tuyo en: ${shareUrl}`;
     } else {
-      texto = `🔥 Mi meta de Libertad Financiera es de ${document.getElementById("lib-res-meta").textContent} (${document.getElementById("lib-res-anios").textContent}). Calcula cuándo podrás vivir de rentas en: ${window.location.href}`;
+      texto = `🔥 Mi meta de Libertad Financiera es de ${document.getElementById("lib-res-meta").textContent} (${document.getElementById("lib-res-anios").textContent}). Calcula cuándo podrás vivir de rentas en: ${shareUrl}`;
     }
 
     navigator.clipboard.writeText(texto).then(() => {
@@ -182,6 +203,5 @@
     });
   });
 
-  updateOfferCard(activeTab);
   recalculateAll();
 })();

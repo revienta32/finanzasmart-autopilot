@@ -263,14 +263,24 @@ ${allUrls
   });
   console.log("IndexNow status:", indexRes.status);
 
-  // 6. Guardar registro de distribución en el proyecto
+  // 6. Guardar registro acumulativo de distribución en el proyecto
+  let prevArticles = [];
+  const reportPath = path.join(__dirname, "red-de-trafico.json");
+  if (fs.existsSync(reportPath)) {
+    try {
+      const prev = JSON.parse(fs.readFileSync(reportPath, "utf8"));
+      prevArticles = prev.telegraphCloudArticles || [];
+    } catch (_) {}
+  }
+  const mergedArticles = [...new Set([...telegraphUrls, ...prevArticles])];
   const report = {
     updatedAt: new Date().toISOString(),
     mainSite: SITE_URL,
+    githubMirror: "https://revienta32.github.io/finanzasmart-autopilot/",
     seoPages: allUrls,
-    telegraphCloudArticles: telegraphUrls
+    telegraphCloudArticles: mergedArticles
   };
-  fs.writeFileSync(path.join(__dirname, "red-de-trafico.json"), JSON.stringify(report, null, 2));
+  fs.writeFileSync(reportPath, JSON.stringify(report, null, 2));
 }
 
 run().catch(console.error);
