@@ -76,9 +76,9 @@ runApp(sandboxWindow, sandboxDocument, { replaceState() {} }, { clipboard: { wri
 assert(getEl("panel-autonomo").classList.contains("active"), "El enrutamiento por hash #autonomo no activó el panel de autónomos");
 
 // Verificar resultados matemáticos exactos:
-// Interés compuesto: 2000 inicial + 150/mes al 8% durante 15 años (180 meses) -> Total aportado = 29.000 €, Total final ~ 58.659 €
+// Interés compuesto: 2000 inicial + 150/mes al 8% durante 15 años (180 meses) -> Total aportado = 29.000 €, Total final = 58.520 €
 assert(getEl("ic-res-aportado").textContent.includes("29.000"), `Error en total aportado IC: ${getEl("ic-res-aportado").textContent}`);
-assert(getEl("ic-res-total").textContent.includes("58.659"), `Error en capital final IC: ${getEl("ic-res-total").textContent}`);
+assert(getEl("ic-res-total").textContent.includes("58.520"), `Error en capital final IC: ${getEl("ic-res-total").textContent}`);
 
 // Hipoteca: 180.000€ + 10% gastos = 198.000€ - 40.000€ ahorro = 158.000€ préstamo a 25 años al 3.1% -> Cuota ~ 757 €/mes, Rentabilidad bruta = (950*12)/180000 = 6,3%
 assert(getEl("hip-res-cuota").textContent.includes("757"), `Error en cuota hipoteca: ${getEl("hip-res-cuota").textContent}`);
