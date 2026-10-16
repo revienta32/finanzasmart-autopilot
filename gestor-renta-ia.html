@@ -3,17 +3,23 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Gestor Renta IA España (Modelo 100) | Simulador IRPF, Casillas Renta WEB y Deducciones</title>
-  <meta name="description" content="Tu gestor fiscal inteligente para la Declaración de la Renta en España: calcula si te sale a pagar o a devolver, descubre tus deducciones autonómicas y obtén las casillas exactas de Renta WEB." />
+  <title>Gestor Renta IA España (Modelo 100) | Simulador IRPF Personalizado a tu Situación</title>
+  <meta name="description" content="Tu gestor fiscal inteligente para la Declaración de la Renta en España: se adapta al 100% a tu situación personal, familiar, vivienda, trabajo e inversiones opcionales." />
   <link rel="stylesheet" href="styles.css" />
   <style>
-    .wizard-grid { display: grid; grid-template-columns: 1.15fr 0.85fr; gap: 1.5rem; margin-top: 1.5rem; margin-bottom: 2.5rem; }
+    .wizard-grid { display: grid; grid-template-columns: 1.18fr 0.82fr; gap: 1.5rem; margin-top: 1.5rem; margin-bottom: 2.5rem; }
     @media (max-width: 900px) { .wizard-grid { grid-template-columns: 1fr; } }
     .bot-bubble { background: rgba(16, 185, 129, 0.1); border-left: 4px solid var(--primary); padding: 1rem 1.2rem; border-radius: 0.6rem; margin-bottom: 1.25rem; font-size: 0.92rem; }
     .select-input { width: 100%; background: #0f172a; border: 1px solid var(--card-border); color: var(--text); padding: 0.65rem 0.8rem; border-radius: 0.5rem; font-size: 0.95rem; font-weight: 600; }
+    .profile-pills { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 0.65rem; margin-bottom: 1.25rem; }
+    .pill-check { display: flex; align-items: center; gap: 0.55rem; background: #0f172a; border: 1px solid var(--card-border); padding: 0.65rem 0.85rem; border-radius: 0.6rem; cursor: pointer; font-size: 0.86rem; font-weight: 600; transition: border-color 0.15s; }
+    .pill-check input { width: 18px; height: 18px; accent-color: var(--primary); cursor: pointer; }
+    .pill-check.active { border-color: var(--primary); background: rgba(16, 185, 129, 0.08); }
+    .cond-box { background: rgba(15, 23, 42, 0.65); border: 1px solid var(--card-border); border-radius: 0.75rem; padding: 1.1rem; margin-bottom: 1.1rem; }
+    .cond-box h3 { font-size: 0.98rem; color: var(--primary); margin-bottom: 0.75rem; }
     .casilla-table { width: 100%; border-collapse: collapse; margin-top: 0.85rem; font-size: 0.86rem; }
     .casilla-table th, .casilla-table td { padding: 0.65rem; border-bottom: 1px solid var(--card-border); text-align: left; }
-    .casilla-badge { background: #3b82f6; color: #fff; font-weight: 700; padding: 0.15rem 0.5rem; border-radius: 0.35rem; font-family: monospace; }
+    .casilla-badge { background: #3b82f6; color: #fff; font-weight: 700; padding: 0.15rem 0.5rem; border-radius: 0.35rem; font-family: monospace; white-space: nowrap; }
     .locked-report { filter: blur(6px); pointer-events: none; user-select: none; }
     .pay-card { background: linear-gradient(145deg, #1e293b 0%, #0f172a 100%); border: 2px solid #f59e0b; border-radius: 1rem; padding: 1.4rem; margin-top: 1.25rem; }
     .copy-row { display: flex; justify-content: space-between; align-items: center; background: #0f172a; border: 1px solid var(--card-border); padding: 0.55rem 0.8rem; border-radius: 0.5rem; font-family: monospace; font-size: 0.82rem; margin-top: 0.4rem; word-break: break-all; gap: 0.5rem; }
@@ -26,7 +32,7 @@
         <span class="brand-icon">🤖</span>
         <div>
           <strong>Gestor Renta IA</strong>
-          <span class="brand-tag">Simulador Oficial IRPF España + Casillas Renta WEB</span>
+          <span class="brand-tag">Asesor IRPF Adaptado a Tu Caso Personal (Modelo 100)</span>
         </div>
       </a>
       <nav class="tabs">
@@ -37,82 +43,171 @@
   </header>
 
   <main class="container wizard-grid">
-    <!-- Panel Izquierdo: Cuestionario del Gestor IA -->
+    <!-- Panel Izquierdo: Asistente Dinámico según el caso de cada persona -->
     <section class="calc-card">
-      <div class="bot-bubble" id="bot-greeting">
-        <strong>🤖 Hola, soy tu Gestor Fiscal IA:</strong> Completa los datos de tu situación en España. Calcularé gratis al instante si tu Declaración de la Renta (Modelo 100) sale <strong>A DEVOLVER o A PAGAR</strong> y cuánto puedes ahorrarte en deducciones que el borrador de Hacienda no marca por defecto.
+      <div class="bot-bubble">
+        <strong>🤖 Hola, soy tu Gestor de la Renta IA:</strong> Primero rellena tus datos básicos y <strong>marca abajo solo las casillas que correspondan a tu vida real</strong> (vivienda, familia, gastos deducibles o inversiones). El cálculo y las casillas de Renta WEB se adaptan exclusivamente a tu caso.
       </div>
 
+      <!-- PASO 1: DATOS BÁSICOS (Todo contribuyente) -->
       <div class="form-grid">
         <div class="field">
-          <label for="r-ccaa">1. Comunidad Autónoma de residencia</label>
+          <label for="r-ccaa">1. Comunidad Autónoma (17 CCAA)</label>
           <select id="r-ccaa" class="select-input">
             <option value="madrid">Comunidad de Madrid</option>
             <option value="cataluna">Cataluña</option>
             <option value="andalucia">Andalucía</option>
             <option value="valencia">Comunidad Valenciana</option>
             <option value="galicia">Galicia</option>
-            <option value="paisvasco">País Vasco / Navarra</option>
-            <option value="otras">Otra Comunidad Autónoma</option>
+            <option value="castillaleon">Castilla y León</option>
+            <option value="canarias">Canarias</option>
+            <option value="castillamancha">Castilla-La Mancha</option>
+            <option value="murcia">Región de Murcia</option>
+            <option value="aragon">Aragón</option>
+            <option value="baleares">Islas Baleares</option>
+            <option value="extremadura">Extremadura</option>
+            <option value="asturias">Principado de Asturias</option>
+            <option value="cantabria">Cantabria</option>
+            <option value="rioja">La Rioja</option>
+            <option value="paisvasco">País Vasco / Navarra (Foral)</option>
           </select>
         </div>
 
         <div class="field">
           <label for="r-situacion">2. Situación laboral principal</label>
           <select id="r-situacion" class="select-input">
-            <option value="asalariado1">Asalariado (1 solo pagador)</option>
-            <option value="asalariado2">Asalariado (2 o más pagadores / SEPE)</option>
+            <option value="asalariado1">Asalariado / Pensionista (1 solo pagador)</option>
+            <option value="asalariado2">Asalariado (2 o más pagadores / Paro SEPE / ERTE)</option>
             <option value="autonomo">Autónomo / Freelance</option>
           </select>
         </div>
 
         <div class="field">
           <label for="r-bruto">3. Ingresos brutos anuales del trabajo / actividad (€)</label>
-          <input type="number" id="r-bruto" value="28500" min="0" step="500" />
+          <input type="number" id="r-bruto" value="26000" min="0" step="500" />
         </div>
 
         <div class="field">
           <label for="r-retenido">4. IRPF ya retenido en tus nóminas o facturas (€)</label>
-          <input type="number" id="r-retenido" value="4200" min="0" step="100" />
-        </div>
-
-        <div class="field">
-          <label for="r-hijos">5. Hijos menores de 25 años a cargo</label>
-          <select id="r-hijos" class="select-input">
-            <option value="0">Sin hijos a cargo</option>
-            <option value="1">1 hijo (Mínimo +2.400 €)</option>
-            <option value="2">2 hijos (Mínimo +5.100 €)</option>
-            <option value="3">3 o más hijos (Mínimo +9.100 €)</option>
-          </select>
-        </div>
-
-        <div class="field">
-          <label for="r-alquiler">6. Alquiler anual pagado por tu vivienda (€)</label>
-          <input type="number" id="r-alquiler" value="7200" min="0" step="300" />
-        </div>
-
-        <div class="field">
-          <label for="r-pensiones">7. Aportación a Plan de Pensiones (máx. 1.500€) (€)</label>
-          <input type="number" id="r-pensiones" value="1000" min="0" max="5750" step="100" />
-        </div>
-
-        <div class="field">
-          <label for="r-intereses">8. Intereses cuentas remuneradas (Revolut, etc.) (€)</label>
-          <input type="number" id="r-intereses" value="350" min="0" step="50" />
-        </div>
-
-        <div class="field">
-          <label for="r-cripto-gan">9. Ganancias en Cripto / Acciones (Bitget, etc.) (€)</label>
-          <input type="number" id="r-cripto-gan" value="1800" min="0" step="100" />
-        </div>
-
-        <div class="field">
-          <label for="r-cripto-per">10. Pérdidas en Cripto / Acciones a compensar (€)</label>
-          <input type="number" id="r-cripto-per" value="600" min="0" step="100" />
+          <input type="number" id="r-retenido" value="3400" min="0" step="100" />
         </div>
       </div>
 
-      <!-- Resultado Principal Gratis -->
+      <!-- PASO 2: ¿QUÉ APLICA A TU SITUACIÓN PERSONAL? (Toggles dinámicos) -->
+      <h2 style="font-size:1.05rem;margin-bottom:0.6rem;">5. Marca solo lo que aplique a tu situación este año:</h2>
+      <div class="profile-pills">
+        <label class="pill-check active" id="lbl-chk-vivienda">
+          <input type="checkbox" id="chk-vivienda" checked />
+          <span>🏠 Pago Alquiler o Hipoteca</span>
+        </label>
+        <label class="pill-check" id="lbl-chk-familia">
+          <input type="checkbox" id="chk-familia" />
+          <span>👨‍👩‍👧 Hijos, Maternidad o Conjunta</span>
+        </label>
+        <label class="pill-check" id="lbl-chk-gastos">
+          <input type="checkbox" id="chk-gastos" />
+          <span>💪 Sindicato, ONG, Gimnasio o Estudios</span>
+        </label>
+        <label class="pill-check" id="lbl-chk-ahorro">
+          <input type="checkbox" id="chk-ahorro" />
+          <span>📈 Plan Pensiones, Banco o Acciones/Cripto</span>
+        </label>
+      </div>
+
+      <!-- MÓDULO CONDICIONAL A: VIVIENDA (Alquiler o Hipoteca) -->
+      <div class="cond-box" id="box-vivienda">
+        <h3>🏠 Situación de tu Vivienda Habitual</h3>
+        <div class="form-grid" style="margin-bottom:0;">
+          <div class="field">
+            <label for="r-tipo-viv">Régimen de vivienda</label>
+            <select id="r-tipo-viv" class="select-input">
+              <option value="alquiler">Vivo de alquiler (Deducción autonómica/estatal)</option>
+              <option value="hipoteca2013">Hipoteca firmada antes de 2013 (Deducción 15%)</option>
+              <option value="hipotecanueva">Hipoteca posterior a 2013 / Propiedad sin deducción</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="r-gasto-viv">Importe anual pagado en alquiler o cuotas hipoteca (€)</label>
+            <input type="number" id="r-gasto-viv" value="7200" min="0" step="300" />
+          </div>
+        </div>
+      </div>
+
+      <!-- MÓDULO CONDICIONAL B: FAMILIA, HIJOS, GUARDERÍA Y DECLARACIÓN CONJUNTA -->
+      <div class="cond-box" id="box-familia" hidden>
+        <h3>👨‍👩‍👧 Situación Familiar, Maternidad y Modalidad (Individual vs. Conjunta)</h3>
+        <div class="form-grid" style="margin-bottom:0;">
+          <div class="field">
+            <label for="r-hijos">Hijos menores de 25 años a cargo</label>
+            <select id="r-hijos" class="select-input">
+              <option value="0">0 hijos</option>
+              <option value="1">1 hijo (+2.400 € mínimo exento)</option>
+              <option value="2">2 hijos (+5.100 € mínimo exento)</option>
+              <option value="3">3 o más hijos (+9.100 € mínimo exento)</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="r-modalidad">Modalidad de declaración</label>
+            <select id="r-modalidad" class="select-input">
+              <option value="individual">Individual</option>
+              <option value="conjuntaMatrimonio">Conjunta con cónyuge sin ingresos (-3.400 € en base)</option>
+              <option value="conjuntaMonoparental">Conjunta monoparental con hijos (-2.150 € en base)</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="r-maternidad">Deducción Maternidad (<3 años) + Guardería (€)</label>
+            <select id="r-maternidad" class="select-input">
+              <option value="0">No aplica</option>
+              <option value="1200">Hijo menor de 3 años (1.200 € directo en Casilla 0611)</option>
+              <option value="2200">Hijo menor de 3 años + Guardería autorizada (2.200 €)</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- MÓDULO CONDICIONAL C: GASTOS DEDUCIBLES (Sindicato, Colegio Profesional, ONG, Gimnasio/CCAA) -->
+      <div class="cond-box" id="box-gastos" hidden>
+        <h3>💪 Cuotas Sindicales, Donativos ONG y Deducciones Autonómicas (Gimnasio, Estudios)</h3>
+        <div class="form-grid" style="margin-bottom:0;">
+          <div class="field">
+            <label for="r-sindicato">Cuota sindical o Colegio Profesional obligatorio (€/año)</label>
+            <input type="number" id="r-sindicato" value="0" min="0" max="500" step="20" />
+          </div>
+          <div class="field">
+            <label for="r-donativos">Donaciones a ONGs / Fundaciones (Deduce hasta el 80%) (€/año)</label>
+            <input type="number" id="r-donativos" value="0" min="0" step="25" />
+          </div>
+          <div class="field">
+            <label for="r-gasto-ccaa">Gastos en Gimnasio/Deporte, Material Escolar o Idiomas (€/año)</label>
+            <input type="number" id="r-gasto-ccaa" value="0" min="0" step="50" />
+          </div>
+        </div>
+      </div>
+
+      <!-- MÓDULO CONDICIONAL D: AHORRO E INVERSIONES (Opcional: Pensiones, Bancos, Acciones/Cripto) -->
+      <div class="cond-box" id="box-ahorro" hidden>
+        <h3>📈 Plan de Pensiones, Cuentas Remuneradas y Acciones / Criptomonedas</h3>
+        <div class="form-grid" style="margin-bottom:0;">
+          <div class="field">
+            <label for="r-pensiones">Aportación anual a Plan de Pensiones (€)</label>
+            <input type="number" id="r-pensiones" value="0" min="0" max="5750" step="100" />
+          </div>
+          <div class="field">
+            <label for="r-intereses">Intereses de cuentas remuneradas / depósitos o dividendos (€)</label>
+            <input type="number" id="r-intereses" value="0" min="0" step="50" />
+          </div>
+          <div class="field">
+            <label for="r-cripto-gan">Ganancias por venta de Acciones, Fondos o Cripto (€)</label>
+            <input type="number" id="r-cripto-gan" value="0" min="0" step="100" />
+          </div>
+          <div class="field">
+            <label for="r-cripto-per">Pérdidas en Acciones o Cripto a compensar (€)</label>
+            <input type="number" id="r-cripto-per" value="0" min="0" step="100" />
+          </div>
+        </div>
+      </div>
+
+      <!-- RESULTADO PRINCIPAL GRATIS -->
       <div class="results-grid">
         <div class="stat-box highlight">
           <span class="stat-label">Resultado Estimado de tu Renta</span>
@@ -120,34 +215,34 @@
           <small id="r-res-etiqueta" style="display:block;margin-top:0.25rem;font-weight:700;"></small>
         </div>
         <div class="stat-box success">
-          <span class="stat-label">Ahorro Fiscal Detectado por el Bot</span>
+          <span class="stat-label">Ahorro en Deducciones Detectado para Tu Caso</span>
           <strong class="stat-value" id="r-res-ahorro">+0 €</strong>
-          <small style="display:block;margin-top:0.25rem;color:var(--muted);font-size:0.75rem;">Deducciones + Compensación Cripto</small>
+          <small id="r-res-ahorro-sub" style="display:block;margin-top:0.25rem;color:var(--muted);font-size:0.75rem;">Aplicando tus deducciones personales</small>
         </div>
         <div class="stat-box">
-          <span class="stat-label">Obligación de Presentar Renta</span>
-          <strong class="stat-value" id="r-res-obligado" style="font-size:1.15rem;">Sí, obligado</strong>
+          <span class="stat-label">¿Estás obligado a presentarla?</span>
+          <strong class="stat-value" id="r-res-obligado" style="font-size:1.05rem;">Calculando...</strong>
         </div>
       </div>
 
-      <!-- INFORME DE CASILLAS RENTA WEB Y DEDUCCIONES (VALOR DE GESTORÍA POR 9,99€ EN VEZ DE 70€) -->
+      <!-- INFORME PERSONALIZADO DE CASILLAS RENTA WEB (SOLO MUESTRA LAS CASILLAS QUE APLICAN AL USUARIO) -->
       <div style="border-top: 1px solid var(--card-border); padding-top: 1.25rem; margin-top: 1rem;">
         <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.5rem;">
-          <h2 style="font-size:1.15rem;">📋 Informe Exacto de Casillas Renta WEB (Modelo 100) + Deducciones Autonómicas</h2>
-          <button type="button" class="tab-btn active" onclick="printOrUnlockRenta()">🖨️ Descargar Informe en PDF</button>
+          <h2 style="font-size:1.15rem;">📋 Tu Informe Personalizado de Casillas Renta WEB (Modelo 100)</h2>
+          <button type="button" class="tab-btn active" onclick="printOrUnlockRenta()">🖨️ Descargar Mi Informe en PDF</button>
         </div>
         <p style="font-size:0.85rem;color:var(--muted);margin-top:0.3rem;">
-          Copia exactamente estos importes en las casillas oficiales de Renta WEB para aplicar todas tus deducciones sin pagar 70 € a una gestoría:
+          Generado dinámicamente solo con las casillas oficiales de la AEAT que corresponden a tu situación marcada arriba:
         </p>
 
         <div id="renta-report-box" class="locked-report">
           <table class="casilla-table">
             <thead>
               <tr>
-                <th>Casilla Oficial Renta WEB</th>
-                <th>Concepto Fiscal</th>
-                <th>Importe a Introducir / Cuota</th>
-                <th>Instrucción del Gestor IA</th>
+                <th>Casilla Oficial AEAT</th>
+                <th>Concepto Aplicado a Tu Caso</th>
+                <th>Importe / Efecto Fiscal</th>
+                <th>Instrucción Exacta Paso a Paso</th>
               </tr>
             </thead>
             <tbody id="renta-casillas-body"></tbody>
@@ -156,17 +251,17 @@
       </div>
     </section>
 
-    <!-- Panel Derecho: Desbloqueo del Gestor IA (9,99€ vs 70€ gestoría) + Cuentas Recomendadas -->
+    <!-- Panel Derecho: Desbloqueo del Gestor IA (9,99€ vs 70€ gestoría) + Cuentas Opcionales -->
     <aside class="affiliate-sidebar">
       <div class="pay-card" id="renta-paywall">
-        <span class="offer-badge" style="background:rgba(245,158,11,0.2);color:#fbbf24;">💡 AHORRA 60 € DE GESTORÍA</span>
-        <h2 style="font-size:1.18rem;margin-bottom:0.4rem;">Desbloquea tu Informe de Casillas Renta WEB + PDF (9,99 € / 10 USDT)</h2>
+        <span class="offer-badge" style="background:rgba(245,158,11,0.2);color:#fbbf24;">💡 TU GESTOR POR 9,99 € (EN VEZ DE 70 €)</span>
+        <h2 style="font-size:1.18rem;margin-bottom:0.4rem;">Desbloquea tu Informe de Casillas Renta WEB + PDF</h2>
         <p style="font-size:0.84rem;color:#cbd5e1;margin-bottom:0.9rem;">
-          Una gestoría cobra entre 60 € y 90 € por hacerte la Renta. Desbloquea tu tabla exacta de casillas del Modelo 100, tus deducciones autonómicas y la compensación de criptomonedas (<strong>también desbloquea el Planificador 50/30/20 VIP</strong>):
+          Obtén las casillas exactas de tu declaración adaptadas a tu situación familiar, autonómica y laboral (<strong>además te desbloquea gratis el Planificador 50/30/20 VIP</strong>):
         </p>
 
         <div style="margin-bottom:0.85rem;">
-          <strong style="font-size:0.8rem;color:#fbbf24;">Opción A: Transferencia Inmediata Revolut (9,99 €)</strong>
+          <strong style="font-size:0.8rem;color:#fbbf24;">Opción A: Transferencia Inmediata SEPA / Revolut (9,99 €)</strong>
           <div class="copy-row">
             <span>ES49 1583 0001 1290 4163 0031</span>
             <button type="button" class="tab-btn" style="padding:0.25rem 0.55rem;font-size:0.75rem;" onclick="copyRentaText('ES4915830001129041630031', this)">Copiar</button>
@@ -174,7 +269,7 @@
         </div>
 
         <div style="margin-bottom:0.85rem;">
-          <strong style="font-size:0.8rem;color:#93c5fd;">Opción B: Pago Cripto en Bitget / Wallet (10 USDT)</strong>
+          <strong style="font-size:0.8rem;color:#93c5fd;">Opción B: Pago Cripto USDT (10 USDT)</strong>
           <select id="renta-net" class="select-input" style="margin-top:0.35rem;padding:0.45rem;font-size:0.82rem;" onchange="document.getElementById('renta-wallet-txt').textContent = this.value">
             <option value="0x512c2d191d9e6857e4fabbf14d0b7bfa9b44aed2">Red BEP20 (BNB Smart Chain)</option>
             <option value="TAeoVC9WL9K63MFYPqVzFKqi3MghZGdv63">Red TRC20 (Tron)</option>
@@ -189,24 +284,24 @@
 
         <input type="text" id="renta-tx-input" class="select-input" placeholder="Pega aquí tu Hash TXID (USDT) o Referencia SEPA..." style="margin-bottom:0.6rem;font-size:0.83rem;" />
         <button type="button" class="cta-button" style="width:100%;border:none;cursor:pointer;background:#f59e0b;color:#0f172a;" onclick="unlockRentaReport()">
-          🔓 Verificar Pago y Ver Casillas Exactas →
+          🔓 Verificar Pago y Ver Mis Casillas →
         </button>
         <p id="renta-verify-msg" style="font-size:0.78rem;color:#fbbf24;margin-top:0.4rem;" hidden></p>
       </div>
 
       <div class="offer-card">
-        <span class="offer-badge">🏦 Cobra tu Devolución Antes</span>
+        <span class="offer-badge">🏦 Recomendación Fiscal</span>
         <h2>Cuenta Gratuita Revolut (IBAN Español ES)</h2>
-        <p>Domicilia tu devolución de la Renta y separa tus impuestos en huchas remuneradas sin comisiones.</p>
+        <p>Domicilia el cobro de tu devolución de la AEAT o separa el pago fraccionado de tu Renta en una hucha sin comisiones.</p>
         <a href="https://revolut.com/referral/?referral-code=revienta!OCT1-26-AR-H1&geo-redirect" target="_blank" rel="noopener sponsored" class="cta-button">
           Abrir cuenta gratis en Revolut →
         </a>
       </div>
 
       <div class="offer-card" style="background: linear-gradient(160deg, #1e293b 0%, #1e3a8a 100%); border-color: #3b82f6;">
-        <span class="offer-badge" style="background: rgba(59, 130, 246, 0.2); color: #93c5fd;">⚡ Informe Fiscal Cripto Fácil</span>
-        <h2>Opera en Bitget (Código: KQBSNNRF)</h2>
-        <p>Exporta tu historial anual en 1 clic para las casillas 1800-1814 de la Renta y activa tu bono de bienvenida.</p>
+        <span class="offer-badge" style="background: rgba(59, 130, 246, 0.2); color: #93c5fd;">⚡ Inversión y Cripto</span>
+        <h2>Bono de Bienvenida en Bitget (Código: KQBSNNRF)</h2>
+        <p>Si inviertes tus ahorros o devolución de la Renta en Bitcoin o USDT Earn, usa el código <strong>KQBSNNRF</strong> con informe anual descargable.</p>
         <a href="https://www.bitget.com/es/referral/register?clacCode=KQBSNNRF" target="_blank" rel="noopener sponsored" class="cta-button" style="background: #3b82f6; color: #fff;">
           Registrarse en Bitget (KQBSNNRF) →
         </a>
@@ -219,13 +314,22 @@
     let isRentaUnlocked = localStorage.getItem("pf_pro_unlocked") === "true";
 
     const DEDUCCIONES_CCAA = {
-      madrid: { nombre: "Madrid", alqPct: 0.30, alqMax: 1237.20, extraDesc: "Deducción autonómica alquiler hasta 1.237 € (Casilla 1043)" },
-      cataluna: { nombre: "Cataluña", alqPct: 0.10, alqMax: 300, extraDesc: "Deducción autonómica alquiler vivienda habitual (Casilla 0903)" },
-      andalucia: { nombre: "Andalucía", alqPct: 0.15, alqMax: 600, extraDesc: "Deducción autonómica alquiler + gastos educativos (Casilla 0853)" },
-      valencia: { nombre: "C. Valenciana", alqPct: 0.20, alqMax: 800, extraDesc: "Deducción alquiler + hasta 150 € por gastos de gimnasio/deporte (Casilla 1095)" },
-      galicia: { nombre: "Galicia", alqPct: 0.10, alqMax: 300, extraDesc: "Deducción autonómica alquiler vivienda habitual (Casilla 0975)" },
-      paisvasco: { nombre: "Régimen Foral", alqPct: 0.20, alqMax: 1600, extraDesc: "Deducción foral por alquiler de vivienda habitual hasta 1.600 €" },
-      otras: { nombre: "Estatal / CCAA", alqPct: 0.15, alqMax: 500, extraDesc: "Deducción autonómica por arrendamiento de vivienda habitual" }
+      madrid: { nombre: "Madrid", alqPct: 0.30, alqMax: 1237, casillaAlq: "Casilla 1043", extraPct: 0.15, extraMax: 400, extraDesc: "Gastos educativos e idiomas hijos (Casilla 1046)" },
+      cataluna: { nombre: "Cataluña", alqPct: 0.10, alqMax: 300, casillaAlq: "Casilla 0903", extraPct: 0.15, extraMax: 300, extraDesc: "Donaciones e inversión autonómica (Casilla 0906)" },
+      andalucia: { nombre: "Andalucía", alqPct: 0.15, alqMax: 600, casillaAlq: "Casilla 0853", extraPct: 0.15, extraMax: 150, extraDesc: "Gastos educativos de idiomas o informática (Casilla 0862)" },
+      valencia: { nombre: "C. Valenciana", alqPct: 0.20, alqMax: 800, casillaAlq: "Casilla 1095", extraPct: 0.30, extraMax: 150, extraDesc: "Gastos en gimnasio, federación y deporte (Casilla 1112)" },
+      galicia: { nombre: "Galicia", alqPct: 0.10, alqMax: 300, casillaAlq: "Casilla 0975", extraPct: 0.15, extraMax: 200, extraDesc: "Deducción autonómica familiar/conciliación (Casilla 0978)" },
+      castillaleon: { nombre: "Castilla y León", alqPct: 0.20, alqMax: 459, casillaAlq: "Casilla 0930", extraPct: 0.15, extraMax: 300, extraDesc: "Deducción familiar y natalidad (Casilla 0925)" },
+      canarias: { nombre: "Canarias", alqPct: 0.24, alqMax: 720, casillaAlq: "Casilla 0946", extraPct: 0.15, extraMax: 300, extraDesc: "Gastos de estudios y enfermedad (Casilla 0940)" },
+      castillamancha: { nombre: "Castilla-La Mancha", alqPct: 0.15, alqMax: 450, casillaAlq: "Casilla 0916", extraPct: 0.15, extraMax: 200, extraDesc: "Libros de texto e idiomas (Casilla 0910)" },
+      murcia: { nombre: "Murcia", alqPct: 0.10, alqMax: 300, casillaAlq: "Casilla 1052", extraPct: 0.15, extraMax: 120, extraDesc: "Material escolar y guardería (Casilla 1055)" },
+      aragon: { nombre: "Aragón", alqPct: 0.10, alqMax: 300, casillaAlq: "Casilla 0870", extraPct: 0.15, extraMax: 200, extraDesc: "Gastos de material escolar y guardería (Casilla 0875)" },
+      baleares: { nombre: "Islas Baleares", alqPct: 0.15, alqMax: 530, casillaAlq: "Casilla 0888", extraPct: 0.15, extraMax: 220, extraDesc: "Libros de texto e idiomas extranjeros (Casilla 0885)" },
+      extremadura: { nombre: "Extremadura", alqPct: 0.30, alqMax: 1000, casillaAlq: "Casilla 0962", extraPct: 0.10, extraMax: 150, extraDesc: "Material escolar y cuidados familiares (Casilla 0960)" },
+      asturias: { nombre: "Asturias", alqPct: 0.10, alqMax: 500, casillaAlq: "Casilla 0878", extraPct: 0.15, extraMax: 200, extraDesc: "Libros de texto y cuidado de descendientes (Casilla 0880)" },
+      cantabria: { nombre: "Cantabria", alqPct: 0.10, alqMax: 300, casillaAlq: "Casilla 0895", extraPct: 0.15, extraMax: 200, extraDesc: "Gastos de guardería y enfermedad (Casilla 0898)" },
+      rioja: { nombre: "La Rioja", alqPct: 0.10, alqMax: 300, casillaAlq: "Casilla 1065", extraPct: 0.20, extraMax: 150, extraDesc: "Ejercicio físico y práctica deportiva (Casilla 1072)" },
+      paisvasco: { nombre: "Régimen Foral", alqPct: 0.20, alqMax: 1600, casillaAlq: "Hacienda Foral", extraPct: 0.15, extraMax: 300, extraDesc: "Deducciones forales personales y familiares" }
     };
 
     function calcCuotaBaseGeneral(baseLiquidable) {
@@ -259,67 +363,114 @@
       ];
       let cuota = 0, prev = 0;
       for (const t of tramos) {
-        if (baseAhorro <= prev) break;
+        if (baseLiquidableAhorroCheck(baseAhorro, prev)) break;
         const porcion = Math.min(baseAhorro, t.hasta) - prev;
         cuota += porcion * t.tipo;
         prev = t.hasta;
       }
       return cuota;
     }
+    function baseLiquidableAhorroCheck(b, p) { return b <= p; }
+
+    function syncSectionVisibility() {
+      const sections = [
+        { chk: "chk-vivienda", lbl: "lbl-chk-vivienda", box: "box-vivienda" },
+        { chk: "chk-familia", lbl: "lbl-chk-familia", box: "box-familia" },
+        { chk: "chk-gastos", lbl: "lbl-chk-gastos", box: "box-gastos" },
+        { chk: "chk-ahorro", lbl: "lbl-chk-ahorro", box: "box-ahorro" }
+      ];
+      sections.forEach(s => {
+        const isChecked = document.getElementById(s.chk).checked;
+        document.getElementById(s.box).hidden = !isChecked;
+        document.getElementById(s.lbl).classList.toggle("active", isChecked);
+      });
+    }
 
     function calcularRentaCompleta() {
+      syncSectionVisibility();
+
       const ccaaKey = document.getElementById("r-ccaa").value;
+      const infoCcaa = DEDUCCIONES_CCAA[ccaaKey] || DEDUCCIONES_CCAA.madrid;
       const situacion = document.getElementById("r-situacion").value;
       const bruto = +document.getElementById("r-bruto").value || 0;
       const retenido = +document.getElementById("r-retenido").value || 0;
-      const hijos = +document.getElementById("r-hijos").value || 0;
-      const alquiler = +document.getElementById("r-alquiler").value || 0;
-      const pensiones = Math.min(5750, +document.getElementById("r-pensiones").value || 0);
-      const intereses = +document.getElementById("r-intereses").value || 0;
-      const criptoGan = +document.getElementById("r-cripto-gan").value || 0;
-      const criptoPer = +document.getElementById("r-cripto-per").value || 0;
 
-      // 1. Gastos deducibles Seguridad Social (6,47% asalariado o cuota autónomo) + 2.000€ gastos generales art. 19 LIRPF
+      const hasVivienda = document.getElementById("chk-vivienda").checked;
+      const hasFamilia = document.getElementById("chk-familia").checked;
+      const hasGastos = document.getElementById("chk-gastos").checked;
+      const hasAhorro = document.getElementById("chk-ahorro").checked;
+
+      // Valores condicionales (SOLO se aplican si el usuario marcó ese bloque)
+      const tipoViv = hasVivienda ? document.getElementById("r-tipo-viv").value : "ninguna";
+      const gastoViv = hasVivienda ? (+document.getElementById("r-gasto-viv").value || 0) : 0;
+
+      const hijos = hasFamilia ? (+document.getElementById("r-hijos").value || 0) : 0;
+      const modalidad = hasFamilia ? document.getElementById("r-modalidad").value : "individual";
+      const maternidad = hasFamilia ? (+document.getElementById("r-maternidad").value || 0) : 0;
+
+      const sindicato = hasGastos ? Math.min(500, +document.getElementById("r-sindicato").value || 0) : 0;
+      const donativos = hasGastos ? (+document.getElementById("r-donativos").value || 0) : 0;
+      const gastoCcaa = hasGastos ? (+document.getElementById("r-gasto-ccaa").value || 0) : 0;
+
+      const pensiones = hasAhorro ? Math.min(5750, +document.getElementById("r-pensiones").value || 0) : 0;
+      const intereses = hasAhorro ? (+document.getElementById("r-intereses").value || 0) : 0;
+      const criptoGan = hasAhorro ? (+document.getElementById("r-cripto-gan").value || 0) : 0;
+      const criptoPer = hasAhorro ? (+document.getElementById("r-cripto-per").value || 0) : 0;
+
+      // 1. Rendimiento neto del trabajo / actividad (incluyendo cuota sindical si aplica)
       const gastoSS = situacion === "autonomo" ? 3720 : Math.round(Math.min(bruto, 56600) * 0.0647);
       const gastoGeneral = situacion === "autonomo" ? Math.round(bruto * 0.07) : 2000;
-      const rendimientoNetoTrabajo = Math.max(0, bruto - gastoSS - gastoGeneral);
+      const rendimientoNetoTrabajo = Math.max(0, bruto - gastoSS - sindicato - gastoGeneral);
 
-      // 2. Mínimo personal y familiar (5.550€ base + hijos)
+      // 2. Reducción por tributación conjunta y plan de pensiones
+      const redConjunta = modalidad === "conjuntaMatrimonio" ? 3400 : modalidad === "conjuntaMonoparental" ? 2150 : 0;
+      const baseLiquidableGeneral = Math.max(0, rendimientoNetoTrabajo - redConjunta - pensiones);
+
+      // 3. Mínimo personal y familiar
       const mapHijos = { 0: 0, 1: 2400, 2: 5100, 3: 9100 };
       const minimoPersonalFamiliar = 5550 + (mapHijos[hijos] || 0);
-
-      // 3. Base Liquidable General (descontando Plan de Pensiones)
-      const baseLiquidableGeneral = Math.max(0, rendimientoNetoTrabajo - pensiones);
       const cuotaGeneral = Math.max(0, calcCuotaBaseGeneral(baseLiquidableGeneral) - calcCuotaBaseGeneral(minimoPersonalFamiliar));
 
-      // 4. Base del Ahorro (Intereses Revolut + Ganancias Cripto compensadas con Pérdidas)
-      const saldoCriptoNeto = criptoGan - criptoPer;
+      // 4. Base del Ahorro (SOLO si marcó que tiene cuentas remuneradas, acciones o cripto)
       let baseAhorroFinal = 0;
       let compensacionAplicada = 0;
-      if (saldoCriptoNeto >= 0) {
-        baseAhorroFinal = intereses + saldoCriptoNeto;
-        compensacionAplicada = Math.min(criptoGan, criptoPer);
-      } else {
-        // Si hay pérdida neta en cripto, compensa hasta el 25% de los intereses de cuentas remuneradas (Art. 49 LIRPF)
-        const maxCompIntereses = intereses * 0.25;
-        const compExtra = Math.min(Math.abs(saldoCriptoNeto), maxCompIntereses);
-        baseAhorroFinal = Math.max(0, intereses - compExtra);
-        compensacionAplicada = criptoGan + compExtra;
+      const saldoCriptoNeto = criptoGan - criptoPer;
+      if (hasAhorro) {
+        if (saldoCriptoNeto >= 0) {
+          baseAhorroFinal = intereses + saldoCriptoNeto;
+          compensacionAplicada = Math.min(criptoGan, criptoPer);
+        } else {
+          const maxCompIntereses = intereses * 0.25;
+          const compExtra = Math.min(Math.abs(saldoCriptoNeto), maxCompIntereses);
+          baseAhorroFinal = Math.max(0, intereses - compExtra);
+          compensacionAplicada = criptoGan + compExtra;
+        }
       }
       const cuotaAhorro = calcCuotaBaseAhorro(baseAhorroFinal);
 
-      // 5. Deducción autonómica por alquiler
-      const infoCcaa = DEDUCCIONES_CCAA[ccaaKey] || DEDUCCIONES_CCAA.otras;
-      const dedAlquiler = bruto <= 35000 && alquiler > 0 ? Math.min(infoCcaa.alqMax, Math.round(alquiler * infoCcaa.alqPct)) : 0;
+      // 5. Deducciones en cuota según la situación real del usuario
+      let dedVivienda = 0;
+      if (hasVivienda && gastoViv > 0) {
+        if (tipoViv === "alquiler" && bruto <= 35000) {
+          dedVivienda = Math.min(infoCcaa.alqMax, Math.round(gastoViv * infoCcaa.alqPct));
+        } else if (tipoViv === "hipoteca2013") {
+          dedVivienda = Math.round(Math.min(gastoViv, 9040) * 0.15); // Hasta 1.356 € en Casilla 0547
+        }
+      }
 
-      // 6. Ahorro fiscal total logrado por el Gestor IA (Plan pensiones + Deducción alquiler + Compensación pérdidas cripto)
+      const dedDonativos = donativos <= 250 ? Math.round(donativos * 0.80) : Math.round(250 * 0.80 + (donativos - 250) * 0.40);
+      const dedAutonomicaExtra = gastoCcaa > 0 ? Math.min(infoCcaa.extraMax, Math.round(gastoCcaa * infoCcaa.extraPct)) : 0;
+
+      const ahorroConjunta = Math.round(redConjunta * 0.24);
       const ahorroPensiones = Math.round(pensiones * 0.30);
+      const ahorroSindicato = Math.round(sindicato * 0.24);
       const ahorroCripto = Math.round(compensacionAplicada * 0.19);
-      const ahorroTotalBot = dedAlquiler + ahorroPensiones + ahorroCripto;
 
-      // 7. Cuota líquida y Resultado de la Declaración (Cuota - Retenciones)
-      const cuotaLiquida = Math.max(0, Math.round(cuotaGeneral + cuotaAhorro - dedAlquiler));
-      const resultadoRenta = cuotaLiquida - retenido; // Negativo = A DEVOLVER, Positivo = A PAGAR
+      const ahorroTotalBot = dedVivienda + maternidad + dedDonativos + dedAutonomicaExtra + ahorroConjunta + ahorroPensiones + ahorroSindicato + ahorroCripto;
+
+      // 6. Resultado final
+      const cuotaLiquida = Math.max(0, Math.round(cuotaGeneral + cuotaAhorro - dedVivienda - dedDonativos - dedAutonomicaExtra));
+      const resultadoRenta = cuotaLiquida - retenido - maternidad;
 
       const elRes = document.getElementById("r-res-final");
       const elEtiq = document.getElementById("r-res-etiqueta");
@@ -331,7 +482,7 @@
       } else {
         elRes.textContent = "+" + fmt.format(resultadoRenta);
         elRes.style.color = "#f59e0b";
-        elEtiq.textContent = "⚠️ SALE A INGRESAR (REVISA DEDUCCIONES)";
+        elEtiq.textContent = "⚠️ SALE A INGRESAR (FRACCIONABLE 60% / 40%)";
         elEtiq.style.color = "#f59e0b";
       }
 
@@ -339,57 +490,129 @@
 
       // ¿Está obligado a presentar?
       let obligado = true;
-      if (situacion === "asalariado1" && bruto < 22000 && criptoGan + intereses < 1600) obligado = false;
-      if (situacion === "asalariado2" && bruto < 15876 && criptoGan + intereses < 1600) obligado = false;
+      if (situacion === "asalariado1" && bruto < 22000 && (!hasAhorro || criptoGan + intereses < 1600)) obligado = false;
+      if (situacion === "asalariado2" && bruto < 15876 && (!hasAhorro || criptoGan + intereses < 1600)) obligado = false;
       document.getElementById("r-res-obligado").textContent = obligado
         ? "Sí, obligado a presentar"
         : resultadoRenta < 0
-        ? "No obligado (¡pero preséntala para cobrar devolución!)"
-        : "No obligado (¡NO la presentes si sale a pagar!)";
+        ? "No obligado (¡Preséntala para cobrar tu devolución!)"
+        : "No obligado (¡NO la presentes si te sale a pagar!)";
 
-      // Rellenar Tabla Exacta de Casillas Renta WEB (Modelo 100)
+      // 7. Construir Tabla Dinámica de Casillas (SOLO incluye las casillas reales que aplican al usuario)
       const filas = [
         {
-          casilla: "Casilla 0003 / 0012",
-          concepto: "Rendimientos íntegros del trabajo y Seguridad Social deducible",
+          casilla: situacion === "autonomo" ? "Casillas 0165 - 0235" : "Casillas 0003 y 0012",
+          concepto: situacion === "autonomo" ? "Rendimientos Actividades Económicas (Estimación Directa)" : "Rendimientos del Trabajo y Seguridad Social deducible",
           importe: `${fmt.format(bruto)} (Gastos SS: -${fmt.format(gastoSS)})`,
-          nota: "Revisa que coincida con tus datos fiscales de la AEAT."
-        },
-        {
-          casilla: "Casilla 0027",
-          concepto: "Intereses de cuentas bancarias y remuneradas (Revolut / Ahorro)",
-          importe: fmt.format(intereses),
-          nota: "Si la cuenta tiene IBAN extranjero o español, verifica que figure en Rendimientos del Capital Mobiliario."
-        },
-        {
-          casilla: "Casilla 0465",
-          concepto: "Reducción por aportaciones a Planes de Pensiones",
-          importe: `-${fmt.format(pensiones)} (Ahorras ~${fmt.format(ahorroPensiones)})`,
-          nota: "Reduce directamente tu Base Imponible General al tipo marginal."
-        },
-        {
-          casilla: "Casillas 1800 - 1814",
-          concepto: "Ganancias y Pérdidas por transmisión de Monedas Virtuales (Cripto / Bitget)",
-          importe: `Ganancia: ${fmt.format(criptoGan)} | Pérdida compensada: -${fmt.format(criptoPer)}`,
-          nota: saldoCriptoNeto < 0
-            ? "Tienes saldo negativo: compensa hasta el 25% de tus intereses (Casilla 0027) y guarda el resto durante 4 años."
-            : "Declara el valor de transmisión menos el valor de adquisición en el apartado de Monedas Virtuales."
-        },
-        {
-          casilla: "Deducción CCAA",
-          concepto: infoCcaa.extraDesc,
-          importe: dedAlquiler > 0 ? `-${fmt.format(dedAlquiler)} en cuota` : "Revisa límite de renta en tu CCAA",
-          nota: "¡IMPORTANTE! El borrador de Renta WEB nunca marca el alquiler autonómico por defecto; debes introducir el NIF de tu casero."
-        },
-        {
-          casilla: "Casilla 0595 / 0670",
-          concepto: "Retenciones ya pagadas vs. Resultado Final de la Declaración",
-          importe: `${fmt.format(resultadoRenta)} (${resultadoRenta <= 0 ? "A DEVOLVER" : "A INGRESAR"})`,
-          nota: resultadoRenta <= 0
-            ? "Domicilia el cobro en tu IBAN ES de Revolut para recibir la transferencia de la AEAT."
-            : "Puedes fraccionar el pago en 2 plazos sin intereses (60% en junio y 40% en noviembre) marcando la casilla de fraccionamiento."
+          nota: situacion === "autonomo"
+            ? "Incluye automáticamente el 7% de gastos de difícil justificación (máx. 2.000€)."
+            : "Verifica que tus ingresos brutos y cotizaciones coincidan con el certificado de empresa."
         }
       ];
+
+      if (hasVivienda && gastoViv > 0) {
+        if (tipoViv === "alquiler") {
+          filas.push({
+            casilla: infoCcaa.casillaAlq,
+            concepto: `Deducción Autonómica por Alquiler en ${infoCcaa.nombre}`,
+            importe: dedVivienda > 0 ? `-${fmt.format(dedVivienda)} en cuota` : "Supera el límite de renta autonómico",
+            nota: "¡El borrador de la AEAT NO la marca sola! Introduce el NIF de tu arrendador y las cantidades pagadas."
+          });
+        } else if (tipoViv === "hipoteca2013") {
+          filas.push({
+            casilla: "Casillas 0547 y 0548",
+            concepto: "Deducción por Inversión en Vivienda Habitual (Hipoteca pre-2013)",
+            importe: `-${fmt.format(dedVivienda)} (15% sobre ${fmt.format(Math.min(gastoViv, 9040))})`,
+            nota: "Puedes deducir el 15% de las cuotas e intereses más los seguros de vida y hogar vinculados a la hipoteca."
+          });
+        }
+      }
+
+      if (hasFamilia) {
+        if (hijos > 0 || redConjunta > 0) {
+          filas.push({
+            casilla: "Casillas 0513 y 0461",
+            concepto: `Mínimo por Descendientes (${hijos} hijos) y Modalidad (${modalidad})`,
+            importe: `Mínimo exento: ${fmt.format(minimoPersonalFamiliar)} ${redConjunta > 0 ? `| Reducción Conjunta: -${fmt.format(redConjunta)}` : ""}`,
+            nota: redConjunta > 0
+              ? "Presentar declaración conjunta reduce tu base imponible directamente y te ahorra impuestos."
+              : "Asegúrate de que los DNI de tus hijos figuren vinculados en Datos Personales de Renta WEB."
+          });
+        }
+        if (maternidad > 0) {
+          filas.push({
+            casilla: "Casilla 0611",
+            concepto: "Deducción por Maternidad e Incremento por Gastos de Guardería",
+            importe: `-${fmt.format(maternidad)} directo a tu favor`,
+            nota: "Funciona como un impuesto negativo: suma directamente a tu devolución aunque tu retención haya sido baja."
+          });
+        }
+      }
+
+      if (hasGastos) {
+        if (sindicato > 0) {
+          filas.push({
+            casilla: "Casillas 0014 / 0015",
+            concepto: "Cuotas satisfechas a Sindicatos y Colegios Profesionales",
+            importe: `-${fmt.format(sindicato)} de tus ingresos brutos`,
+            nota: "Hacienda nunca tiene este dato por defecto; escríbelo manualmente en Rendimientos del Trabajo."
+          });
+        }
+        if (donativos > 0) {
+          filas.push({
+            casilla: "Casilla 0723",
+            concepto: "Deducción por Donativos a ONGs y Fundaciones (80% primeros 250€)",
+            importe: `-${fmt.format(dedDonativos)} directo en cuota`,
+            nota: "Deduce el 80% de los primeros 250 € donados y el 40% del resto."
+          });
+        }
+        if (gastoCcaa > 0) {
+          filas.push({
+            casilla: "Deducción CCAA",
+            concepto: infoCcaa.extraDesc,
+            importe: `-${fmt.format(dedAutonomicaExtra)} en cuota autonómica`,
+            nota: "Guarda las facturas o recibos bancarios del gasto por si la Agencia Tributaria los solicita."
+          });
+        }
+      }
+
+      if (hasAhorro) {
+        if (pensiones > 0) {
+          filas.push({
+            casilla: "Casilla 0465",
+            concepto: "Reducciones por Aportaciones a Planes de Pensiones",
+            importe: `-${fmt.format(pensiones)} en Base General (Ahorras ~${fmt.format(ahorroPensiones)})`,
+            nota: "Comprueba que la entidad gestora haya volcado tu aportación anual."
+          });
+        }
+        if (intereses > 0) {
+          filas.push({
+            casilla: "Casilla 0027",
+            concepto: "Rendimientos del Capital Mobiliario (Intereses Cuentas / Depósitos / Dividendos)",
+            importe: fmt.format(intereses),
+            nota: "Tributan en la Base del Ahorro al 19% (hasta 6.000 €)."
+          });
+        }
+        if (criptoGan > 0 || criptoPer > 0) {
+          filas.push({
+            casilla: "Casillas 1800 - 1814 / 0328",
+            concepto: "Ganancias y Pérdidas Patrimoniales (Acciones, Fondos o Monedas Virtuales)",
+            importe: `Ganancia: ${fmt.format(criptoGan)} | Pérdida compensada: -${fmt.format(criptoPer)}`,
+            nota: saldoCriptoNeto < 0
+              ? "Al tener pérdida neta, compensas hasta el 25% de tus intereses bancarios (Casilla 0027) y guardas el resto 4 años."
+              : "Introduce valor de transmisión menos valor de adquisición."
+          });
+        }
+      }
+
+      filas.push({
+        casilla: "Casilla 0595 y 0670",
+        concepto: "Retenciones Pagadas vs. Resultado Final de Tu Declaración",
+        importe: `${fmt.format(resultadoRenta)} (${resultadoRenta <= 0 ? "A DEVOLVER" : "A INGRESAR"})`,
+        nota: resultadoRenta <= 0
+          ? "Indica tu código IBAN para recibir el ingreso de la Agencia Tributaria."
+          : "Marca el pago fraccionado en 2 plazos sin intereses (60% el 30 de junio y 40% en noviembre)."
+      });
 
       const tbody = document.getElementById("renta-casillas-body");
       tbody.innerHTML = filas
@@ -466,7 +689,7 @@
         document.getElementById("renta-paywall").scrollIntoView({ behavior: "smooth" });
         const msg = document.getElementById("renta-verify-msg");
         msg.hidden = false;
-        msg.textContent = "🔒 Desbloquea el Informe de Casillas Renta WEB por 9,99 € (Revolut SEPA) o 10 USDT para imprimir o guardar el PDF.";
+        msg.textContent = "🔒 Desbloquea el Informe de Casillas Renta WEB por 9,99 € (SEPA) o 10 USDT para imprimir o guardar el PDF.";
         return;
       }
       window.print();
