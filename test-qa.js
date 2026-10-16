@@ -84,8 +84,9 @@ assert(getEl("hip-res-rentabilidad").textContent.includes("6.3"), `Error en rent
 assert(norm(getEl("aut-res-neto").textContent).includes("1919"), `Error en neto autónomo: ${getEl("aut-res-neto").textContent}`);
 assert(norm(getEl("lib-res-meta").textContent).includes("450000"), `Error en meta libertad financiera: ${getEl("lib-res-meta").textContent}`);
 
-// 3. Verificar exportación Excel (UTF-8 BOM + punto y coma ';' para Excel en España)
+// 3. Verificar exportación Excel (UTF-8 BOM + punto y coma ';' para Excel en España + 6 columnas VIP) y Decoy Pricing
 assert(proHtml.includes('\\uFEFF'), "El exportador Excel no incluye BOM UTF-8 (\\uFEFF) para acentos y símbolo € en Excel");
-assert(proHtml.includes("Mes;Ahorro Acumulado (€);Fondo de Emergencia 40% (€);Capital Invertido al 8% Anual (€)"), "El exportador Excel no usa ';' como separador de columnas para España");
+assert(proHtml.includes("Mes;Ahorro Acumulado (€);Fondo de Emergencia 40% (€);Capital Invertido al 8% Anual (€);Reserva Fiscal IVA+IRPF (€);Objetivo Take-Profit Cripto +35% (€)"), "El exportador Excel no usa las 6 columnas con ';' como separador para España");
+assert(proHtml.includes("function selectTier("), "Falta selector de 3 niveles de producto (Decoy Pricing)");
 
-console.log("✅ QA TEST SUITE PASSED: 4/4 calculadoras, enrutamiento hash, pasarela cripto/SEPA y exportación Excel verificados sin errores.");
+console.log("✅ QA TEST SUITE PASSED: 4/4 calculadoras, 3 niveles de producto, enrutamiento hash, pasarela cripto/SEPA y exportación Excel verificados sin errores.");

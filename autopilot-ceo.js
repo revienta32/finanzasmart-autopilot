@@ -151,6 +151,28 @@ for (const mensual of INVERSION_BRACKETS) {
   });
 }
 
+// Expansión diaria continua: cada día del año desbloquea automáticamente nuevos tramos de sueldo/ahorro
+const dayIndex = Math.floor(Date.now() / 86400000) % 30;
+for (let d = 0; d <= Math.min(dayIndex, 10); d++) {
+  const sueldoRegla = 1100 + d * 150;
+  SEO_PAGES.push({
+    slug: `regla-50-30-20-sueldo-${sueldoRegla}-euros.html`,
+    title: `Cómo Aplicar la Regla 50/30/20 con un Sueldo de ${sueldoRegla}€ al Mes (Tabla 2026)`,
+    h1: `Distribución exacta 50/30/20 para un sueldo neto de ${sueldoRegla} €`,
+    lead: `Calcula cuánto destinar a gastos fijos, ocio e inversión automática si cobras ${sueldoRegla}€ al mes en España.`,
+    calcLink: "producto-digital-pro.html",
+    bodyHtml: `
+      <p>Si tu ingreso neto mensual es de <strong>${sueldoRegla} €</strong>, la regla 50/30/20 divide tu presupuesto mensual de forma matemática para garantizar que construyes patrimonio todos los meses:</p>
+      <ul style="margin: 1rem 0 1.5rem 1.25rem; color: #cbd5e1;">
+        <li><strong>50% Necesidades Básicas (vivienda, facturas, comida):</strong> Máximo ${Math.round(sueldoRegla * 0.5)} € / mes</li>
+        <li><strong>30% Estilo de vida y ocio:</strong> Máximo ${Math.round(sueldoRegla * 0.3)} € / mes</li>
+        <li><strong>20% Ahorro e Inversión Automática (DCA):</strong> Mínimo <strong style="color:#10b981;">${Math.round(sueldoRegla * 0.2)} € / mes</strong> (${Math.round(sueldoRegla * 0.2 * 12)} € / año)</li>
+      </ul>
+      <p>Descarga nuestra plantilla Excel interactiva o automatiza ese 20% creando una hucha gratuita en <strong>Revolut</strong> y un plan DCA en <strong>Bitget (Código: KQBSNNRF)</strong>.</p>
+    `
+  });
+}
+
 function buildSeoPageHtml(page) {
   return `<!DOCTYPE html>
 <html lang="es">

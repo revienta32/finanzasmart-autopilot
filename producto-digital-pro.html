@@ -47,29 +47,53 @@
       </div>
     </header>
 
-    <!-- PASARELA DE PAGO DIRECTA (REVOLUT IBAN + USDT MULTI-RED) -->
+    <!-- PASARELA DE PAGO DIRECTA CON 3 NIVELES DE PRODUCTO (DECOY PRICING) -->
     <div class="paywall-box" id="paywall-section">
-      <h2 style="color: var(--amber); font-size: 1.25rem; margin-bottom: 0.4rem;">🔓 Desbloquea el Pack Financiero Pro Completo (Pago Único: 4,99 € o 5 USDT)</h2>
+      <h2 style="color: var(--amber); font-size: 1.25rem; margin-bottom: 0.4rem;">🔓 Elige tu Pack Digital (Pago Único sin Suscripciones)</h2>
       <p style="color: var(--muted); font-size: 0.9rem; margin-bottom: 1rem;">
-        Incluye: <strong>Exportación ilimitada a Excel (CSV) y PDF</strong>, tabla completa de 12 meses personalizada y guardado permanente en tu dispositivo. Elige tu método de pago instantáneo:
+        Desbloquea al instante todas las herramientas avanzadas y la descarga directa en <strong>Excel (.CSV Español) y PDF</strong>:
       </p>
+
+      <!-- Selector de 3 Productos (Escalera de Valor CEO) -->
+      <div class="grid" style="margin-bottom: 1.25rem;">
+        <div class="card" id="tier-card-1" style="cursor:pointer; border-color: var(--border);" onclick="selectTier(1, '4,99 €', '5 USDT', 'PACK BASICO')">
+          <span class="badge" style="background:rgba(148,163,184,0.15);color:#cbd5e1;">TIER 1 • AHORRO</span>
+          <h2 style="color:var(--text);margin-top:0.5rem;">Planificador 50/30/20</h2>
+          <div class="big-num">4,99 € <small style="font-size:0.85rem;color:var(--muted);">/ 5 USDT</small></div>
+          <p style="font-size:0.8rem;color:var(--muted);margin-top:0.4rem;">✔ Hoja de ruta 12 meses<br>✔ Exportación Excel 50/30/20</p>
+        </div>
+
+        <div class="card" id="tier-card-2" style="cursor:pointer; border-color: var(--border);" onclick="selectTier(2, '7,99 €', '8 USDT', 'PACK AUTONOMO')">
+          <span class="badge" style="background:rgba(59,130,246,0.2);color:#93c5fd;">TIER 2 • FREELANCE</span>
+          <h2 style="color:var(--text);margin-top:0.5rem;">Kit Fiscal Autónomos</h2>
+          <div class="big-num blue">7,99 € <small style="font-size:0.85rem;color:var(--muted);">/ 8 USDT</small></div>
+          <p style="font-size:0.8rem;color:var(--muted);margin-top:0.4rem;">✔ Cuadro Trimestral IVA (Mod. 303) e IRPF (Mod. 130)<br>✔ Exportación Excel Fiscal</p>
+        </div>
+
+        <div class="card" id="tier-card-3" style="cursor:pointer; border: 2px solid var(--amber); background: rgba(245,158,11,0.07);" onclick="selectTier(3, '9,99 €', '10 USDT', 'PACK VIP COMPLETO')">
+          <span class="badge">🔥 MÁS VENDIDO • 3 EN 1</span>
+          <h2 style="color:var(--text);margin-top:0.5rem;">Pack Completo VIP</h2>
+          <div class="big-num amber">9,99 € <small style="font-size:0.85rem;color:var(--muted);">/ 10 USDT</small></div>
+          <p style="font-size:0.8rem;color:var(--muted);margin-top:0.4rem;">✔ Planificador 50/30/20 + Kit Autónomos<br>✔ Calculadora Take-Profit Cripto + Excel Completo</p>
+        </div>
+      </div>
 
       <div class="grid" style="margin-bottom: 1rem;">
         <!-- Opción 1: Transferencia Revolut / SEPA -->
         <div class="card">
-          <h2 style="color: var(--text);">🏦 Opción 1: Revolut / Transferencia SEPA (4,99 €)</h2>
-          <p style="font-size: 0.82rem; color: var(--muted);">Envía <strong>4,99 €</strong> por transferencia inmediata al siguiente IBAN de Revolut:</p>
+          <h2 style="color: var(--text);">🏦 Opción 1: Revolut / SEPA (<span id="lbl-eur-price">9,99 €</span>)</h2>
+          <p style="font-size: 0.82rem; color: var(--muted);">Envía <strong id="lbl-eur-inline">9,99 €</strong> por transferencia inmediata al IBAN de Revolut:</p>
           <div class="wallet-row">
             <span id="iban-val">ES49 1583 0001 1290 4163 0031</span>
             <button type="button" class="sec" style="padding: 0.35rem 0.65rem; font-size: 0.78rem;" onclick="copyText('ES4915830001129041630031', this)">Copiar IBAN</button>
           </div>
-          <small style="display:block; margin-top:0.5rem; color: var(--muted);">Concepto recomendado: <strong>PACK PRO</strong></small>
+          <small style="display:block; margin-top:0.5rem; color: var(--muted);">Concepto recomendado: <strong id="lbl-concepto">PACK VIP COMPLETO</strong></small>
         </div>
 
         <!-- Opción 2: Cripto USDT (Bitget) -->
         <div class="card">
-          <h2 style="color: var(--text);">⚡ Opción 2: Pago Cripto (5 USDT)</h2>
-          <label for="net-select" style="margin-top:0;">Selecciona la red para enviar 5 USDT:</label>
+          <h2 style="color: var(--text);">⚡ Opción 2: Pago Cripto (<span id="lbl-usdt-price">10 USDT</span>)</h2>
+          <label for="net-select" style="margin-top:0;">Selecciona la red para enviar <strong id="lbl-usdt-inline">10 USDT</strong>:</label>
           <select id="net-select" onchange="updateWalletDisplay()">
             <option value="0x512c2d191d9e6857e4fabbf14d0b7bfa9b44aed2">BEP20 (BNB Smart Chain) — Sin apenas comisión</option>
             <option value="TAeoVC9WL9K63MFYPqVzFKqi3MghZGdv63">TRC20 (Tron)</option>
@@ -84,8 +108,8 @@
       </div>
 
       <div style="background: #0f172a; padding: 1rem; border-radius: 0.65rem; border: 1px solid var(--border); display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap;">
-        <input type="text" id="tx-input" placeholder="Pega aquí el Hash/TXID de USDT o el código de referencia de tu transferencia SEPA..." style="flex: 1; min-width: 240px;" />
-        <button type="button" class="gold" onclick="verifyAndUnlock()">✅ Verificar Pago y Desbloquear Pack Pro</button>
+        <input type="text" id="tx-input" placeholder="Pega aquí el Hash/TXID de USDT o el ID de referencia de tu transferencia SEPA..." style="flex: 1; min-width: 240px;" />
+        <button type="button" class="gold" onclick="verifyAndUnlock()">✅ Verificar Pago y Desbloquear Todo</button>
       </div>
       <p id="verify-msg" style="font-size: 0.83rem; margin-top: 0.5rem; color: var(--amber);" hidden></p>
     </div>
@@ -93,7 +117,7 @@
     <div class="grid">
       <div class="card">
         <h2>1. Tus Ingresos Mensuales</h2>
-        <label>Sueldo / Ingreso Principal (€)</label>
+        <label>Sueldo / Facturación Principal (€)</label>
         <input type="number" id="in-sueldo" value="1800" />
         <label>Ingresos Extra / Pasivos (€)</label>
         <input type="number" id="in-extra" value="200" />
@@ -137,8 +161,8 @@
       </div>
     </div>
 
-    <div class="card">
-      <h2>4. Hoja de Ruta de 12 Meses (Desbloqueable con Pack Pro)</h2>
+    <div class="card" style="margin-bottom: 1.5rem;">
+      <h2>4. Hoja de Ruta de 12 Meses + Reserva Fiscal IVA/IRPF + Plan Take-Profit Cripto (Pack Pro)</h2>
       <div id="roadmap-container" class="locked-blur">
         <table>
           <thead>
@@ -147,6 +171,8 @@
               <th>Ahorro Acumulado</th>
               <th>Fondo de Emergencia</th>
               <th>Capital Invertido (8% anual)</th>
+              <th>Reserva Impuestos (IVA/IRPF)</th>
+              <th>Meta Take-Profit Cripto (+35%)</th>
             </tr>
           </thead>
           <tbody id="tabla-meses"></tbody>
@@ -169,6 +195,25 @@
         badge.style.background = "rgba(16,185,129,0.2)";
         badge.style.color = "#34d399";
       }
+    }
+
+    function selectTier(tierNum, eurTxt, usdtTxt, conceptoTxt) {
+      [1, 2, 3].forEach(n => {
+        const el = document.getElementById("tier-card-" + n);
+        if (!el) return;
+        if (n === tierNum) {
+          el.style.border = "2px solid var(--amber)";
+          el.style.background = "rgba(245,158,11,0.07)";
+        } else {
+          el.style.border = "1px solid var(--border)";
+          el.style.background = "var(--card)";
+        }
+      });
+      document.getElementById("lbl-eur-price").textContent = eurTxt;
+      document.getElementById("lbl-eur-inline").textContent = eurTxt;
+      document.getElementById("lbl-usdt-price").textContent = usdtTxt;
+      document.getElementById("lbl-usdt-inline").textContent = usdtTxt;
+      document.getElementById("lbl-concepto").textContent = conceptoTxt;
     }
 
     function updateWalletDisplay() {
@@ -295,16 +340,21 @@
 
       const tbody = document.getElementById("tabla-meses");
       tbody.innerHTML = "";
-      let acum = 0, inv = 0;
+      let acum = 0, inv = 0, reservaFiscal = 0;
+      const reservaMensual = Math.round(sueldo * 0.25);
       for (let m = 1; m <= 12; m++) {
         acum += ahorroReal;
         inv = inv * (1 + r) + ahorroReal;
+        reservaFiscal += reservaMensual;
+        const takeProfit = Math.round(inv * 1.35);
         const tr = document.createElement("tr");
         tr.dataset.mes = m;
         tr.dataset.acum = Math.round(acum);
         tr.dataset.emergencia = Math.round(acum * 0.4);
         tr.dataset.invertido = Math.round(inv);
-        tr.innerHTML = `<td>Mes ${m}</td><td>${fmt.format(acum)}</td><td>${fmt.format(acum * 0.4)}</td><td class="green"><strong>${fmt.format(inv)}</strong></td>`;
+        tr.dataset.fiscal = reservaFiscal;
+        tr.dataset.tp = takeProfit;
+        tr.innerHTML = `<td>Mes ${m}</td><td>${fmt.format(acum)}</td><td>${fmt.format(acum * 0.4)}</td><td class="green"><strong>${fmt.format(inv)}</strong></td><td class="blue">${fmt.format(reservaFiscal)}</td><td class="amber"><strong>${fmt.format(takeProfit)}</strong></td>`;
         tbody.appendChild(tr);
       }
     }
@@ -319,7 +369,7 @@
 
       // Compatible al 100% con Excel en España (UTF-8 con BOM + separador ';' para columnas perfectas)
       const lines = [
-        "PLANIFICADOR FINANCIERO PRO 50/30/20 - FINANZASMART",
+        "PACK FINANCIERO VIP 3 EN 1 (50/30/20 + KIT FISCAL + TAKE-PROFIT CRIPTO) - FINANZASMART",
         `Ingresos Totales Mensuales (€);${total}`,
         `Gastos Fijos Actuales (€);${fijos}`,
         `Gastos Ocio Actuales (€);${ocio}`,
@@ -328,18 +378,18 @@
         `Meta 30% Ocio (€);${Math.round(total * 0.3)}`,
         `Meta 20% Inversión (€);${Math.round(total * 0.2)}`,
         "",
-        "Mes;Ahorro Acumulado (€);Fondo de Emergencia 40% (€);Capital Invertido al 8% Anual (€)"
+        "Mes;Ahorro Acumulado (€);Fondo de Emergencia 40% (€);Capital Invertido al 8% Anual (€);Reserva Fiscal IVA+IRPF (€);Objetivo Take-Profit Cripto +35% (€)"
       ];
 
       document.querySelectorAll("#tabla-meses tr").forEach(tr => {
-        lines.push(`Mes ${tr.dataset.mes};${tr.dataset.acum};${tr.dataset.emergencia};${tr.dataset.invertido}`);
+        lines.push(`Mes ${tr.dataset.mes};${tr.dataset.acum};${tr.dataset.emergencia};${tr.dataset.invertido};${tr.dataset.fiscal};${tr.dataset.tp}`);
       });
 
       const csvContent = "\uFEFF" + lines.join("\r\n");
       const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
       const a = document.createElement("a");
       a.href = URL.createObjectURL(blob);
-      a.download = "Planificador-Financiero-Pro-50-30-20.csv";
+      a.download = "Pack-VIP-FinanzaSmart-50-30-20-Fiscal-Cripto.csv";
       a.click();
     }
 
