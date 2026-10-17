@@ -79,15 +79,18 @@
       </div>
 
       <div class="grid" style="margin-bottom: 1rem;">
-        <!-- Opción 1: Transferencia Revolut / SEPA -->
-        <div class="card">
-          <h2 style="color: var(--text);">🏦 Opción 1: Revolut / SEPA (<span id="lbl-eur-price">9,99 €</span>)</h2>
-          <p style="font-size: 0.82rem; color: var(--muted);">Envía <strong id="lbl-eur-inline">9,99 €</strong> por transferencia inmediata al IBAN de Revolut:</p>
+        <!-- Opción 1: Tarjeta / Apple Pay / Google Pay + SEPA -->
+        <div class="card" style="border-color: var(--green);">
+          <h2 style="color: var(--text);">💳 Opción 1: Tarjeta, Apple Pay o SEPA (<span id="lbl-eur-price">9,99 €</span>)</h2>
+          <a href="https://revolut.me/revienta" target="_blank" rel="noopener" style="display:block;text-align:center;background:var(--green);color:#052e16;text-decoration:none;font-weight:700;padding:0.65rem;border-radius:0.5rem;margin-bottom:0.65rem;">
+            💳 Pagar <span id="lbl-eur-inline">9,99 €</span> con Tarjeta / Apple Pay →
+          </a>
+          <p style="font-size: 0.78rem; color: var(--muted);">O por transferencia SEPA inmediata al IBAN:</p>
           <div class="wallet-row">
             <span id="iban-val">ES49 1583 0001 1290 4163 0031</span>
             <button type="button" class="sec" style="padding: 0.35rem 0.65rem; font-size: 0.78rem;" onclick="copyText('ES4915830001129041630031', this)">Copiar IBAN</button>
           </div>
-          <small style="display:block; margin-top:0.5rem; color: var(--muted);">Concepto recomendado: <strong id="lbl-concepto">PACK VIP COMPLETO</strong></small>
+          <small style="display:block; margin-top:0.5rem; color: var(--muted);">Concepto: <strong id="lbl-concepto">PACK VIP COMPLETO</strong></small>
         </div>
 
         <!-- Opción 2: Cripto USDT (Bitget) -->
