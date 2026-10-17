@@ -25,6 +25,7 @@ jobs:
 
       - name: Run CEO Autopilot (Generate SEO pages + Publish Cloud Articles + Ping Search Engines)
         run: |
+          node auto-doctor.js
           node autopilot-ceo.js
           node syndicate-network.js
 

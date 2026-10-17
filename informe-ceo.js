@@ -16,9 +16,12 @@ async function generarInformeCEO() {
   console.log("📊 INFORME EJECUTIVO CEO - FINANZASMART (" + new Date().toISOString().slice(0, 10) + ")");
   console.log("==================================================================");
 
-  // 1.Sincronizar últimos cambios hechos por el robot en la nube (GitHub Actions)
+  // 1.Sincronizar últimos cambios hechos por el robot en la nube (GitHub Actions) y correr Auto-Doctor
   try {
     execSync("git pull --rebase origin main", { stdio: "ignore" });
+  } catch (_) {}
+  try {
+    execSync("node auto-doctor.js", { stdio: "inherit" });
   } catch (_) {}
 
   const trafico = JSON.parse(fs.readFileSync(path.join(__dirname, "red-de-trafico.json"), "utf8"));
