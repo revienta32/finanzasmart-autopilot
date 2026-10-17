@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Recurso de Multas DGT / ZBE y Calculadora ITP Coche 2026 — MotorSmart IA</title>
+  <meta name="description" content="Genera tu escrito de alegaciones y recurso de multas DGT, radar o Zona de Bajas Emisiones (ZBE) pidiendo prueba de margen de error y homologación metrológica." />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="top-banner">🚗 <strong>MotorSmart IA:</strong> Recurre multas de radar DGT y ZBE exigiendo el certificado metrológico ITC/3123/2010 y evita perder puntos.</div>
+  <header class="app-header">
+    <div class="container header-inner">
+      <div class="logo"><span class="logo-icon">🚗</span><div><h1>MotorSmart <span class="badge-pro">DGT IA</span></h1><p class="subtitle">Recursos de Multas de Tráfico, Radar y ZBE</p></div></div>
+      <nav class="nav-tabs">
+        <a href="index.html" class="tab-btn" style="text-decoration:none;">📊 Finanzas</a>
+        <a href="reclamaciones-ia.html" class="tab-btn" style="text-decoration:none;">⚖️ ReclamaSmart</a>
+        <a href="laboral-ia.html" class="tab-btn" style="text-decoration:none;">💼 LaboralSmart</a>
+      </nav>
+    </div>
+  </header>
+  <main class="container" style="padding:28px 0 60px;">
+    <div style="background:rgba(21,25,34,0.95);border:1px solid #262d3d;border-radius:14px;padding:24px;">
+      <h2>Generador de Pliego de Descargos / Recurso de Multa DGT o Ayuntamiento</h2>
+      <p style="color:#94a3b8;margin-bottom:16px;">Más del 38% de las multas de radar fijo/móvil y cámaras ZBE se anulan cuando se exige el expediente completo con los dos fotogramas y el certificado de verificación periódica del cinemómetro (Orden ICT/155/2020).</p>
+      <div class="form-group"><label>Número de Expediente Sancionador</label><input type="text" id="dgt-exp" value="2026-EXP-0049182" /></div>
+      <div class="form-group"><label>Organismo (DGT / Ayuntamiento)</label><input type="text" id="dgt-org" value="Jefatura Provincial de Tráfico (DGT)" /></div>
+      <div class="form-group"><label>Importe de la Multa (€)</label><input type="number" id="dgt-imp" value="300" /></div>
+      <button class="btn-primary" onclick="genDgt()">Generar Pliego de Descargos Oficial →</button>
+      <pre id="dgt-out" style="background:#0d111a;border:1px solid #262d3d;border-radius:10px;padding:16px;margin-top:16px;color:#cbd5e1;white-space:pre-wrap;font-size:0.83rem;"></pre>
+      <div style="margin-top:14px;display:flex;gap:10px;flex-wrap:wrap;">
+        <a href="https://revolut.me/revienta" target="_blank" rel="noopener" style="background:#10b981;color:#062319;font-weight:800;padding:10px 14px;border-radius:8px;text-decoration:none;">💳 Desbloquear Pliego Completo (4,99 €)</a>
+      </div>
+    </div>
+  </main>
+  <script>
+    function genDgt() {
+      const exp = document.getElementById("dgt-exp").value;
+      const org = document.getElementById("dgt-org").value;
+      const imp = document.getElementById("dgt-imp").value;
+      document.getElementById("dgt-out").textContent =
+        "A LA " + org.toUpperCase() + "\nExpediente Sancionador Nº: " + exp + " | Cuantía: " + imp + " €\n\n" +
+        "ALEGACIONES:\nPRIMERA.- VULNERACIÓN DEL DERECHO A LA PRESUNCIÓN DE INOCENCIA (Art. 24.2 CE y Art. 53.2.b LPACAP). Se solicita la aportación íntegra del certificado de verificación primitiva y periódica del cinemómetro/cámara conforme a la Orden ICT/155/2020, así como los dos fotogramas exigidos para acreditar la aplicación correcta del margen de error normativo...";
+    }
+    genDgt();
+  </script>
+  <script src="telemetria-soporte.js"></script>
+</body>
+</html>

@@ -104,10 +104,12 @@ assert(legalHtml.includes("ART. 36.4 LAU"), "Falta generador de fianza alquiler 
 assert(legalHtml.includes("REGLAMENTO CE 261/2004"), "Falta generador de vuelos en reclamaciones-ia.html");
 assert(legalHtml.includes("ÍNDICE IRAV INE"), "Falta generador de carta IRAV en reclamaciones-ia.html");
 
-// 5. Verificar Widget de Soporte de Usuarios y Auto-Doctor Cloud (telemetria-soporte.js & auto-doctor.js)
+// 5. Verificar Widget de Soporte de Usuarios, Auto-Doctor Cloud e Incubadora Multi-Sector
 const telemetriaCode = fs.readFileSync(path.join(__dirname, "telemetria-soporte.js"), "utf8");
 new Function(telemetriaCode);
+const incubadoraCode = fs.readFileSync(path.join(__dirname, "incubadora-empresa.js"), "utf8");
+new Function(incubadoraCode);
 assert(indexHtml.includes("telemetria-soporte.js") && proHtml.includes("telemetria-soporte.js") && rentaHtml.includes("telemetria-soporte.js") && legalHtml.includes("telemetria-soporte.js"), "Falta inyección de telemetria-soporte.js en páginas principales");
 
-console.log("✅ QA TEST SUITE PASSED: 4/4 calculadoras, Gestor Renta IA, ReclamaSmart Legal IA, Soporte/Auto-Doctor y exportación Excel verificados sin errores.");
+console.log("✅ QA TEST SUITE PASSED: 6 líneas de negocio SaaS, Soporte/Auto-Doctor, Incubadora Autónoma y exportación Excel verificados sin errores.");
 

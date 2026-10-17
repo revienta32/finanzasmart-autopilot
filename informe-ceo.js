@@ -22,6 +22,7 @@ async function generarInformeCEO() {
   } catch (_) {}
   try {
     execSync("node auto-doctor.js", { stdio: "inherit" });
+    execSync("node incubadora-empresa.js", { stdio: "inherit" });
   } catch (_) {}
 
   const trafico = JSON.parse(fs.readFileSync(path.join(__dirname, "red-de-trafico.json"), "utf8"));

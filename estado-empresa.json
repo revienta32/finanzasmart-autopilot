@@ -1,0 +1,109 @@
+{
+  "startedAt": "2026-10-17T10:55:03.656Z",
+  "lastEvaluation": "2026-10-17T10:55:03.981Z",
+  "activeProducts": [
+    {
+      "id": "finanzas-suite",
+      "file": "index.html",
+      "sector": "FinTech / Ahorro e Inversión"
+    },
+    {
+      "id": "gestor-renta-ia",
+      "file": "gestor-renta-ia.html",
+      "sector": "TaxTech / IRPF Modelo 100"
+    },
+    {
+      "id": "reclamaciones-ia",
+      "file": "reclamaciones-ia.html",
+      "sector": "LegalTech / Hipoteca, Alquiler y Vuelos"
+    },
+    {
+      "id": "producto-digital-pro",
+      "file": "producto-digital-pro.html",
+      "sector": "SaaS / Excel y Cuadro Fiscal"
+    },
+    {
+      "id": "laboral-ia",
+      "file": "laboral-ia.html",
+      "sector": "LaboralTech / Despidos y Finiquitos",
+      "title": "LaboralSmart IA — Calculadora de Finiquito, Indemnización y Papeleta SMAC",
+      "launchedAt": "2026-10-17T10:55:03.980Z"
+    },
+    {
+      "id": "multas-dgt-ia",
+      "file": "multas-dgt-ia.html",
+      "sector": "MotorTech / Recursos Multas DGT e ITP Coches",
+      "title": "MotorSmart IA — Calculadora ITP Coche Segunda Mano + Recurso Multas DGT/ZBE",
+      "launchedAt": "2026-10-17T10:55:03.981Z"
+    }
+  ],
+  "discoveredTrends": [
+    "calcular finiquito e indemnización",
+    "calcular finiquito e indemnizacion por despido",
+    "calcular finiquito e indemnizacion por despido injustificado",
+    "reclamar gastos hipoteca",
+    "reclamar gastos hipotecarios",
+    "reclamar gastos hipoteca caixabank",
+    "reclamar gastos hipoteca gratis",
+    "recurrir multa dgt",
+    "recurrir multa ayuntamiento valencia",
+    "recurrir multa dgt online",
+    "recurrir multa trafico",
+    "simulador declaracion renta 2026",
+    "simulador declaración renta 2025",
+    "simulador declaracion renta navarra",
+    "simulador declaracion renta"
+  ],
+  "pivotsHistory": [
+    {
+      "date": "2026-10-17T10:55:03.980Z",
+      "action": "Lanzada nueva vertical autónoma: LaboralSmart IA — Calculadora de Finiquito, Indemnización y Papeleta SMAC (laboral-ia.html) en sector LaboralTech / Despidos y Finiquitos"
+    },
+    {
+      "date": "2026-10-17T10:55:03.981Z",
+      "action": "Lanzada nueva vertical autónoma: MotorSmart IA — Calculadora ITP Coche Segunda Mano + Recurso Multas DGT/ZBE (multas-dgt-ia.html) en sector MotorTech / Recursos Multas DGT e ITP Coches"
+    }
+  ],
+  "productPerformance": [
+    {
+      "id": "finanzas-suite",
+      "file": "index.html",
+      "sector": "FinTech / Ahorro e Inversión",
+      "views": 0
+    },
+    {
+      "id": "gestor-renta-ia",
+      "file": "gestor-renta-ia.html",
+      "sector": "TaxTech / IRPF Modelo 100",
+      "views": 0
+    },
+    {
+      "id": "reclamaciones-ia",
+      "file": "reclamaciones-ia.html",
+      "sector": "LegalTech / Hipoteca, Alquiler y Vuelos",
+      "views": 0
+    },
+    {
+      "id": "producto-digital-pro",
+      "file": "producto-digital-pro.html",
+      "sector": "SaaS / Excel y Cuadro Fiscal",
+      "views": 0
+    },
+    {
+      "id": "laboral-ia",
+      "file": "laboral-ia.html",
+      "sector": "LaboralTech / Despidos y Finiquitos",
+      "title": "LaboralSmart IA — Calculadora de Finiquito, Indemnización y Papeleta SMAC",
+      "launchedAt": "2026-10-17T10:55:03.980Z",
+      "views": 0
+    },
+    {
+      "id": "multas-dgt-ia",
+      "file": "multas-dgt-ia.html",
+      "sector": "MotorTech / Recursos Multas DGT e ITP Coches",
+      "title": "MotorSmart IA — Calculadora ITP Coche Segunda Mano + Recurso Multas DGT/ZBE",
+      "launchedAt": "2026-10-17T10:55:03.981Z",
+      "views": 0
+    }
+  ]
+}

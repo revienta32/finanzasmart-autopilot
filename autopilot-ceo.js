@@ -387,7 +387,9 @@ async function run() {
     `${SITE_URL}/`,
     `${SITE_URL}/producto-digital-pro.html`,
     `${SITE_URL}/gestor-renta-ia.html`,
-    `${SITE_URL}/reclamaciones-ia.html`
+    `${SITE_URL}/reclamaciones-ia.html`,
+    `${SITE_URL}/laboral-ia.html`,
+    `${SITE_URL}/multas-dgt-ia.html`
   ];
 
   for (const page of SEO_PAGES) {
