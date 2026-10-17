@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ReclamaSmart IA España | Generador de Reclamaciones Legales sin Abogado (Hipoteca, Fianza, Vuelos e IRAV)</title>
+  <meta name="description" content="Calcula gratis tu indemnización y genera al instante el escrito legal oficial listo para presentar: Gastos de Hipoteca (TJUE), Fianza de Alquiler (LAU), Vuelos (CE 261) y Subida Alquiler IRAV." />
+  <link rel="stylesheet" href="styles.css" />
+  <style>
+    .legal-grid { display: grid; grid-template-columns: 1.18fr 0.82fr; gap: 1.5rem; margin-top: 1.5rem; margin-bottom: 2.5rem; }
+    @media (max-width: 900px) { .legal-grid { grid-template-columns: 1fr; } }
+    .case-tabs { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 0.6rem; margin-bottom: 1.25rem; }
+    .case-btn { background: #0f172a; border: 1px solid var(--card-border); color: var(--text); padding: 0.75rem; border-radius: 0.6rem; cursor: pointer; text-align: left; font-size: 0.85rem; font-weight: 600; transition: all 0.15s; }
+    .case-btn.active { border-color: var(--primary); background: rgba(16, 185, 129, 0.12); color: #34d399; }
+    .select-input { width: 100%; background: #0f172a; border: 1px solid var(--card-border); color: var(--text); padding: 0.65rem 0.8rem; border-radius: 0.5rem; font-size: 0.95rem; font-weight: 600; }
+    .doc-preview { background: #ffffff; color: #0f172a; padding: 1.75rem; border-radius: 0.6rem; font-family: "Georgia", serif; font-size: 0.9rem; line-height: 1.65; margin-top: 1rem; border: 1px solid #cbd5e1; }
+    .doc-preview h3 { text-align: center; text-transform: uppercase; font-size: 1rem; margin-bottom: 1rem; border-bottom: 2px solid #0f172a; padding-bottom: 0.5rem; }
+    .locked-doc { filter: blur(5px); user-select: none; pointer-events: none; }
+    .pay-card { background: linear-gradient(145deg, #1e293b 0%, #0f172a 100%); border: 2px solid #f59e0b; border-radius: 1rem; padding: 1.4rem; margin-bottom: 1.25rem; }
+    .copy-row { display: flex; justify-content: space-between; align-items: center; background: #0f172a; border: 1px solid var(--card-border); padding: 0.55rem 0.8rem; border-radius: 0.5rem; font-family: monospace; font-size: 0.82rem; margin-top: 0.4rem; word-break: break-all; gap: 0.5rem; }
+    @media print {
+      header, aside, .no-print { display: none !important; }
+      body { background: #fff; color: #000; }
+      .legal-grid { display: block; }
+      .calc-card { border: none; padding: 0; background: #fff; }
+      .doc-preview { border: none; padding: 0; }
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="container topbar-inner">
+      <a href="index.html" class="brand" style="text-decoration:none;color:inherit;">
+        <span class="brand-icon">⚖️</span>
+        <div>
+          <strong>ReclamaSmart IA</strong>
+          <span class="brand-tag">Generador de Escritos Legales y Reclamaciones sin Comisiones</span>
+        </div>
+      </a>
+      <nav class="tabs">
+        <a href="index.html" class="tab-btn" style="text-decoration:none;">← Calculadoras</a>
+        <a href="gestor-renta-ia.html" class="tab-btn" style="text-decoration:none;">🤖 Gestor Renta IA</a>
+        <a href="producto-digital-pro.html" class="tab-btn" style="text-decoration:none;">📊 Planificador 50/30/20</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container legal-grid">
+    <section class="calc-card">
+      <div class="no-print">
+        <h1>Generador de Reclamaciones y Escritos Legales en 1 Clic</h1>
+        <p class="subtitle">Los abogados y empresas de reclamación te quitan entre el 25% y el 35% de tu dinero (hasta 500 €) por rellenar un escrito estándar. Calcula gratis cuánto te deben y descarga tu documento oficial fundamentado en ley por solo 9,99 €.</p>
+
+        <!-- Selector de Caso Legal de Alta Demanda -->
+        <div class="case-tabs">
+          <button type="button" class="case-btn active" onclick="setLegalCase('hipoteca', this)">
+            🏦 1. Reclamar Gastos de Hipoteca<br><small style="color:var(--muted);">Recupera ~1.500€ + intereses (TJUE)</small>
+          </button>
+          <button type="button" class="case-btn" onclick="setLegalCase('fianza', this)">
+            🔑 2. Reclamar Fianza de Alquiler<br><small style="color:var(--muted);">Burofax Art. 36 LAU + interés legal</small>
+          </button>
+          <button type="button" class="case-btn" onclick="setLegalCase('vuelo', this)">
+            ✈️ 3. Indemnización Vuelo (250€-600€)<br><small style="color:var(--muted);">Reglamento CE 261 sin dar el 35%</small>
+          </button>
+          <button type="button" class="case-btn" onclick="setLegalCase('irav', this)">
+            🏠 4. Carta Subida Alquiler IRAV<br><small style="color:var(--muted);">Notificación oficial INE Art. 18 LAU</small>
+          </button>
+        </div>
+
+        <!-- Datos comunes de identificación para personalizar el escrito -->
+        <div class="form-grid" style="margin-bottom:1rem;">
+          <div class="field">
+            <label for="l-nombre">Tu Nombre y Apellidos (para el escrito)</label>
+            <input type="text" id="l-nombre" value="Juan Pérez García" />
+          </div>
+          <div class="field">
+            <label for="l-dni">Tu DNI / NIE</label>
+            <input type="text" id="l-dni" value="12345678Z" />
+          </div>
+          <div class="field">
+            <label for="l-entidad" id="lbl-entidad">Banco / Entidad destinataria</label>
+            <input type="text" id="l-entidad" value="Servicio de Atención al Cliente de Caixabank / BBVA / Santander" />
+          </div>
+          <div class="field">
+            <label for="l-fecha" id="lbl-fecha">Año de firma de la hipoteca (antes de junio 2019)</label>
+            <input type="number" id="l-fecha" value="2015" min="1995" max="2026" />
+          </div>
+        </div>
+
+        <!-- FORMULARIO CASO 1: GASTOS HIPOTECA -->
+        <div class="form-grid" id="form-hipoteca">
+          <div class="field">
+            <label for="h-notaria">Factura de Notaría pagada (€) (Recuperas el 50%)</label>
+            <input type="number" id="h-notaria" value="750" min="0" step="25" />
+          </div>
+          <div class="field">
+            <label for="h-registro">Factura Registro Propiedad (€) (Recuperas el 100%)</label>
+            <input type="number" id="h-registro" value="420" min="0" step="25" />
+          </div>
+          <div class="field">
+            <label for="h-gestoria">Factura de Gestoría (€) (Recuperas el 100%)</label>
+            <input type="number" id="h-gestoria" value="380" min="0" step="25" />
+          </div>
+          <div class="field">
+            <label for="h-tasacion">Factura de Tasación (€) (Recuperas el 100%)</label>
+            <input type="number" id="h-tasacion" value="320" min="0" step="25" />
+          </div>
+        </div>
+
+        <!-- FORMULARIO CASO 2: FIANZA ALQUILER -->
+        <div class="form-grid" id="form-fianza" hidden>
+          <div class="field">
+            <label for="f-importe">Importe de la fianza y garantías no devueltas (€)</label>
+            <input type="number" id="f-importe" value="1100" min="100" step="50" />
+          </div>
+          <div class="field">
+            <label for="f-meses">Meses transcurridos desde la entrega de llaves (>1 mes)</label>
+            <input type="number" id="f-meses" value="3" min="1" max="60" />
+          </div>
+          <div class="field">
+            <label for="f-direccion">Dirección de la vivienda alquilada</label>
+            <input type="text" id="f-direccion" value="Calle Mayor 15, 3ºB, Madrid" />
+          </div>
+        </div>
+
+        <!-- FORMULARIO CASO 3: VUELO RETRASADO / CANCELADO -->
+        <div class="form-grid" id="form-vuelo" hidden>
+          <div class="field">
+            <label for="v-distancia">Distancia del vuelo afectado</label>
+            <select id="v-distancia" class="select-input">
+              <option value="250">Corto recorrido hasta 1.500 km (250 € por pasajero)</option>
+              <option value="400" selected>Medio recorrido 1.500 a 3.500 km (400 € por pasajero)</option>
+              <option value="600">Largo recorrido más de 3.500 km (600 € por pasajero)</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="v-pasajeros">Número de pasajeros en tu reserva</label>
+            <input type="number" id="v-pasajeros" value="2" min="1" max="10" />
+          </div>
+          <div class="field">
+            <label for="v-codigo">Número de vuelo y localizador PNR (ej. IB3240 / ABC123)</label>
+            <input type="text" id="v-codigo" value="Vuelo VY8124 - Localizador K9M2P" />
+          </div>
+          <div class="field">
+            <label for="v-gastos">Gastos extra de comida, hotel o taxi por el retraso (€)</label>
+            <input type="number" id="v-gastos" value="85" min="0" step="10" />
+          </div>
+        </div>
+
+        <!-- FORMULARIO CASO 4: ACTUALIZACIÓN ALQUILER IRAV / IPC -->
+        <div class="form-grid" id="form-irav" hidden>
+          <div class="field">
+            <label for="i-renta">Renta mensual actual que paga el inquilino (€)</label>
+            <input type="number" id="i-renta" value="850" min="100" step="25" />
+          </div>
+          <div class="field">
+            <label for="i-indice">Índice oficial aplicable (IRAV INE ~2,20%)</label>
+            <input type="number" id="i-indice" value="2.20" step="0.05" />
+          </div>
+          <div class="field">
+            <label for="i-mes">Mes en que entra en vigor la nueva anualidad</label>
+            <input type="text" id="i-mes" value="Diciembre de 2026" />
+          </div>
+        </div>
+
+        <!-- Resumen de Dinero a Recuperar -->
+        <div class="results-grid">
+          <div class="stat-box highlight">
+            <span class="stat-label" id="res-lbl-1">Dinero Total a Reclamar</span>
+            <strong class="stat-value" id="res-val-1">0 €</strong>
+          </div>
+          <div class="stat-box success">
+            <span class="stat-label" id="res-lbl-2">Intereses Legales / Extra Incluidos</span>
+            <strong class="stat-value" id="res-val-2">+0 €</strong>
+          </div>
+          <div class="stat-box">
+            <span class="stat-label">Lo que te ahorras frente a un Abogado/Agencia</span>
+            <strong class="stat-value" id="res-val-ahorro" style="color:#fbbf24;">+380 €</strong>
+          </div>
+        </div>
+
+        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.5rem;margin-top:1rem;">
+          <h2 style="font-size:1.15rem;">📄 Tu Escrito Oficial Listo para Firmar y Presentar</h2>
+          <div style="display:flex;gap:0.5rem;">
+            <button type="button" class="tab-btn active" onclick="downloadOrUnlockLegal('print')">🖨️ Imprimir / Guardar en PDF</button>
+            <button type="button" class="tab-btn" onclick="downloadOrUnlockLegal('copy')">📋 Copiar Texto Completo</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="legal-doc-box" class="doc-preview locked-doc"></div>
+    </section>
+
+    <aside class="affiliate-sidebar no-print">
+      <div class="pay-card" id="legal-paywall">
+        <span class="offer-badge" style="background:rgba(245,158,11,0.2);color:#fbbf24;">⚖️ AHORRA EL 30% DE COMISIÓN DE ABOGADO</span>
+        <h2 style="font-size:1.15rem;margin-bottom:0.4rem;">Desbloquea los 4 Generadores de Escritos Legales (9,99 € / 10 USDT)</h2>
+        <p style="font-size:0.83rem;color:#cbd5e1;margin-bottom:0.9rem;">
+          Descarga al instante tu escrito jurídico personalizado con artículos de ley, jurisprudencia del Tribunal Supremo/TJUE y tabla de liquidación (<strong>desbloquea también el Gestor de la Renta IA y el Planificador VIP</strong>):
+        </p>
+
+        <div style="margin-bottom:0.85rem;">
+          <strong style="font-size:0.8rem;color:#fbbf24;">Opción A: Transferencia Inmediata SEPA / Revolut (9,99 €)</strong>
+          <div class="copy-row">
+            <span>ES49 1583 0001 1290 4163 0031</span>
+            <button type="button" class="tab-btn" style="padding:0.25rem 0.55rem;font-size:0.75rem;" onclick="copyLegalText('ES4915830001129041630031', this)">Copiar</button>
+          </div>
+        </div>
+
+        <div style="margin-bottom:0.85rem;">
+          <strong style="font-size:0.8rem;color:#93c5fd;">Opción B: Pago Cripto USDT (10 USDT)</strong>
+          <select id="legal-net" class="select-input" style="margin-top:0.35rem;padding:0.45rem;font-size:0.82rem;" onchange="document.getElementById('legal-wallet-txt').textContent = this.value">
+            <option value="0x512c2d191d9e6857e4fabbf14d0b7bfa9b44aed2">Red BEP20 (BNB Smart Chain)</option>
+            <option value="TAeoVC9WL9K63MFYPqVzFKqi3MghZGdv63">Red TRC20 (Tron)</option>
+            <option value="3CjrJ9C6D5z1crQRXwti6JdQdBAYmqRUKCakFXi2vpRY">Red SOL (Solana)</option>
+            <option value="0x512c2d191d9e6857e4fabbf14d0b7bfa9b44aed2">Red ERC20 (Ethereum)</option>
+          </select>
+          <div class="copy-row">
+            <span id="legal-wallet-txt">0x512c2d191d9e6857e4fabbf14d0b7bfa9b44aed2</span>
+            <button type="button" class="tab-btn" style="padding:0.25rem 0.55rem;font-size:0.75rem;" onclick="copyLegalText(document.getElementById('legal-wallet-txt').textContent, this)">Copiar</button>
+          </div>
+        </div>
+
+        <input type="text" id="legal-tx-input" class="select-input" placeholder="Pega aquí tu Hash TXID (USDT) o Referencia SEPA..." style="margin-bottom:0.6rem;font-size:0.83rem;" />
+        <button type="button" class="cta-button" style="width:100%;border:none;cursor:pointer;background:#f59e0b;color:#0f172a;" onclick="unlockLegalDoc()">
+          🔓 Verificar Pago y Desbloquear Escrito Oficial →
+        </button>
+        <p id="legal-verify-msg" style="font-size:0.78rem;color:#fbbf24;margin-top:0.4rem;" hidden></p>
+      </div>
+
+      <div class="offer-card">
+        <span class="offer-badge">🏦 Recibe tu Indemnización sin Comisiones</span>
+        <h2>Cuenta Gratuita Revolut (IBAN Español ES)</h2>
+        <p>Indica un IBAN español sin comisiones de mantenimiento en tus escritos de reclamación y separa el dinero recuperado en una hucha remunerada.</p>
+        <a href="https://revolut.com/referral/?referral-code=revienta!OCT1-26-AR-H1&geo-redirect" target="_blank" rel="noopener sponsored" class="cta-button">
+          Abrir cuenta gratis en Revolut →
+        </a>
+      </div>
+    </aside>
+  </main>
+
+  <script>
+    const fmt = new Intl.NumberFormat("es-ES", { style: "currency", currency: "EUR", maximumFractionDigits: 2 });
+    let activeCase = "hipoteca";
+    let isLegalUnlocked = localStorage.getItem("pf_pro_unlocked") === "true";
+
+    function setLegalCase(caseKey, btn) {
+      activeCase = caseKey;
+      document.querySelectorAll(".case-btn").forEach(b => b.classList.remove("active"));
+      if (btn) btn.classList.add("active");
+
+      ["hipoteca", "fianza", "vuelo", "irav"].forEach(k => {
+        document.getElementById("form-" + k).hidden = k !== caseKey;
+      });
+
+      const lblEnt = document.getElementById("lbl-entidad");
+      const inpEnt = document.getElementById("l-entidad");
+      if (caseKey === "hipoteca") {
+        lblEnt.textContent = "Banco / Entidad donde firmaste la hipoteca";
+        inpEnt.value = "Servicio de Atención al Cliente de Caixabank / BBVA / Santander";
+      } else if (caseKey === "fianza") {
+        lblEnt.textContent = "Nombre completo del Arrendador / Casero";
+        inpEnt.value = "D. Carlos Martínez López (Arrendador)";
+      } else if (caseKey === "vuelo") {
+        lblEnt.textContent = "Aerolínea responsable del vuelo";
+        inpEnt.value = "Departamento de Atención al Cliente de Iberia / Vueling / Ryanair";
+      } else {
+        lblEnt.textContent = "Nombre completo del Inquilino / Arrendatario";
+        inpEnt.value = "Dª. Laura Gómez Sánchez (Arrendataria)";
+      }
+      renderLegalCase();
+    }
+
+    function renderLegalCase() {
+      const nombre = document.getElementById("l-nombre").value || "________________";
+      const dni = document.getElementById("l-dni").value || "___________";
+      const entidad = document.getElementById("l-entidad").value || "________________";
+      const anioFirma = +document.getElementById("l-fecha").value || 2015;
+      const hoy = new Date().toLocaleDateString("es-ES", { day: "2-digit", month: "long", year: "numeric" });
+
+      let htmlDoc = "";
+      if (activeCase === "hipoteca") {
+        const notaria = (+document.getElementById("h-notaria").value || 0) * 0.5;
+        const registro = +document.getElementById("h-registro").value || 0;
+        const gestoria = +document.getElementById("h-gestoria").value || 0;
+        const tasacion = +document.getElementById("h-tasacion").value || 0;
+        const principal = notaria + registro + gestoria + tasacion;
+        const aniosTranscurridos = Math.max(1, 2026 - anioFirma);
+        const interesesLegales = principal * 0.0325 * aniosTranscurridos;
+        const totalReclamar = principal + interesesLegales;
+
+        document.getElementById("res-lbl-1").textContent = "Total a Devolver por el Banco";
+        document.getElementById("res-val-1").textContent = fmt.format(totalReclamar);
+        document.getElementById("res-lbl-2").textContent = "Intereses Legales Acumulados";
+        document.getElementById("res-val-2").textContent = "+" + fmt.format(interesesLegales);
+        document.getElementById("res-val-ahorro").textContent = "+" + fmt.format(totalReclamar * 0.25) + " ahorrados";
+
+        htmlDoc = `
+          <h3>RECLAMACIÓN EXTRAJUDICIAL DE NULIDAD DE CLÁUSULA DE GASTOS HIPOTECARIOS Y RESTITUCIÓN DE CANTIDADES</h3>
+          <p><strong>AL SERVICIO DE ATENCIÓN AL CLIENTE DE:</strong> ${entidad}</p>
+          <p><strong>DE:</strong> D./Dª. ${nombre}, mayor de edad, provisto/a de DNI/NIE nº ${dni}.</p>
+          <p><strong>FECHA:</strong> ${hoy}</p>
+          <br>
+          <p><strong>EXPONE:</strong></p>
+          <p><strong>PRIMERO.-</strong> Que en el año <strong>${anioFirma}</strong> suscribí con esa entidad escritura de préstamo con garantía hipotecaria en condición de consumidor, imponiéndose de forma unilateral y no negociada la cláusula que atribuía al prestatario el pago de la totalidad de los gastos de formalización.</p>
+          <p><strong>SEGUNDO.-</strong> Conforme a la doctrina reiterada del <strong>Tribunal Supremo (SSTS 44/2019, 457/2020 y 35/2021)</strong> y la <strong>Sentencia del Tribunal de Justicia de la Unión Europea (TJUE) de 25 de abril de 2024 (Asunto C-561/21)</strong> sobre imprescriptibilidad previa al conocimiento de la nulidad, procede la restitución íntegra del <strong>50% de los aranceles notariales</strong> y del <strong>100% de los gastos de Registro de la Propiedad, Gestoría y Tasación</strong>, más el interés legal del dinero devengado desde la fecha de cada pago (STJUE C-224/19).</p>
+          <p><strong>TERCERO.- DESGLOSE DE CANTIDADES RECLAMADAS:</strong></p>
+          <ul style="margin: 0.75rem 0 0.75rem 1.5rem;">
+            <li>50% Aranceles de Notaría: <strong>${fmt.format(notaria)}</strong></li>
+            <li>100% Aranceles del Registro de la Propiedad: <strong>${fmt.format(registro)}</strong></li>
+            <li>100% Honorarios de Gestoría impuesta: <strong>${fmt.format(gestoria)}</strong></li>
+            <li>100% Factura de Tasación del inmueble: <strong>${fmt.format(tasacion)}</strong></li>
+            <li><strong>SUBTOTAL PRINCIPAL:</strong> <strong>${fmt.format(principal)}</strong></li>
+            <li><strong>INTERESES LEGALES DEVENGADOS DESDE ${anioFirma}:</strong> <strong>${fmt.format(interesesLegales)}</strong></li>
+            <li><strong>TOTAL A ABONAR:</strong> <strong>${fmt.format(totalReclamar)}</strong></li>
+          </ul>
+          <p><strong>POR LO EXPUESTO, SOLICITO:</strong> Que se tenga por presentado este escrito junto con copia de las facturas y se proceda en el plazo máximo legal de un mes al abono de <strong>${fmt.format(totalReclamar)}</strong>, con apercibimiento expreso de acudir a la vía judicial con imposición de costas por mala fe procesal (art. 395 LEC).</p>
+          <br><p>Firmado: D./Dª. ${nombre} (DNI: ${dni})</p>
+        `;
+      } else if (activeCase === "fianza") {
+        const fianza = +document.getElementById("f-importe").value || 0;
+        const meses = +document.getElementById("f-meses").value || 1;
+        const dir = document.getElementById("f-direccion").value || "";
+        const interesMora = fianza * 0.0325 * (meses / 12);
+        const total = fianza + interesMora;
+
+        document.getElementById("res-lbl-1").textContent = "Fianza + Intereses Art. 36.4 LAU";
+        document.getElementById("res-val-1").textContent = fmt.format(total);
+        document.getElementById("res-lbl-2").textContent = "Intereses de Demora Obligatorios";
+        document.getElementById("res-val-2").textContent = "+" + fmt.format(interesMora);
+        document.getElementById("res-val-ahorro").textContent = "+180,00 € ahorrados";
+
+        htmlDoc = `
+          <h3>REQUERIMIENTO FEHACIENTE DE DEVOLUCIÓN DE FIANZA DE ARRENDAMIENTO (ART. 36.4 LAU)</h3>
+          <p><strong>DESTINATARIO (ARRENDADOR):</strong> ${entidad}</p>
+          <p><strong>REQUIRENTE (ARRENDATARIO):</strong> D./Dª. ${nombre} (DNI/NIE: ${dni})</p>
+          <p><strong>VIVIENDA ARRENDADA:</strong> ${dir} | <strong>FECHA:</strong> ${hoy}</p>
+          <br>
+          <p>Por medio del presente escrito le requiero formalmente para que, habiendo transcurrido <strong>${meses} meses</strong> desde la finalización del contrato y entrega efectiva de llaves sin que exista causa justificada ni desperfectos imputables, proceda a la restitución inmediata del saldo de la fianza por importe de <strong>${fmt.format(fianza)}</strong>.</p>
+          <p>De conformidad con el <strong>artículo 36.4 de la Ley 29/1994 de Arrendamientos Urbanos (LAU)</strong>, transcurrido un mes desde la entrega de las llaves sin que se hubiera hecho efectiva la restitución, el saldo de la fianza devenga automáticamente el interés legal del dinero (actualmente <strong>${fmt.format(interesMora)}</strong> acumulados, sumando un total exigible de <strong>${fmt.format(total)}</strong>).</p>
+          <p>Le concedo un plazo improrrogable de <strong>7 días naturales</strong> para realizar la transferencia del citado importe, advirtiéndole de que, en caso contrario, interpondré demanda de Juicio Verbal de reclamación de cantidad (sin necesidad de abogado ni procurador hasta 2.000 € conforme al art. 23.2.1º LEC).</p>
+          <br><p>Firmado: D./Dª. ${nombre} (DNI: ${dni})</p>
+        `;
+      } else if (activeCase === "vuelo") {
+        const compUnit = +document.getElementById("v-distancia").value || 400;
+        const pax = +document.getElementById("v-pasajeros").value || 1;
+        const gastos = +document.getElementById("v-gastos").value || 0;
+        const codigo = document.getElementById("v-codigo").value || "";
+        const total = compUnit * pax + gastos;
+
+        document.getElementById("res-lbl-1").textContent = "Indemnización Total CE 261/2004";
+        document.getElementById("res-val-1").textContent = fmt.format(total);
+        document.getElementById("res-lbl-2").textContent = "Gastos de Asistencia Reembolsables";
+        document.getElementById("res-val-2").textContent = "+" + fmt.format(gastos);
+        document.getElementById("res-val-ahorro").textContent = "+" + fmt.format(total * 0.30) + " ahorrados";
+
+        htmlDoc = `
+          <h3>RECLAMACIÓN DE COMPENSACIÓN E INDEMNIZACIÓN POR INCIDENCIA AÉREA (REGLAMENTO CE 261/2004)</h3>
+          <p><strong>A LA COMPAÑÍA AÉREA:</strong> ${entidad}</p>
+          <p><strong>PASAJERO RECLAMANTE:</strong> D./Dª. ${nombre} (DNI/NIE: ${dni}) en representación de <strong>${pax} pasajero(s)</strong>.</p>
+          <p><strong>DATOS DEL VUELO Y RESERVA:</strong> ${codigo} | <strong>FECHA:</strong> ${hoy}</p>
+          <br>
+          <p>En virtud de lo dispuesto en los <strong>artículos 5, 7 y 9 del Reglamento (CE) nº 261/2004 del Parlamento Europeo y del Consejo</strong> y la jurisprudencia del TJUE (Asuntos acumulados C-402/07 y C-432/07, <em>Sturgeon</em>, que equipara el retraso en llegada igual o superior a 3 horas con la cancelación), formulo reclamación previa por importe total de <strong>${fmt.format(total)}</strong>, desglosado en:</p>
+          <ul style="margin: 0.75rem 0 0.75rem 1.5rem;">
+            <li>Compensación objetiva tasada (${pax} pasajero/s × ${fmt.format(compUnit)}): <strong>${fmt.format(compUnit * pax)}</strong></li>
+            <li>Reembolso de gastos de asistencia, manutención y transporte (art. 9): <strong>${fmt.format(gastos)}</strong></li>
+          </ul>
+          <p>De no recibir el abono íntegro de <strong>${fmt.format(total)}</strong> en el plazo de 30 días, elevaré expediente de resolución alternativa de litigios ante la <strong>Agencia Estatal de Seguridad Aérea (AESA)</strong>, cuya decisión tiene carácter vinculante para la compañía aérea.</p>
+          <br><p>Firmado: D./Dª. ${nombre} (DNI: ${dni})</p>
+        `;
+      } else {
+        const rentaActual = +document.getElementById("i-renta").value || 850;
+        const pct = +document.getElementById("i-indice").value || 2.2;
+        const mesVigor = document.getElementById("i-mes").value || "próximo mes";
+        const subidaMensual = rentaActual * (pct / 100);
+        const nuevaRenta = rentaActual + subidaMensual;
+
+        document.getElementById("res-lbl-1").textContent = "Nueva Renta Mensual Actualizada";
+        document.getElementById("res-val-1").textContent = fmt.format(nuevaRenta) + "/mes";
+        document.getElementById("res-lbl-2").textContent = "Ingreso Extra Anual para Ti";
+        document.getElementById("res-val-2").textContent = "+" + fmt.format(subidaMensual * 12) + "/año";
+        document.getElementById("res-val-ahorro").textContent = "+90,00 € ahorrados";
+
+        htmlDoc = `
+          <h3>NOTIFICACIÓN FEHACIENTE DE ACTUALIZACIÓN ANUAL DE RENTA DE ALQUILER (ART. 18 LAU / ÍNDICE IRAV INE)</h3>
+          <p><strong>ARRENDADOR:</strong> D./Dª. ${nombre} (DNI/NIE: ${dni})</p>
+          <p><strong>ARRENDATARIO:</strong> ${entidad} | <strong>FECHA:</strong> ${hoy}</p>
+          <br>
+          <p>Estimado/a arrendatario/a:</p>
+          <p>De conformidad con lo pactado en nuestro contrato de arrendamiento de vivienda y en cumplimiento estricto del <strong>artículo 18 de la Ley 29/1994 de Arrendamientos Urbanos (LAU)</strong> tras la reforma operada por la Ley 12/2023 por el Derecho a la Vivienda, le notifico por escrito con la antelación legal requerida la actualización anual de la renta aplicando el índice oficial publicado por el <strong>Instituto Nacional de Estadística (INE)</strong> de <strong>+${pct.toFixed(2)}%</strong>:</p>
+          <ul style="margin: 0.75rem 0 0.75rem 1.5rem;">
+            <li>Renta mensual anterior: <strong>${fmt.format(rentaActual)}</strong></li>
+            <li>Variación porcentual aplicada (Índice Oficial INE): <strong>+${pct.toFixed(2)}% (+${fmt.format(subidaMensual)}/mes)</strong></li>
+            <li><strong>NUEVA RENTA MENSUAL EXIGIBLE DESDE ${mesVigor.toUpperCase()}:</strong> <strong>${fmt.format(nuevaRenta)} / mes</strong></li>
+          </ul>
+          <p>La presente actualización será exigible a partir del próximo recibo mensual correspondiente a <strong>${mesVigor}</strong>.</p>
+          <br><p>Firmado: D./Dª. ${nombre} (DNI: ${dni})</p>
+        `;
+      }
+
+      document.getElementById("legal-doc-box").innerHTML = htmlDoc;
+    }
+
+    function applyLegalUnlockState() {
+      if (isLegalUnlocked) {
+        document.getElementById("legal-doc-box").classList.remove("locked-doc");
+        document.getElementById("legal-paywall").hidden = true;
+      }
+    }
+
+    function copyLegalText(txt, btn) {
+      navigator.clipboard.writeText(txt).then(() => {
+        const old = btn.textContent;
+        btn.textContent = "¡Copiado!";
+        setTimeout(() => (btn.textContent = old), 2000);
+      });
+    }
+
+    async function unlockLegalDoc() {
+      const code = (document.getElementById("legal-tx-input").value || "").trim();
+      const msg = document.getElementById("legal-verify-msg");
+      msg.hidden = false;
+
+      const isEvmTx = /^0x[a-fA-F0-9]{64}$/.test(code);
+      const isTronTx = /^[a-fA-F0-9]{64}$/.test(code);
+      const isSolTx = /^[1-9A-HJ-NP-Za-km-z]{80,92}$/.test(code);
+      const isSepaRef = /^SEPA-[A-Z0-9-]{6,}$/i.test(code) || /^[A-Z0-9]{10,35}$/i.test(code);
+
+      if (!isEvmTx && !isTronTx && !isSolTx && !isSepaRef) {
+        msg.textContent = "⚠️ Introduce un Hash TXID válido (64+ caracteres) o el ID de operación SEPA de tu transferencia (10+ caracteres).";
+        return;
+      }
+
+      if (isEvmTx) {
+        const target = "0x512c2d191d9e6857e4fabbf14d0b7bfa9b44aed2";
+        for (const rpc of ["https://bsc-dataseed.binance.org/", "https://eth.llamarpc.com"]) {
+          try {
+            const r = await fetch(rpc, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ jsonrpc: "2.0", id: 1, method: "eth_getTransactionByHash", params: [code] })
+            }).then((res) => res.json());
+            if (r && r.result) {
+              const txData = ((r.result.input || "") + (r.result.to || "")).toLowerCase();
+              if (!txData.includes(target.slice(2).toLowerCase())) {
+                msg.textContent = "⚠️ Esa transacción no corresponde a la billetera oficial.";
+                return;
+              }
+              break;
+            }
+          } catch (_) {}
+        }
+      }
+
+      isLegalUnlocked = true;
+      localStorage.setItem("pf_pro_unlocked", "true");
+      localStorage.setItem("pf_pro_ref", code);
+      applyLegalUnlockState();
+    }
+
+    function downloadOrUnlockLegal(action) {
+      if (!isLegalUnlocked) {
+        document.getElementById("legal-paywall").scrollIntoView({ behavior: "smooth" });
+        const msg = document.getElementById("legal-verify-msg");
+        msg.hidden = false;
+        msg.textContent = "🔒 Desbloquea tu Escrito Oficial por 9,99 € (SEPA) o 10 USDT para imprimir en PDF o copiar el texto.";
+        return;
+      }
+      if (action === "print") window.print();
+      if (action === "copy") {
+        navigator.clipboard.writeText(document.getElementById("legal-doc-box").innerText);
+      }
+    }
+
+    document.querySelectorAll("input, select").forEach((el) => {
+      el.addEventListener("input", renderLegalCase);
+      el.addEventListener("change", renderLegalCase);
+    });
+
+    applyLegalUnlockState();
+    renderLegalCase();
+  </script>
+</body>
+</html>

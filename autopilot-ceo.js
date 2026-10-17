@@ -94,6 +94,47 @@ const SEO_PAGES = [
       <p>En la Declaración de la Renta (Modelo 100), las ventas o permutas de criptomonedas se declaran en el apartado <strong>Ganancias y pérdidas patrimoniales derivadas de la transmisión de monedas virtuales (Casillas 1800 a 1814)</strong> tributando en la Base del Ahorro (19% hasta 6.000€, 21% hasta 50.000€, 23% hasta 200.000€).</p>
       <p>Si has tenido pérdidas, la Ley del IRPF te permite compensarlas con ganancias del mismo año y hasta con el <strong>25% de los intereses de tus cuentas remuneradas (Casilla 0027)</strong>, ahorrando impuestos legalmente.</p>
     `
+  },
+  {
+    slug: "reclamar-gastos-hipoteca-sin-abogado-modelo.html",
+    title: "Cómo Reclamar los Gastos de Hipoteca sin Abogado en 2026 (Calculadora + Escrito TJUE)",
+    h1: "Calcula y Reclama tus Gastos de Hipoteca al Banco sin Dar el 25% a un Abogado",
+    lead: "Tras la sentencia del TJUE (C-561/21), puedes recuperar el 50% de Notaría y el 100% de Registro, Gestoría y Tasación más intereses legales presentando el escrito oficial al SAC de tu banco.",
+    calcLink: "reclamaciones-ia.html",
+    bodyHtml: `
+      <p>La mayoría de hipotecas firmadas antes de junio de 2019 obligaban al cliente a pagar todos los gastos de formalización. Hoy los bancos están obligados a devolver una media de <strong>1.500 € a 2.400 € más los intereses legales acumulados</strong>.</p>
+      <p>En lugar de ceder entre 350 € y 500 € de comisión a un despacho, calcula tu importe exacto al céntimo y genera tu <strong>Escrito Oficial de Reclamación Extrajudicial</strong> listo para presentar en tu sucursal o sede electrónica.</p>
+    `
+  },
+  {
+    slug: "modelo-burofax-reclamar-fianza-alquiler-lau.html",
+    title: "Modelo Burofax para Reclamar la Devolución de Fianza de Alquiler (Art. 36.4 LAU)",
+    h1: "¿Tu casero no te devuelve la fianza tras 30 días? Genera tu Requerimiento Legal",
+    lead: "El artículo 36.4 de la Ley de Arrendamientos Urbanos obliga a devolver la fianza en 1 mes desde la entrega de llaves o pagar intereses legales automáticos.",
+    calcLink: "reclamaciones-ia.html",
+    bodyHtml: `
+      <p>Si ha pasado más de un mes desde que entregaste las llaves del piso y el propietario retiene tu fianza sin facturas justificadas, puedes exigir el principal más los intereses de demora mediante un requerimiento fehaciente previo a juicio verbal (que no requiere abogado ni procurador hasta 2.000 €).</p>
+    `
+  },
+  {
+    slug: "calculadora-irav-subida-alquiler-carta-inquilino.html",
+    title: "Calculadora IRAV 2026 y Modelo de Carta para Comunicar la Subida del Alquiler al Inquilino",
+    h1: "Calcula la Subida Legal del Alquiler con el IRAV del INE y Descarga la Carta Oficial",
+    lead: "Para que la actualización anual del alquiler sea válida según el artículo 18 de la LAU, debes notificar por escrito al inquilino el porcentaje exacto con 30 días de antelación.",
+    calcLink: "reclamaciones-ia.html",
+    bodyHtml: `
+      <p>Con la entrada en vigor del nuevo índice de referencia del INE (IRAV), los propietarios deben calcular la nueva cuota mensual y enviar una notificación escrita fehaciente antes del mes siguiente para poder exigir la nueva renta.</p>
+    `
+  },
+  {
+    slug: "reclamar-vuelo-retrasado-cancelado-sin-comisiones-aesa.html",
+    title: "Cómo Reclamar de 250€ a 600€ por Vuelo Retrasado o Cancelado sin Pagar el 35% de Comisión",
+    h1: "Cobra el 100% de tu Indemnización Aérea (Reglamento CE 261/2004) sin Intermediarios",
+    lead: "Las agencias de reclamación se quedan hasta el 35% + IVA de tus 250€-600€. Genera el escrito oficial previo a AESA en 1 minuto y quédate con todo tu dinero.",
+    calcLink: "reclamaciones-ia.html",
+    bodyHtml: `
+      <p>Si tu vuelo llegó con 3 o más horas de retraso o fue cancelado con menos de 14 días de preaviso, el Reglamento Europeo CE 261/2004 establece una compensación automática de <strong>250 €, 400 € o 600 € por pasajero</strong> además del reembolso de comida, hotel y transporte.</p>
+    `
   }
 ];
 
@@ -343,7 +384,9 @@ async function run() {
   // 2. Generar páginas SEO programáticas
   const allUrls = [
     `${SITE_URL}/`,
-    `${SITE_URL}/producto-digital-pro.html`
+    `${SITE_URL}/producto-digital-pro.html`,
+    `${SITE_URL}/gestor-renta-ia.html`,
+    `${SITE_URL}/reclamaciones-ia.html`
   ];
 
   for (const page of SEO_PAGES) {

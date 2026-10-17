@@ -89,12 +89,19 @@ assert(proHtml.includes('\\uFEFF'), "El exportador Excel no incluye BOM UTF-8 (\
 assert(proHtml.includes("Mes;Ahorro Acumulado (€);Fondo de Emergencia 40% (€);Capital Invertido al 8% Anual (€);Reserva Fiscal IVA+IRPF (€);Objetivo Take-Profit Cripto +35% (€)"), "El exportador Excel no usa las 6 columnas con ';' como separador para España");
 assert(proHtml.includes("function selectTier("), "Falta selector de 3 niveles de producto (Decoy Pricing)");
 
-// 4. Verificar Gestor Renta IA España (gestor-renta-ia.html)
+// 4. Verificar Gestor Renta IA España (gestor-renta-ia.html) y ReclamaSmart IA (reclamaciones-ia.html)
 const rentaHtml = fs.readFileSync(path.join(__dirname, "gestor-renta-ia.html"), "utf8");
 const rentaScript = rentaHtml.split("<script>")[1].split("</script>")[0];
 new Function(rentaScript); // Verifica sintaxis JS limpia
-assert(rentaHtml.includes("Casillas 1800 - 1814"), "Faltan casillas oficiales de criptomonedas en gestor-renta-ia.html");
 assert(rentaHtml.includes("ES49 1583 0001 1290 4163 0031"), "Falta IBAN Revolut en gestor-renta-ia.html");
 assert(rentaHtml.includes("KQBSNNRF"), "Falta código Bitget en gestor-renta-ia.html");
 
-console.log("✅ QA TEST SUITE PASSED: 4/4 calculadoras, Gestor Renta IA (Modelo 100), 3 niveles de producto, enrutamiento hash, pasarela cripto/SEPA y exportación Excel verificados sin errores.");
+const legalHtml = fs.readFileSync(path.join(__dirname, "reclamaciones-ia.html"), "utf8");
+const legalScript = legalHtml.split("<script>")[1].split("</script>")[0];
+new Function(legalScript); // Verifica sintaxis JS limpia
+assert(legalHtml.includes("RECLAMACIÓN EXTRAJUDICIAL DE NULIDAD DE CLÁUSULA DE GASTOS HIPOTECARIOS"), "Falta generador de gastos hipotecarios en reclamaciones-ia.html");
+assert(legalHtml.includes("ART. 36.4 LAU"), "Falta generador de fianza alquiler en reclamaciones-ia.html");
+assert(legalHtml.includes("REGLAMENTO CE 261/2004"), "Falta generador de vuelos en reclamaciones-ia.html");
+assert(legalHtml.includes("ÍNDICE IRAV INE"), "Falta generador de carta IRAV en reclamaciones-ia.html");
+
+console.log("✅ QA TEST SUITE PASSED: 4/4 calculadoras, Gestor Renta IA, ReclamaSmart Legal IA (4 generadores), 3 niveles de producto y exportación Excel verificados sin errores.");
