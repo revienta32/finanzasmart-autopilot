@@ -2,11 +2,20 @@
   "processedIds": [
     "PzlPwqDaU72t",
     "fb2wohIOC20c",
-    "uFGXMIC1ZoZw"
+    "uFGXMIC1ZoZw",
+    "t6d1CioQ4RoP",
+    "yRnxbdjFfL22",
+    "oPsgxNkmea4R",
+    "F1iQl2KYgImv",
+    "82ikKWfjwkyt",
+    "VGZObWzP5HtL",
+    "Tqn1loaKbVuT"
   ],
-  "totalPageviews": 1,
+  "totalPageviews": 8,
   "pageviewsByPage": {
-    "index.html": 1
+    "index.html": 1,
+    "verifactu-studio.html": 1,
+    "clean-ai-studio.html": 6
   },
   "affiliateClicks": {
     "revolut_referral": 0,
@@ -16,5 +25,5 @@
   "jsErrors": [],
   "userBugReports": [],
   "autoHeals": [],
-  "lastDoctorRun": "2026-10-19T15:56:59.303Z"
+  "lastDoctorRun": "2026-10-19T21:59:27.174Z"
 }
