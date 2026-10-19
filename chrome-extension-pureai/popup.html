@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>PureAI Studio</title>
+  <style>
+    body {
+      width: 370px;
+      margin: 0;
+      padding: 14px;
+      background: #0b0f19;
+      color: #f8fafc;
+      font-family: system-ui, -apple-system, sans-serif;
+    }
+    .hdr {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid #1e293b;
+      padding-bottom: 8px;
+      margin-bottom: 10px;
+    }
+    .hdr h1 {
+      font-size: 0.96rem;
+      margin: 0;
+      color: #10b981;
+    }
+    .badge {
+      font-size: 0.68rem;
+      background: rgba(16, 185, 129, 0.16);
+      color: #6ee7b7;
+      padding: 3px 7px;
+      border-radius: 999px;
+      font-weight: 700;
+    }
+    .box {
+      background: #131b2e;
+      border: 1px solid #26334d;
+      border-radius: 10px;
+      padding: 10px;
+      margin-bottom: 10px;
+    }
+    .box h2 {
+      font-size: 0.82rem;
+      margin: 0 0 6px;
+      color: #e2e8f0;
+    }
+    textarea {
+      width: 100%;
+      box-sizing: border-box;
+      height: 78px;
+      background: #070a12;
+      color: #f1f5f9;
+      border: 1px solid #2d3748;
+      border-radius: 8px;
+      padding: 7px;
+      font-size: 0.76rem;
+      resize: none;
+    }
+    .btn {
+      width: 100%;
+      padding: 8px 10px;
+      border: none;
+      border-radius: 8px;
+      font-weight: 800;
+      font-size: 0.78rem;
+      cursor: pointer;
+      margin-top: 6px;
+    }
+    .btn-green { background: #10b981; color: #052e16; }
+    .btn-purple { background: #8b5cf6; color: #fff; }
+    .status {
+      font-size: 0.72rem;
+      color: #94a3b8;
+      margin-top: 5px;
+      font-family: monospace;
+    }
+    .pro-strip {
+      background: linear-gradient(135deg, rgba(16,185,129,0.16), rgba(59,130,246,0.16));
+      border: 1px solid #10b981;
+      border-radius: 10px;
+      padding: 9px;
+      text-align: center;
+    }
+    .pro-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 5px;
+      margin-top: 6px;
+    }
+    .pro-link {
+      text-decoration: none;
+      background: #0b0f19;
+      border: 1px solid #334155;
+      border-radius: 6px;
+      padding: 5px 4px;
+      color: #f8fafc;
+      font-size: 0.68rem;
+      display: block;
+    }
+    .pro-link strong { display: block; font-size: 0.82rem; color: #6ee7b7; }
+  </style>
+</head>
+<body>
+  <div class="hdr">
+    <h1>🛡️ PureAI Studio</h1>
+    <span class="badge">Zero-Server</span>
+  </div>
+
+  <div class="box">
+    <h2>✍️ 1. Strip ChatGPT / Claude Invisible Watermarks</h2>
+    <textarea id="ext-txt" placeholder="Paste AI text here to strip U+202F, U+200B, U+00A0 & robotic em-dashes..."></textarea>
+    <div id="ext-txt-status" class="status">Ready to scan Unicode code points.</div>
+    <button id="btn-clean-txt" class="btn btn-purple">🧹 Scrub Watermarks & Copy Clean Text</button>
+  </div>
+
+  <div class="box">
+    <h2>🖼️ 2. Image C2PA / EXIF Binary Destroyer</h2>
+    <input type="file" id="ext-img" accept="image/jpeg,image/png,image/webp" style="font-size:0.72rem;width:100%;" />
+    <div id="ext-img-status" class="status">Select an AI or smartphone image to strip C2PA/GPS.</div>
+    <canvas id="ext-canvas" style="display:none;"></canvas>
+    <button id="btn-clean-img" class="btn btn-green" disabled>⚡ Download Clean Image (0 Metadata)</button>
+  </div>
+
+  <div class="pro-strip">
+    <div style="font-size:0.74rem;font-weight:800;color:#a7f3d0;">🚀 Unlock Bulk Batch (50+ Images) & Camera Profile</div>
+    <div class="pro-grid">
+      <a href="https://buy.stripe.com/9B64gA5zA22x5zq3aW00000" target="_blank" class="pro-link">24h Pass<strong>3,99 €</strong></a>
+      <a href="https://buy.stripe.com/eVqbJ2bXYbD72ne3aW00001" target="_blank" class="pro-link">Monthly<strong>9 €/mo</strong></a>
+      <a href="https://buy.stripe.com/cNi9AUgeedLffa0aDo00002" target="_blank" class="pro-link" style="border-color:#10b981;">★ Annual<strong>49 €/yr</strong></a>
+    </div>
+    <a href="https://finanzasmart-pro.surge.sh/clean-ai-studio.html" target="_blank" style="display:block;margin-top:6px;font-size:0.7rem;color:#93c5fd;text-decoration:none;">Open Full Web Studio ↗</a>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>
