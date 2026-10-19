@@ -119,7 +119,7 @@ const CATALOGO_PRODUCTOS_SAAS = [
           <div style="font-weight:800;margin-bottom:6px;">🔒 Desbloquea tu Papeleta SMAC Completa + Hoja de Cálculo Legal por 4,99 €</div>
           <p style="font-size:0.82rem;color:#94a3b8;margin-bottom:10px;">Un abogado laboralista cobra entre 180 € y 300 € por redactar la Papeleta de Conciliación SMAC. Descárgala lista para presentar en el registro electrónico de tu CCAA:</p>
           <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;">
-            <a href="https://revolut.me/revienta" target="_blank" rel="noopener" style="background:#10b981;color:#062319;font-weight:800;padding:10px 14px;border-radius:8px;text-decoration:none;font-size:0.85rem;">💳 Pagar 4,99 € con Tarjeta / Bizum-Revolut</a>
+            <a href="https://buy.stripe.com/9B64gA5zA22x5zq3aW00000" target="_blank" rel="noopener" style="background:#10b981;color:#062319;font-weight:800;padding:10px 14px;border-radius:8px;text-decoration:none;font-size:0.85rem;">💳 Pagar 4,99 € con Tarjeta / Bizum-Revolut</a>
             <button onclick="navigator.clipboard.writeText('ES49 1583 0001 1290 4163 0031');alert('IBAN copiado: ES49 1583 0001 1290 4163 0031');" style="background:#3b82f6;color:#fff;border:none;padding:10px 14px;border-radius:8px;cursor:pointer;font-weight:700;font-size:0.82rem;">🏦 Copiar IBAN (ES49 1583...)</button>
           </div>
           <div style="display:flex;gap:8px;">
@@ -228,7 +228,7 @@ const CATALOGO_PRODUCTOS_SAAS = [
       <button class="btn-primary" onclick="genDgt()">Generar Pliego de Descargos Oficial →</button>
       <pre id="dgt-out" style="background:#0d111a;border:1px solid #262d3d;border-radius:10px;padding:16px;margin-top:16px;color:#cbd5e1;white-space:pre-wrap;font-size:0.83rem;"></pre>
       <div style="margin-top:14px;display:flex;gap:10px;flex-wrap:wrap;">
-        <a href="https://revolut.me/revienta" target="_blank" rel="noopener" style="background:#10b981;color:#062319;font-weight:800;padding:10px 14px;border-radius:8px;text-decoration:none;">💳 Desbloquear Pliego Completo (4,99 €)</a>
+        <a href="https://buy.stripe.com/9B64gA5zA22x5zq3aW00000" target="_blank" rel="noopener" style="background:#10b981;color:#062319;font-weight:800;padding:10px 14px;border-radius:8px;text-decoration:none;">💳 Desbloquear Pliego Completo (4,99 €)</a>
       </div>
     </div>
   </main>
