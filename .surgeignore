@@ -1,0 +1,6 @@
+.env
+.env.*
+.reddit*
+.mail_tmp.json
+node_modules/
+.git/
