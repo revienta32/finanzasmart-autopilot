@@ -540,6 +540,10 @@
         `<span class="threat-badge-green">✅ All invisible Unicode watermarks (U+202F / U+200B / U+00A0) and em-dashes stripped & copied to clipboard!</span>`;
     }
 
+    if (location.search.includes("pro_activated=true")) {
+      isPureAiPro = true;
+      localStorage.setItem("pureai_studio_pro", "true");
+    }
     const urlLang = (location.search.match(/lang=(en|es|de|fr|pt)/) || [])[1];
     if (urlLang) setLang(urlLang);
   </script>

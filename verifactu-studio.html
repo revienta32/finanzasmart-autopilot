@@ -1040,6 +1040,10 @@
       }
     }
 
+    if (location.search.includes("pro_activated=true")) {
+      isPro = true;
+      localStorage.setItem("verifactu_studio_pro", "true");
+    }
     // Auto-select language from URL hash or query (?lang=de / #de)
     const urlLang = (location.search.match(/lang=(en|de|fr|es)/) || location.hash.match(/#(en|de|fr|es)/) || [])[1];
     renderLinesEditor();
