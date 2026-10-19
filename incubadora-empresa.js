@@ -304,9 +304,9 @@ async function runIncubator() {
   }
 
   // 3. Evaluar conversión por página y calcular ranking de rentabilidad
-  const byPage = metrics.byPage || {};
+  const byPage = metrics.pageviewsByPage || metrics.byPage || {};
   state.productPerformance = state.activeProducts.map((p) => {
-    const views = byPage["/" + p.file] || (p.file === "index.html" ? (byPage["/"] || 0) : 0);
+    const views = byPage[p.file] || byPage["/" + p.file] || (p.file === "index.html" ? (byPage["/"] || 0) : 0);
     return { ...p, views };
   });
 

@@ -135,8 +135,71 @@ const SEO_PAGES = [
     bodyHtml: `
       <p>Si tu vuelo llegó con 3 o más horas de retraso o fue cancelado con menos de 14 días de preaviso, el Reglamento Europeo CE 261/2004 establece una compensación automática de <strong>250 €, 400 € o 600 € por pasajero</strong> además del reembolso de comida, hotel y transporte.</p>
     `
+  },
+  {
+    slug: "calcular-finiquito-indemnizacion-despido-improcedente.html",
+    title: "Calcular Finiquito e Indemnización por Despido Improcedente u Objetivo (2026) + Papeleta SMAC",
+    h1: "Calculadora de Finiquito, Indemnización por Despido (33 o 20 días) y Papeleta SMAC",
+    lead: "Calcula al céntimo cuánto te corresponde por despido improcedente, objetivo o fin de contrato temporal más vacaciones no disfrutadas y descarga tu Papeleta de Conciliación SMAC.",
+    calcLink: "laboral-ia.html",
+    bodyHtml: `
+      <p>Ante cualquier despido o falta de pago del finiquito, dispones de un plazo improrrogable de <strong>20 días hábiles</strong> (art. 59.3 del Estatuto de los Trabajadores) para presentar la Papeleta de Conciliación ante el SMAC.</p>
+      <p>Con <strong>LaboralSmart IA</strong> puedes calcular gratis la indemnización exenta de IRPF (33 días por año trabajado en despido improcedente o 20 días en despido objetivo), sumar las vacaciones devengadas y generar el escrito oficial para el SMAC sin pagar 250 € a un despacho.</p>
+    `
+  },
+  {
+    slug: "recurrir-multa-dgt-radar-zbe-modelo-alegaciones.html",
+    title: "Cómo Recurrir una Multa de la DGT, Radar o ZBE en 2026 (Modelo de Alegaciones Orden ICT/155/2020)",
+    h1: "Generador de Recurso y Alegaciones para Multas de Radar DGT y Zonas de Bajas Emisiones (ZBE)",
+    lead: "Exige el certificado de verificación metrológica del cinemómetro y los dos fotogramas obligatorios para anular multas de velocidad o cámaras municipales y conservar tus puntos.",
+    calcLink: "multas-dgt-ia.html",
+    bodyHtml: `
+      <p>Más del 38% de las sanciones por exceso de velocidad o acceso a Zonas de Bajas Emisiones (ZBE) presentan defectos formales al no adjuntar el certificado de verificación periódica del aparato medidor conforme a la <strong>Orden ICT/155/2020</strong> ni aplicar correctamente el margen de error legal.</p>
+      <p>Utiliza <strong>MotorSmart IA</strong> para generar tu pliego de descargos oficial listo para presentar en la Sede Electrónica de la DGT o de tu Ayuntamiento.</p>
+    `
+  },
+  {
+    slug: "reclamar-gastos-hipoteca-caixabank-bbva-santander.html",
+    title: "Reclamar Gastos de Hipoteca a CaixaBank, BBVA, Santander o Sabadell (2026) sin Abogado",
+    h1: "Cómo Recuperar entre 1.500€ y 2.400€ de Gastos de Hipoteca en CaixaBank, BBVA y Santander",
+    lead: "El plazo de prescripción solo empieza a contar desde que conoces la nulidad de tu cláusula (Sentencia TJUE C-561/21). Calcula tu devolución más intereses legales y presenta el escrito al SAC.",
+    calcLink: "reclamaciones-ia.html",
+    bodyHtml: `
+      <p>Tanto si tu hipoteca original era de <strong>CaixaBank (o Bankia/La Caixa), BBVA, Banco Santander, Sabadell, Kutxabank o Ibercaja</strong> —incluso si ya está cancelada o vendida—, tienes derecho a recuperar el 50% de Notaría y el 100% de Registro, Gestoría y Tasación más los intereses legales desde la fecha de cada factura.</p>
+    `
+  },
+  {
+    slug: "subida-alquiler-ipc-irav-limite-legal-inquilino.html",
+    title: "¿Puede mi Casero Subirme el Alquiler un 5% con el IPC en 2026? Límite Legal IRAV y Fianza INCASOL/IVIMA",
+    h1: "Límite Legal de Subida de Alquiler (IRAV vs IPC) y Reclamación de Fianza No Depositada",
+    lead: "Comprueba si la subida de alquiler que te pide tu casero es ilegal según el artículo 18 de la LAU y cómo reclamar la fianza e indemnización si no la depositó en INCASOL/IVIMA.",
+    calcLink: "reclamaciones-ia.html",
+    bodyHtml: `
+      <p>El propietario <strong>no puede aplicar subidas arbitrarias del 5% ni actualizar la renta con carácter retroactivo</strong>: el artículo 18 de la LAU exige preaviso fehaciente con 30 días de antelación respetando el límite oficial del INE (IRAV). Además, si al finalizar el contrato no devuelve la fianza en 30 días (art. 36.4 LAU), genera intereses legales automáticos.</p>
+    `
   }
 ];
+
+const DESPIDO_ANOS = [2, 5, 8, 10, 15];
+for (const anos of DESPIDO_ANOS) {
+  const indemn33 = Math.round((27000 / 365) * Math.min(anos * 33, 720));
+  const indemn20 = Math.round((27000 / 365) * Math.min(anos * 20, 360));
+  SEO_PAGES.push({
+    slug: `indemnizacion-despido-${anos}-anos-trabajados.html`,
+    title: `Cuánta Indemnización por Despido me Corresponde por ${anos} Años Trabajados en España (2026)`,
+    h1: `Cálculo de Indemnización y Finiquito por ${anos} Años de Antigüedad`,
+    lead: `Tabla comparativa de indemnización por despido improcedente (33 días/año) vs objetivo (20 días/año) tras ${anos} años en la empresa.`,
+    calcLink: "laboral-ia.html",
+    bodyHtml: `
+      <p>Con una antigüedad de <strong>${anos} años</strong> y un sueldo medio de referencia de 27.000 € brutos anuales (73,97 €/día), esta es la indemnización legal exenta de IRPF que te corresponde:</p>
+      <ul style="margin: 1rem 0 1.5rem 1.25rem; color: #cbd5e1;">
+        <li><strong>Despido Improcedente (33 días/año, Art. 56 ET):</strong> <strong style="color:#10b981;">${indemn33.toLocaleString("es-ES")} €</strong> (${Math.min(anos * 33, 720)} días de salario)</li>
+        <li><strong>Despido Objetivo / ETOP (20 días/año, Art. 53 ET):</strong> <strong>${indemn20.toLocaleString("es-ES")} €</strong> (${Math.min(anos * 20, 360)} días de salario)</li>
+      </ul>
+      <p>A esta cifra debes sumar siempre el <strong>finiquito</strong> (vacaciones generadas y no disfrutadas + días trabajados del mes). Calcula tu cifra exacta con tu sueldo real y genera tu Papeleta SMAC en 1 clic.</p>
+    `
+  });
+}
 
 // Generación programática de Long-Tail SEO (búsquedas exactas sin competencia donde el usuario entra directo a calcular)
 const AUTONOMO_BRACKETS = [1500, 2000, 2500, 3500, 4000, 5000];
@@ -258,8 +321,10 @@ function buildSeoPageHtml(page) {
         </div>
       </a>
       <nav class="tabs">
-        <a href="index.html" class="tab-btn active" style="text-decoration:none;">🧮 Ir a las Calculadoras</a>
-        <a href="producto-digital-pro.html" class="tab-btn" style="text-decoration:none;">📊 Planificador 50/30/20</a>
+        <a href="index.html" class="tab-btn active" style="text-decoration:none;">🧮 Calculadoras</a>
+        <a href="reclamaciones-ia.html" class="tab-btn" style="text-decoration:none;">⚖️ ReclamaSmart</a>
+        <a href="laboral-ia.html" class="tab-btn" style="text-decoration:none;">💼 LaboralSmart</a>
+        <a href="gestor-renta-ia.html" class="tab-btn" style="text-decoration:none;">🤖 Renta IA</a>
       </nav>
     </div>
   </header>
@@ -271,8 +336,8 @@ function buildSeoPageHtml(page) {
       ${page.bodyHtml}
       <div style="margin-top: 2rem; padding: 1.25rem; background: #0f172a; border: 1px solid #334155; border-radius: 0.75rem;">
         <h3 style="margin-bottom: 0.5rem;">🧮 Haz tu propia simulación en 10 segundos</h3>
-        <p style="color: #94a3b8; font-size: 0.9rem; margin-bottom: 1rem;">Usa nuestra calculadora interactiva gratuita para ajustar las cifras a tu caso personal:</p>
-        <a href="${page.calcLink}" class="cta-button" style="display:inline-block; padding: 0.7rem 1.4rem;">Abrir Calculadora Interactiva →</a>
+        <p style="color: #94a3b8; font-size: 0.9rem; margin-bottom: 1rem;">Usa nuestra herramienta interactiva gratuita para calcular tu caso exacto y descargar el documento oficial:</p>
+        <a href="${page.calcLink}" class="cta-button" style="display:inline-block; padding: 0.7rem 1.4rem;">Abrir Herramienta Interactiva →</a>
       </div>
     </article>
 
@@ -294,14 +359,14 @@ function buildSeoPageHtml(page) {
   </main>
 
   <footer class="footer container">
-    <p>© 2026 FinanzaSmart — <a href="index.html" style="color:#10b981;">Calculadoras Financieras</a> | <a href="producto-digital-pro.html" style="color:#10b981;">Planificador 50/30/20</a></p>
+    <p>© 2026 FinanzaSmart — <a href="index.html" style="color:#10b981;">Calculadoras Financieras</a> | <a href="reclamaciones-ia.html" style="color:#10b981;">Reclamaciones Legales</a> | <a href="laboral-ia.html" style="color:#10b981;">Finiquito y SMAC</a> | <a href="multas-dgt-ia.html" style="color:#10b981;">Recurso Multas DGT</a></p>
   </footer>
   <script src="telemetria-soporte.js"></script>
 </body>
 </html>`;
 }
 
-async function publishTelegraphArticles() {
+async function publishTelegraphArticles(prevArticles = []) {
   const accRes = await fetch(
     "https://api.telegra.ph/createAccount?short_name=FinanzaSmart&author_name=FinanzaSmart+Espa%C3%B1a&author_url=" +
       encodeURIComponent(SITE_URL)
@@ -310,55 +375,48 @@ async function publishTelegraphArticles() {
   if (!accRes.ok) return [];
   const token = accRes.result.access_token;
 
-  const todayStr = new Date().toISOString().slice(0, 10);
   const articles = [
     {
-      title: `Resumen Financiero y Estrategia DCA (${todayStr}): Calculadora de Interés Compuesto y Cripto`,
+      slugKey: "Modelo-Burofax-Reclamar-Fianza-Alquiler-LAU",
+      title: "Modelo Burofax Reclamar Fianza de Alquiler no Devuelta en 30 Días (Art. 36.4 LAU e INCASOL)",
       nodes: [
-        { tag: "p", children: [`Actualización del ${todayStr}: Automatizar el ahorro mensual (Regla 50/30/20) y reinvertir intereses es la vía más segura para construir patrimonio sin depender de un único sueldo.`] },
-        { tag: "p", children: [{ tag: "a", attrs: { href: SITE_URL }, children: ["🧮 Simular tu Interés Compuesto, Hipoteca o Sueldo Neto en FinanzaSmart"] }] },
-        { tag: "p", children: [{ tag: "a", attrs: { href: REVOLUT_URL }, children: ["🏦 Abrir Cuenta Gratuita con Huchas en Revolut (Invitación Oficial)"] }] },
-        { tag: "p", children: [{ tag: "a", attrs: { href: BITGET_URL }, children: ["⚡ Activar Bono de Bienvenida en Bitget (Código: KQBSNNRF)"] }] }
+        { tag: "p", children: ["Si has entregado las llaves del piso y tu casero no te devuelve la fianza tras 30 días o no la depositó en el organismo autonómico (INCASOL, IVIMA, etc.), el artículo 36.4 de la LAU obliga al pago de intereses legales automáticos."] },
+        { tag: "p", children: [{ tag: "a", attrs: { href: `${SITE_URL}/reclamaciones-ia.html` }, children: ["⚖️ Calcular Intereses de Fianza y Descargar Burofax Oficial (Art. 36.4 LAU)"] }] },
+        { tag: "p", children: [{ tag: "a", attrs: { href: `${SITE_URL}/subida-alquiler-ipc-irav-limite-legal-inquilino.html` }, children: ["🏠 ¿Puede tu casero subirte un 5% de IPC? Consulta el límite legal IRAV"] }] }
       ]
     },
     {
-      title: "Cómo Calcular tu Interés Compuesto y Automatizar tu Ahorro en 2026 (Herramienta Gratis)",
+      slugKey: "Calcular-Finiquito-Indemnizacion-Despido-Papeleta-SMAC",
+      title: "Cómo Calcular tu Finiquito e Indemnización por Despido Improcedente (33 días) + Papeleta SMAC",
       nodes: [
-        { tag: "p", children: ["El 90% de las personas pierde poder adquisitivo cada año por dejar sus ahorros parados sin una estrategia clara. Con solo 150€ al mes invertidos a largo plazo, el interés compuesto multiplica tu capital por encima de los 50.000€ en 15 años."] },
-        { tag: "h4", children: ["1. Calcula tu proyección exacta gratis"] },
-        { tag: "p", children: ["Hemos publicado una suite gratuita de calculadoras financieras (Interés Compuesto, Cuota de Hipoteca, Sueldo Neto de Autónomo y Regla del 4%) junto con un Planificador 50/30/20 descargable en Excel:"] },
-        { tag: "p", children: [{ tag: "a", attrs: { href: SITE_URL }, children: ["👉 Abrir Calculadora Financiera Interactiva FinanzaSmart"] }] },
-        { tag: "h4", children: ["2. Automatiza tus huchas sin comisiones con Revolut"] },
-        { tag: "p", children: ["Para no mezclar tus gastos diarios con tu ahorro mensual, abre una cuenta gratuita en Revolut y activa las huchas automáticas:"] },
-        { tag: "p", children: [{ tag: "a", attrs: { href: REVOLUT_URL }, children: ["🏦 Crear Cuenta Gratis en Revolut (Invitación Oficial)"] }] },
-        { tag: "h4", children: ["3. Estrategia DCA y Copy Trading en Bitget (Código: KQBSNNRF)"] },
-        { tag: "p", children: ["Si destinas una parte de tu cartera a Bitcoin, USDT Earn o Copy Trading automático, regístrate en Bitget con el código promocional KQBSNNRF para activar tu bono de bienvenida:"] },
-        { tag: "p", children: [{ tag: "a", attrs: { href: BITGET_URL }, children: ["🚀 Registrarse en Bitget con Bono (Código: KQBSNNRF)"] }] }
+        { tag: "p", children: ["Recuerda que dispones de solo 20 días hábiles desde la carta de despido para presentar la Papeleta de Conciliación ante el SMAC y reclamar tus 33 días por año trabajado más las vacaciones no disfrutadas."] },
+        { tag: "p", children: [{ tag: "a", attrs: { href: `${SITE_URL}/laboral-ia.html` }, children: ["💼 Abrir Calculadora de Finiquito, Indemnización y Generador de Papeleta SMAC"] }] }
       ]
     },
     {
-      title: "Regla 50/30/20 en España (2026): Plantilla Interactiva Gratis + Mejores Cuentas",
+      slugKey: "Recurrir-Multa-Radar-DGT-y-ZBE-Modelo-Alegaciones",
+      title: "Modelo para Recurrir Multa de Radar DGT o Zona de Bajas Emisiones (ZBE) en 2026",
       nodes: [
-        { tag: "p", children: ["La regla 50/30/20 divide tus ingresos netos en un 50% para necesidades básicas, 30% para estilo de vida y un 20% para ahorro e inversión automática."] },
-        { tag: "p", children: [{ tag: "a", attrs: { href: `${SITE_URL}/producto-digital-pro.html` }, children: ["📊 Usar Plantilla Interactiva 50/30/20 Gratis (Exportable a Excel y PDF)"] }] },
-        { tag: "p", children: ["Combina la plantilla con una cuenta sin comisiones en Revolut para separar tu 20% el mismo día que cobras la nómina y automatiza tus compras DCA en Bitget con el código KQBSNNRF:"] },
-        { tag: "p", children: [{ tag: "a", attrs: { href: REVOLUT_URL }, children: ["👉 Invitación Oficial Revolut Gratis"] }] },
-        { tag: "p", children: [{ tag: "a", attrs: { href: BITGET_URL }, children: ["👉 Bono Bitget (Código: KQBSNNRF)"] }] }
+        { tag: "p", children: ["Antes de perder puntos del carnet, exige el certificado de verificación periódica del cinemómetro (Orden ICT/155/2020) y los dos fotogramas obligatorios con aplicación del margen de error."] },
+        { tag: "p", children: [{ tag: "a", attrs: { href: `${SITE_URL}/multas-dgt-ia.html` }, children: ["🚗 Generar Pliego de Descargos para Multa DGT o Ayuntamiento"] }] }
       ]
     },
     {
-      title: "Código de Referencia Bitget 2026 (KQBSNNRF): Cómo Hacer DCA Automático en Cripto",
+      slugKey: "Reclamar-Gastos-Hipoteca-CaixaBank-BBVA-Santander-TJUE",
+      title: "Cómo Reclamar los Gastos de Hipoteca a CaixaBank, BBVA y Santander sin Abogado (Sentencia TJUE)",
       nodes: [
-        { tag: "p", children: ["Hacer DCA (Dollar Cost Averaging) consiste en invertir una cantidad fija cada semana o mes sin importar las subidas o bajadas del mercado."] },
-        { tag: "p", children: ["Antes de empezar, simula cuánto tiempo tardarás en alcanzar tu meta de libertad financiera con nuestra calculadora gratuita:"] },
-        { tag: "p", children: [{ tag: "a", attrs: { href: `${SITE_URL}/codigo-promocional-bitget-kqbsnnrf.html` }, children: ["📈 Guía y Simulador DCA + Código Bitget KQBSNNRF"] }] },
-        { tag: "p", children: [{ tag: "a", attrs: { href: BITGET_URL }, children: ["⚡ Abrir cuenta en Bitget con el código KQBSNNRF"] }] }
+        { tag: "p", children: ["Recupera entre 1.500 € y 2.400 € (50% Notaría y 100% Registro, Gestoría y Tasación más intereses legales) presentando el escrito oficial ante el Servicio de Atención al Cliente de tu banco."] },
+        { tag: "p", children: [{ tag: "a", attrs: { href: `${SITE_URL}/reclamaciones-ia.html` }, children: ["🏦 Calcular Importe Exacto + Descargar Escrito Oficial Gastos de Hipoteca"] }] },
+        { tag: "p", children: [{ tag: "a", attrs: { href: REVOLUT_URL }, children: ["💳 Abrir Cuenta Gratuita Revolut para cobrar tu indemnización sin comisiones"] }] }
       ]
     }
   ];
 
   const publishedUrls = [];
   for (const art of articles) {
+    // Evitar republicar en bucle si ya existe este tema en red-de-trafico.json
+    const alreadyExists = prevArticles.some((u) => decodeURIComponent(u).toLowerCase().includes(art.slugKey.slice(0, 18).toLowerCase()));
+    if (alreadyExists) continue;
     const res = await fetch("https://api.telegra.ph/createPage", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -427,8 +485,16 @@ ${allUrls
 </urlset>`;
   fs.writeFileSync(path.join(__dirname, "sitemap.xml"), sitemapXml);
 
-  // 4. Publicar artículos satélite en la nube de Telegra.ph (24/7 online)
-  const telegraphUrls = await publishTelegraphArticles();
+  // 4. Cargar historial de artículos satélite y publicar solo nuevos temas sin duplicar en bucle
+  let prevArticles = [];
+  const reportPath = path.join(__dirname, "red-de-trafico.json");
+  if (fs.existsSync(reportPath)) {
+    try {
+      const prev = JSON.parse(fs.readFileSync(reportPath, "utf8"));
+      prevArticles = (prev.telegraphCloudArticles || []).filter((u) => !/-\d{2}-\d{2}-\d+$/.test(u));
+    } catch (_) {}
+  }
+  const telegraphUrls = await publishTelegraphArticles(prevArticles);
   console.log("Published Telegraph Cloud Articles:", telegraphUrls);
 
   // 5. Notificar automáticamente a buscadores (Bing, DuckDuckGo, Yandex, ChatGPT Search) vía IndexNow
@@ -445,14 +511,6 @@ ${allUrls
   console.log("IndexNow status:", indexRes.status);
 
   // 6. Guardar registro acumulativo de distribución en el proyecto
-  let prevArticles = [];
-  const reportPath = path.join(__dirname, "red-de-trafico.json");
-  if (fs.existsSync(reportPath)) {
-    try {
-      const prev = JSON.parse(fs.readFileSync(reportPath, "utf8"));
-      prevArticles = prev.telegraphCloudArticles || [];
-    } catch (_) {}
-  }
   const mergedArticles = [...new Set([...telegraphUrls, ...prevArticles])];
   const report = {
     updatedAt: new Date().toISOString(),

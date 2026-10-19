@@ -1,6 +1,6 @@
 {
   "startedAt": "2026-10-17T10:55:03.656Z",
-  "lastEvaluation": "2026-10-19T12:08:05.174Z",
+  "lastEvaluation": "2026-10-19T15:56:59.689Z",
   "activeProducts": [
     {
       "id": "finanzas-suite",
@@ -46,9 +46,9 @@
     "reclamar gastos hipoteca caixabank",
     "reclamar gastos hipoteca gratis",
     "recurrir multa dgt",
-    "recurrir multa zbe madrid",
-    "recurrir multa ayuntamiento madrid",
+    "recurrir multa ayuntamiento valencia",
     "recurrir multa dgt online",
+    "recurrir multa trafico",
     "simulador declaracion renta 2026",
     "simulador declaración renta 2025",
     "simulador declaracion renta navarra",
@@ -69,7 +69,7 @@
       "id": "finanzas-suite",
       "file": "index.html",
       "sector": "FinTech / Ahorro e Inversión",
-      "views": 0
+      "views": 1
     },
     {
       "id": "gestor-renta-ia",
