@@ -226,6 +226,40 @@ const SEO_PAGES = [
     bodyHtml: `
       <p>No necesitas pagar 25 €/mes a un programa en la nube para emitir <strong>facturas legales con código QR de la Agencia Tributaria y huella digital SHA-256 encadenada</strong>. Nuestro estudio funciona 100% en tu dispositivo (tus clientes y facturas no se suben a ningún servidor externo).</p>
     `
+  },
+  {
+    slug: "c2pa-metadata-remover-ai-scrubber.html",
+    title: "Free C2PA Metadata Remover & AI Content Credential Scrubber (2026 — 100% Client-Side)",
+    h1: "🧬 Strip C2PA 'Made with AI' Credentials, JUMBF, EXIF GPS & ChatGPT Unicode Watermarks",
+    lead: "Remove hidden C2PA manifests (DALL-E, Firefly, Gemini, Midjourney), ComfyUI PNG workflow chunks, EXIF GPS coordinates and invisible ChatGPT Unicode spaces (U+202F / U+200B) locally in your browser.",
+    calcLink: "clean-ai-studio.html?lang=en",
+    bodyHtml: `
+      <p>Social platforms (Instagram, TikTok, LinkedIn) and AI detectors scan binary <strong>C2PA / JUMBF boxes</strong>, <strong>IPTC trainedAlgorithmicMedia tags</strong>, and <strong>narrow no-break spaces (U+202F)</strong> to automatically label and throttle AI-assisted images and text.</p>
+      <ul style="margin: 1rem 0 1.5rem 1.25rem; color: #cbd5e1;">
+        <li><strong>Binary C2PA &amp; EXIF Destroyer:</strong> Re-encodes a 100% clean pixel buffer in your browser with optional imperceptible sensor micro-grain.</li>
+        <li><strong>Invisible Unicode Watermark Scrubber:</strong> Instantly detects and strips hidden zero-width and narrow no-break spaces inserted by LLMs.</li>
+      </ul>
+    `
+  },
+  {
+    slug: "quitar-metadatos-ia-c2pa-exif-fotos-texto.html",
+    title: "Cómo Quitar la Etiqueta 'Creado con IA' (C2PA / EXIF) en Fotos y Marcas Invisibles de ChatGPT (2026)",
+    h1: "🇪🇸 Elimina Metadatos Ocultos C2PA, Coordenadas GPS EXIF y Marcas Unicode Invisibles de IA",
+    lead: "Escanea y limpia gratis desde tu navegador las firmas ocultas de DALL-E, Midjourney, Firefly, Gemini y los espacios invisibles (U+202F / U+200B) de ChatGPT sin subir tus archivos a internet.",
+    calcLink: "clean-ai-studio.html?lang=es",
+    bodyHtml: `
+      <p>Cuando subes una imagen generada o editada con IA a Instagram, TikTok o LinkedIn, la plataforma lee el bloque binario <strong>C2PA / JUMBF</strong> y le aplica automáticamente el aviso <em>"Creado con IA"</em>, reduciendo su alcance orgánico. Con <strong>PureAI Studio</strong> puedes auditar y limpiar tus imágenes y textos al instante.</p>
+    `
+  },
+  {
+    slug: "ki-metadaten-c2pa-entfernen-kostenlos.html",
+    title: "C2PA KI-Metadaten, EXIF-GPS & ChatGPT-Wasserzeichen Online Entfernen Kostenlos (2026)",
+    h1: "🇩🇪 Kostenloser C2PA-, EXIF- & KI-Wasserzeichen-Entferner (100% Lokal im Browser)",
+    lead: "Entfernen Sie 'Mit KI erstellt'-Signaturen (C2PA / JUMBF), EXIF-Standortdaten und unsichtbare ChatGPT Unicode-Zeichen (U+202F / U+200B) ohne Server-Upload.",
+    calcLink: "clean-ai-studio.html?lang=de",
+    bodyHtml: `
+      <p>Soziale Netzwerke und Prüfprogramme analysieren versteckte <strong>C2PA-Manifeste</strong> in Bildern sowie unsichtbare Unicode-Steuerzeichen in KI-Texten. Unser Studio bereinigt Ihre Dateien zu 100 % lokal auf Ihrem Gerät (DSGVO-konform).</p>
+    `
   }
 ];
 
@@ -492,6 +526,7 @@ async function run() {
   // 2. Generar páginas SEO programáticas
   const allUrls = [
     `${SITE_URL}/`,
+    `${SITE_URL}/clean-ai-studio.html`,
     `${SITE_URL}/verifactu-studio.html`,
     `${SITE_URL}/producto-digital-pro.html`,
     `${SITE_URL}/gestor-renta-ia.html`,

@@ -113,7 +113,10 @@ const verifactuHtml = fs.readFileSync(path.join(__dirname, "verifactu-studio.htm
 assert(verifactuHtml.includes("urn:oasis:names:specification:ubl:schema:xsd:Invoice-2"), "Falta exportador Peppol/XRechnung UBL 2.1 en verifactu-studio.html");
 assert(verifactuHtml.includes("Facturaev3_2_2.xml"), "Falta exportador Facturae 3.2.2 en verifactu-studio.html");
 assert(verifactuHtml.includes("crypto.subtle.digest(\"SHA-256\""), "Falta motor criptográfico SHA-256 en verifactu-studio.html");
-assert(indexHtml.includes("telemetria-soporte.js") && proHtml.includes("telemetria-soporte.js") && rentaHtml.includes("telemetria-soporte.js") && legalHtml.includes("telemetria-soporte.js") && verifactuHtml.includes("telemetria-soporte.js"), "Falta inyección de telemetria-soporte.js en páginas principales");
+const cleanAiHtml = fs.readFileSync(path.join(__dirname, "clean-ai-studio.html"), "utf8");
+assert(cleanAiHtml.includes("trainedAlgorithmicMedia") && cleanAiHtml.includes("\\u202F"), "Falta motor C2PA y Unicode Scrubber en clean-ai-studio.html");
+assert(indexHtml.includes("telemetria-soporte.js") && proHtml.includes("telemetria-soporte.js") && rentaHtml.includes("telemetria-soporte.js") && legalHtml.includes("telemetria-soporte.js") && verifactuHtml.includes("telemetria-soporte.js") && cleanAiHtml.includes("telemetria-soporte.js"), "Falta inyección de telemetria-soporte.js en páginas principales");
 
-console.log("✅ QA TEST SUITE PASSED: Global E-Invoice Studio Pro (EN/DE/FR/ES), 7 líneas SaaS, Soporte/Auto-Doctor y exportación XML/Excel verificados sin errores.");
+console.log("✅ QA TEST SUITE PASSED: PureAI C2PA/Unicode Studio + Global E-Invoice Studio Pro (8 líneas SaaS globales) verificados sin errores.");
+
 

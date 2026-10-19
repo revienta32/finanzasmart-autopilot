@@ -69,6 +69,11 @@ async function publishHighAuthorityGists(token) {
       description: "Free Peppol UBL 2.1, German XRechnung 3.0, French Factur-X & Spanish VeriFactu E-Invoice XML Generator + Viewer (EN 16931)",
       filename: "Global-E-Invoice-XML-Generator-Viewer-EN16931.md",
       content: `# 🌍 Free Client-Side E-Invoice Generator & XML Viewer (Peppol UBL 2.1 · XRechnung 3.0 · Factur-X · VeriFactu)\n\n100% browser-based, GDPR/DSGVO-compliant electronic invoicing studio supporting European **EN 16931** standards with zero server uploads:\n\n- 🇬🇧 **[Free Peppol BIS 3.0 (UBL 2.1) XML Invoice Generator & Validator](${SITE_URL}/verifactu-studio.html?lang=en)**\n- 🇩🇪 **[Kostenloser XRechnung 3.0 Generator & XML-Viewer (mit Leitweg-ID & GiroCode)](${SITE_URL}/verifactu-studio.html?lang=de)**\n- 🇫🇷 **[Générateur Factur-X / Chorus Pro XML Gratuit en Ligne](${SITE_URL}/verifactu-studio.html?lang=fr)**\n- 🇪🇸 **[Generador Veri*Factu (Huella SHA-256 + QR AEAT) y Facturae 3.2.2 XML](${SITE_URL}/verifactu-studio.html?lang=es)**`
+    },
+    {
+      description: "Free C2PA Metadata Remover, EXIF GPS Destroyer & Invisible ChatGPT Unicode Watermark Scrubber (100% Client-Side)",
+      filename: "C2PA-Metadata-Remover-AI-Unicode-Scrubber.md",
+      content: `# 🧬 PureAI Studio: Free Client-Side C2PA Metadata Remover & AI Unicode Watermark Scrubber\n\nInspect and strip **C2PA / JUMBF 'Made with AI' manifests** (DALL-E, Firefly, Gemini, Midjourney), **ComfyUI PNG chunks**, **EXIF GPS coordinates**, and **invisible LLM Unicode watermarks (\`U+202F\`, \`U+200B\`, \`U+00A0\`)** 100% locally in your browser without uploading files to any server:\n\n- 🇬🇧 **[Open PureAI C2PA & Unicode Watermark Scrubber (EN)](${SITE_URL}/clean-ai-studio.html?lang=en)**\n- 🇪🇸 **[Quitar Metadatos IA (C2PA / EXIF) y Marcas Invisibles de ChatGPT (ES)](${SITE_URL}/clean-ai-studio.html?lang=es)**\n- 🇩🇪 **[C2PA KI-Metadaten & ChatGPT-Wasserzeichen Entfernen (DE)](${SITE_URL}/clean-ai-studio.html?lang=de)**`
     }
   ];
 
@@ -125,6 +130,13 @@ async function createSatelliteRepos(token) {
       homepage: `${SITE_URL}/verifactu-studio.html`,
       topics: ["xrechnung", "peppol", "einvoicing", "ubl", "factur-x", "verifactu", "en16931"],
       readme: `# 🌍 Global E-Invoice & XML Studio Pro (Peppol UBL 2.1 · XRechnung 3.0 · Factur-X · VeriFactu)\n\n👉 **Launch Live Web App (100% Client-Side, No Sign-Up):** **[${SITE_URL}/verifactu-studio.html](${SITE_URL}/verifactu-studio.html)**\n\n### Supported International Standards:\n- 🇬🇧 **[Peppol BIS Billing 3.0 (UBL 2.1 XML) Generator & Validator](${SITE_URL}/peppol-ubl-xml-invoice-generator-validator.html)**\n- 🇩🇪 **[XRechnung 3.0 & ZUGFeRD Generator + XML Viewer (Leitweg-ID & GiroCode)](${SITE_URL}/xrechnung-generator-viewer-kostenlos.html)**\n- 🇫🇷 **[Générateur Factur-X / Chorus Pro XML Gratuit](${SITE_URL}/generateur-factur-x-chorus-pro-gratuit.html)**\n- 🇪🇸 **[Veri*Factu AEAT (SHA-256 + QR) & Facturae 3.2.2 XML](${SITE_URL}/generador-facturas-verifactu-qr-aeat-facturae-xml-gratis.html)**`
+    },
+    {
+      name: "c2pa-metadata-remover-ai-watermark-scrubber",
+      description: "Free 100% Client-Side C2PA Metadata Remover, EXIF GPS Destroyer, ComfyUI/Midjourney PNG Scrubber & ChatGPT Invisible Unicode Watermark Cleaner.",
+      homepage: `${SITE_URL}/clean-ai-studio.html`,
+      topics: ["c2pa", "exif-remover", "metadata-remover", "ai-watermark", "privacy-tools", "comfyui", "midjourney"],
+      readme: `# 🧬 PureAI Studio — Free Client-Side C2PA Metadata Remover & AI Unicode Watermark Scrubber\n\n👉 **Launch Live Web App (Zero Server Upload):** **[${SITE_URL}/clean-ai-studio.html](${SITE_URL}/clean-ai-studio.html)**\n\n### Features (EN / ES / DE / FR / PT):\n- **[Image C2PA, JUMBF & EXIF GPS Destroyer](${SITE_URL}/c2pa-metadata-remover-ai-scrubber.html)**: Strips 'Made with AI' Content Credentials (DALL-E, Firefly, Gemini, Midjourney), ComfyUI PNG chunks, and EXIF geolocation.\n- **[ChatGPT / Claude Invisible Unicode Watermark Scrubber](${SITE_URL}/quitar-metadatos-ia-c2pa-exif-fotos-texto.html)**: Detects and removes hidden \`U+202F\`, \`U+200B\`, and \`U+00A0\` tracking characters.\n- 🇩🇪 **[C2PA KI-Metadaten & Wasserzeichen Kostenlos Entfernen](${SITE_URL}/ki-metadaten-c2pa-entfernen-kostenlos.html)**`
     }
   ];
 
