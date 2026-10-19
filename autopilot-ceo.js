@@ -177,6 +177,55 @@ const SEO_PAGES = [
     bodyHtml: `
       <p>El propietario <strong>no puede aplicar subidas arbitrarias del 5% ni actualizar la renta con carácter retroactivo</strong>: el artículo 18 de la LAU exige preaviso fehaciente con 30 días de antelación respetando el límite oficial del INE (IRAV). Además, si al finalizar el contrato no devuelve la fianza en 30 días (art. 36.4 LAU), genera intereses legales automáticos.</p>
     `
+  },
+  {
+    slug: "xrechnung-generator-viewer-kostenlos.html",
+    title: "XRechnung Generator & XML Viewer Online Kostenlos (2026) — EN 16931 E-Rechnung erstellen ohne Anmeldung",
+    h1: "🇩🇪 Kostenloser XRechnung 3.0 & ZUGFeRD Generator + XML-Viewer (100% DSGVO-konform im Browser)",
+    lead: "Erstellen, prüfen und öffnen Sie XRechnung 3.0 (.XML mit Leitweg-ID) und druckfertige A4-PDFs mit EPC-GiroCode direkt im Browser — ohne Registrierung und ohne Server-Upload.",
+    calcLink: "verifactu-studio.html?lang=de",
+    bodyHtml: `
+      <p>Seit der Einführung der <strong>E-Rechnungspflicht in Deutschland (Wachstumschancengesetz / EN 16931)</strong> müssen Unternehmen und Freiberufler strukturierte XML-Rechnungen (XRechnung 3.0 / ZUGFeRD) empfangen, prüfen und erstellen können.</p>
+      <ul style="margin: 1rem 0 1.5rem 1.25rem; color: #cbd5e1;">
+        <li><strong>XRechnung XML-Viewer (Drag &amp; Drop):</strong> Öffnen Sie jede empfangene <code>.xml</code>-E-Rechnung sofort als lesbares A4-PDF inklusive EN-16931-Prüfbericht.</li>
+        <li><strong>XRechnung 3.0 Generator mit Leitweg-ID (BT-10):</strong> Exportieren Sie standardkonforme UBL 2.1 XML-Dateien + A4-PDF mit SEPA EPC-GiroCode.</li>
+        <li><strong>100% Lokal &amp; DSGVO-sicher:</strong> Ihre Rechnungsdaten verlassen niemals Ihren Browser.</li>
+      </ul>
+    `
+  },
+  {
+    slug: "peppol-ubl-xml-invoice-generator-validator.html",
+    title: "Free Peppol BIS 3.0 UBL 2.1 XML Invoice Generator, Viewer & EN 16931 Validator (No Sign-Up)",
+    h1: "🇬🇧 Free Peppol UBL 2.1 E-Invoice Generator & Drag-and-Drop XML Viewer (100% Client-Side)",
+    lead: "Generate EN 16931 compliant Peppol BIS Billing 3.0 XML invoices or drag & drop any UBL/CII .xml file to validate and convert it into a clean printable PDF in seconds.",
+    calcLink: "verifactu-studio.html?lang=en",
+    bodyHtml: `
+      <p>With mandatory B2B e-invoicing across Europe (Belgium, Germany, UK, Netherlands) and APAC (Australia, Singapore), freelancers and SMEs need a fast, zero-server way to create and inspect <strong>Peppol BIS 3.0 (UBL 2.1) XML invoices</strong> without paying $30/month for bloated ERP suites.</p>
+      <ul style="margin: 1rem 0 1.5rem 1.25rem; color: #cbd5e1;">
+        <li><strong>Instant XML-to-PDF Viewer &amp; EN 16931 Validator:</strong> Drop any <code>.xml</code> invoice to verify mandatory business terms (BT-1, BT-2, BT-10, BT-31, BT-109, BT-112) and print as A4 PDF.</li>
+        <li><strong>1-Click UBL 2.1 XML + SHA-256 Audit Trail Export:</strong> Ready for Peppol access points and public procurement portals.</li>
+      </ul>
+    `
+  },
+  {
+    slug: "generateur-factur-x-chorus-pro-gratuit.html",
+    title: "Générateur Factur-X & Lecteur XML Chorus Pro Gratuit en Ligne (2026 — Sans Inscription)",
+    h1: "🇫🇷 Créez et Validez vos Factures Électroniques Factur-X / Chorus Pro (.XML + PDF A4)",
+    lead: "Outil 100% local (conforme RGPD) pour auto-entrepreneurs et PME : générez vos fichiers XML conformes EN 16931 avec SIRET/TVA et convertissez vos factures XML en PDF lisible.",
+    calcLink: "verifactu-studio.html?lang=fr",
+    bodyHtml: `
+      <p>Face à l'obligation de facturation électronique B2B en France (réforme DGFIP / Chorus Pro / norme européenne EN 16931), notre studio vous permet de générer gratuitement vos factures <strong>Factur-X / UBL XML</strong> avec numéro SIRET, TVA intracommunautaire et QR SEPA sans aucun abonnement mensuel.</p>
+    `
+  },
+  {
+    slug: "generador-facturas-verifactu-qr-aeat-facturae-xml-gratis.html",
+    title: "Generador de Facturas VeriFactu Gratis (2026) con QR AEAT, Huella SHA-256 y XML Facturae 3.2.2",
+    h1: "🇪🇸 Crea Facturas Oficiales Veri*Factu (Huella SHA-256 + QR AEAT) y Facturae 3.2.2 sin Cuotas Mensuales",
+    lead: "Cumple con el Real Decreto 1007/2023 (Ley Antifraude) gratis desde tu navegador: encadenamiento criptográfico SHA-256, QR tributario de la AEAT, exportación XML Facturae y Libro de IVA/IRPF.",
+    calcLink: "verifactu-studio.html?lang=es",
+    bodyHtml: `
+      <p>No necesitas pagar 25 €/mes a un programa en la nube para emitir <strong>facturas legales con código QR de la Agencia Tributaria y huella digital SHA-256 encadenada</strong>. Nuestro estudio funciona 100% en tu dispositivo (tus clientes y facturas no se suben a ningún servidor externo).</p>
+    `
   }
 ];
 
@@ -443,6 +492,7 @@ async function run() {
   // 2. Generar páginas SEO programáticas
   const allUrls = [
     `${SITE_URL}/`,
+    `${SITE_URL}/verifactu-studio.html`,
     `${SITE_URL}/producto-digital-pro.html`,
     `${SITE_URL}/gestor-renta-ia.html`,
     `${SITE_URL}/reclamaciones-ia.html`,

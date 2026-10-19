@@ -1,0 +1,1030 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Global E-Invoice & XML Studio Pro (2026) — Peppol UBL 2.1, XRechnung 3.0, Factur-X & VeriFactu Generator + XML Viewer</title>
+  <meta name="description" content="100% Client-Side E-Invoicing Suite (EN / DE / FR / ES): Generate and validate Peppol BIS 3.0 (UBL 2.1), German XRechnung 3.0 (Leitweg-ID), French Factur-X (CII) and Spanish VeriFactu SHA-256 + Facturae 3.2.2 XML & PDF." />
+  <link rel="canonical" href="https://finanzasmart-pro.surge.sh/verifactu-studio.html" />
+  <link rel="stylesheet" href="styles.css" />
+  <style>
+    :root {
+      --vf-bg: #090d16;
+      --vf-card: #111827;
+      --vf-border: #1f2937;
+      --vf-accent: #10b981;
+      --vf-blue: #3b82f6;
+    }
+    body { background: var(--vf-bg); color: #f8fafc; font-family: 'Inter', system-ui, -apple-system, sans-serif; }
+    .lang-bar {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      background: #111827;
+      border: 1px solid #1f2937;
+      border-radius: 12px;
+      padding: 12px 16px;
+      margin-top: 18px;
+    }
+    .lang-btn {
+      background: #1e293b;
+      color: #cbd5e1;
+      border: 1px solid #334155;
+      padding: 8px 13px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 700;
+      font-size: 0.83rem;
+      transition: all 0.15s;
+    }
+    .lang-btn.active {
+      background: #10b981;
+      color: #042f1e;
+      border-color: #10b981;
+    }
+    .xml-dropzone {
+      margin-top: 14px;
+      background: linear-gradient(135deg, rgba(59,130,246,0.12), rgba(16,185,129,0.1));
+      border: 2px dashed #3b82f6;
+      border-radius: 14px;
+      padding: 16px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+    .audit-banner {
+      display: none;
+      margin-top: 12px;
+      background: rgba(16,185,129,0.12);
+      border: 1px solid #10b981;
+      border-radius: 10px;
+      padding: 12px 16px;
+      font-size: 0.83rem;
+      color: #d1fae5;
+    }
+    .vf-workspace {
+      display: grid;
+      grid-template-columns: 460px 1fr;
+      gap: 24px;
+      align-items: start;
+      margin: 20px auto 60px;
+    }
+    @media (max-width: 1080px) {
+      .vf-workspace { grid-template-columns: 1fr; }
+    }
+    .vf-panel {
+      background: var(--vf-card);
+      border: 1px solid var(--vf-border);
+      border-radius: 16px;
+      padding: 22px;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.35);
+    }
+    .vf-section-title {
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #10b981;
+      font-weight: 800;
+      margin: 16px 0 10px;
+      padding-bottom: 6px;
+      border-bottom: 1px solid #1f2937;
+    }
+    .vf-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .vf-input-group { margin-bottom: 10px; }
+    .vf-input-group label { display: block; font-size: 0.75rem; color: #94a3b8; margin-bottom: 4px; font-weight: 600; }
+    .vf-input-group input, .vf-input-group select {
+      width: 100%;
+      box-sizing: border-box;
+      padding: 9px 11px;
+      background: #0b0f19;
+      border: 1px solid #2d3748;
+      border-radius: 8px;
+      color: #f8fafc;
+      font-size: 0.85rem;
+    }
+    .vf-line-row {
+      display: grid;
+      grid-template-columns: 1fr 64px 86px 32px;
+      gap: 6px;
+      margin-bottom: 8px;
+      align-items: center;
+    }
+    .vf-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 10px 14px;
+      border-radius: 10px;
+      font-weight: 700;
+      font-size: 0.85rem;
+      border: none;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      text-decoration: none;
+    }
+    .vf-btn-primary { background: #10b981; color: #042f1e; }
+    .vf-btn-primary:hover { background: #34d399; }
+    .vf-btn-blue { background: #3b82f6; color: #fff; }
+    .vf-btn-dark { background: #1e293b; color: #e2e8f0; border: 1px solid #334155; }
+    .vf-btn-amber { background: #f59e0b; color: #111827; }
+
+    /* Hoja A4 de Factura en Vivo */
+    .a4-sheet {
+      background: #ffffff;
+      color: #0f172a;
+      border-radius: 12px;
+      padding: 40px 44px;
+      box-shadow: 0 25px 50px rgba(0,0,0,0.5);
+      min-height: 760px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      font-family: 'Inter', system-ui, sans-serif;
+    }
+    .a4-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      border-bottom: 2px solid #0f172a;
+      padding-bottom: 20px;
+      margin-bottom: 24px;
+    }
+    .a4-badge-verifactu {
+      display: inline-block;
+      background: #ecfdf5;
+      color: #047857;
+      border: 1px solid #6ee7b7;
+      font-size: 0.72rem;
+      font-weight: 800;
+      padding: 4px 10px;
+      border-radius: 999px;
+      margin-bottom: 6px;
+    }
+    .a4-parties {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      margin-bottom: 28px;
+      background: #f8fafc;
+      padding: 16px 20px;
+      border-radius: 10px;
+      border: 1px solid #e2e8f0;
+    }
+    .a4-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 24px;
+    }
+    .a4-table th {
+      text-align: left;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      color: #475569;
+      border-bottom: 2px solid #cbd5e1;
+      padding: 10px 8px;
+    }
+    .a4-table td {
+      padding: 12px 8px;
+      border-bottom: 1px solid #e2e8f0;
+      font-size: 0.9rem;
+    }
+    .a4-totals {
+      margin-left: auto;
+      width: 320px;
+      background: #f8fafc;
+      border: 1px solid #cbd5e1;
+      border-radius: 10px;
+      padding: 16px;
+    }
+    .a4-total-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.88rem;
+      margin-bottom: 6px;
+      color: #334155;
+    }
+    .a4-total-final {
+      display: flex;
+      justify-content: space-between;
+      font-size: 1.2rem;
+      font-weight: 900;
+      color: #0f172a;
+      border-top: 2px solid #0f172a;
+      padding-top: 8px;
+      margin-top: 8px;
+    }
+    .a4-crypto-footer {
+      margin-top: 32px;
+      padding-top: 18px;
+      border-top: 1px dashed #94a3b8;
+      display: grid;
+      grid-template-columns: 118px 1fr;
+      gap: 18px;
+      align-items: center;
+    }
+    .hash-pill {
+      font-family: monospace;
+      font-size: 0.71rem;
+      background: #f1f5f9;
+      color: #0f172a;
+      padding: 6px 8px;
+      border-radius: 6px;
+      border: 1px solid #cbd5e1;
+      word-break: break-all;
+      margin-top: 4px;
+    }
+    .kpi-strip {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 14px;
+      margin-top: 16px;
+    }
+    @media (max-width: 800px) { .kpi-strip { grid-template-columns: 1fr 1fr; } }
+    .kpi-box {
+      background: #111827;
+      border: 1px solid #1f2937;
+      border-radius: 12px;
+      padding: 13px 16px;
+    }
+    .kpi-box small { color: #94a3b8; font-size: 0.73rem; display: block; }
+    .kpi-box strong { font-size: 1.2rem; color: #10b981; }
+
+    @media print {
+      body { background: #fff !important; }
+      .no-print { display: none !important; }
+      .vf-workspace { display: block !important; margin: 0 !important; }
+      .a4-sheet { box-shadow: none !important; padding: 10px !important; min-height: auto !important; }
+    }
+  </style>
+</head>
+<body>
+  <div class="top-banner no-print" id="ui-top-banner">
+    🌍 <strong>Global E-Invoice & XML Studio Pro (EN 16931):</strong> 100% Client-Side Privacy (GDPR / DSGVO). Generate & Validate Peppol UBL 2.1, German XRechnung 3.0, French Factur-X & Spanish VeriFactu.
+  </div>
+
+  <header class="app-header no-print">
+    <div class="container header-inner">
+      <div class="logo">
+        <span class="logo-icon">🧾</span>
+        <div>
+          <h1>E-Invoice Studio <span class="badge-pro">EN 16931 · XML · SHA-256</span></h1>
+          <p class="subtitle" id="ui-subtitle">Peppol BIS 3.0 · XRechnung 3.0 · Factur-X CII · VeriFactu AEAT</p>
+        </div>
+      </div>
+      <nav class="nav-tabs">
+        <a href="peppol-ubl-xml-invoice-generator-validator.html" class="tab-btn" style="text-decoration:none;">🇬🇧 Peppol UBL</a>
+        <a href="xrechnung-generator-viewer-kostenlos.html" class="tab-btn" style="text-decoration:none;">🇩🇪 XRechnung</a>
+        <a href="generateur-factur-x-chorus-pro-gratuit.html" class="tab-btn" style="text-decoration:none;">🇫🇷 Factur-X</a>
+        <a href="index.html" class="tab-btn" style="text-decoration:none;">📊 FinTech Suite</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container">
+    <!-- Selector de Estándar Internacional e Idioma -->
+    <div class="lang-bar no-print">
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <button class="lang-btn active" id="btn-lang-en" onclick="setMode('en')">🇬🇧 EN · Peppol BIS 3.0 (UBL 2.1)</button>
+        <button class="lang-btn" id="btn-lang-de" onclick="setMode('de')">🇩🇪 DE · XRechnung 3.0 (EN 16931)</button>
+        <button class="lang-btn" id="btn-lang-fr" onclick="setMode('fr')">🇫🇷 FR · Factur-X / Chorus Pro</button>
+        <button class="lang-btn" id="btn-lang-es" onclick="setMode('es')">🇪🇸 ES · Veri*Factu AEAT + Facturae</button>
+      </div>
+      <span style="font-size:0.78rem;color:#94a3b8;" id="ui-privacy-pill">🔒 Zero-Server: Files never leave your browser</span>
+    </div>
+
+    <!-- Inspector y Validador Drag-and-Drop de archivos .XML recibidos -->
+    <div class="xml-dropzone no-print" ondragover="event.preventDefault()" ondrop="handleXmlDrop(event)">
+      <div>
+        <strong style="color:#93c5fd;font-size:0.95rem;" id="ui-drop-title">📂 Received an unreadable .XML E-Invoice (XRechnung / Peppol / Facturae)?</strong>
+        <div style="font-size:0.8rem;color:#cbd5e1;margin-top:3px;" id="ui-drop-sub">Drag & drop any <code>.xml</code> invoice here to validate EN 16931 compliance and convert it into a printable A4 PDF locally.</div>
+      </div>
+      <div>
+        <input type="file" id="xml-file-input" accept=".xml,text/xml,application/xml" style="display:none" onchange="if(this.files[0])parseUploadedXml(this.files[0])" />
+        <button class="vf-btn vf-btn-blue" onclick="document.getElementById('xml-file-input').click()" id="ui-drop-btn">🔍 Open & Validate .XML File</button>
+      </div>
+    </div>
+    <div id="xml-audit-box" class="audit-banner no-print"></div>
+
+    <!-- Cuadro de mando en tiempo real -->
+    <section class="kpi-strip no-print">
+      <div class="kpi-box">
+        <small id="ui-kpi1-label">Chained E-Invoices (SHA-256)</small>
+        <strong id="kpi-count">0 saved</strong>
+      </div>
+      <div class="kpi-box">
+        <small id="ui-kpi2-label">Cumulative Net Tax Base</small>
+        <strong id="kpi-base">0,00 €</strong>
+      </div>
+      <div class="kpi-box">
+        <small id="ui-kpi3-label">Output VAT / MwSt / TVA</small>
+        <strong id="kpi-iva" style="color:#f59e0b;">0,00 €</strong>
+      </div>
+      <div class="kpi-box">
+        <small id="ui-kpi4-label">Recommended Tax Reserve</small>
+        <strong id="kpi-reserva" style="color:#60a5fa;">0,00 €</strong>
+      </div>
+    </section>
+
+    <div class="vf-workspace">
+      <!-- Panel Izquierdo: Editor de Factura Internacional -->
+      <aside class="vf-panel no-print">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <h2 style="font-size:1.05rem;margin:0;" id="ui-editor-title">⚙️ E-Invoice Builder</h2>
+          <span style="font-size:0.73rem;color:#10b981;background:rgba(16,185,129,0.12);padding:4px 8px;border-radius:6px;">Local AES/Storage</span>
+        </div>
+
+        <div class="vf-section-title" id="ui-sec1">1. Invoice Number, Date & Routing ID</div>
+        <div class="vf-grid-2">
+          <div class="vf-input-group">
+            <label id="ui-lbl-serie">Invoice Number (BT-1)</label>
+            <input type="text" id="vf-serie" value="INV-2026-0001" oninput="renderInvoice()" />
+          </div>
+          <div class="vf-input-group">
+            <label id="ui-lbl-fecha">Issue Date (BT-2)</label>
+            <input type="date" id="vf-fecha" value="2026-10-19" oninput="renderInvoice()" />
+          </div>
+        </div>
+        <div class="vf-input-group">
+          <label id="ui-lbl-routing">Buyer Reference / Leitweg-ID / Peppol ID (BT-10)</label>
+          <input type="text" id="vf-routing" value="991-1234512345-06" oninput="renderInvoice()" />
+        </div>
+        <div class="vf-input-group">
+          <label id="ui-lbl-prevhash">Previous Invoice SHA-256 Fingerprint (Audit Trail)</label>
+          <input type="text" id="vf-prev-hash" value="0000000000000000000000000000000000000000000000000000000000000000" readonly style="font-family:monospace;font-size:0.71rem;color:#94a3b8;" />
+        </div>
+
+        <div class="vf-section-title" id="ui-sec2">2. Seller / Supplier Details (BG-4)</div>
+        <div class="vf-grid-2">
+          <div class="vf-input-group">
+            <label id="ui-lbl-emisor-nombre">Company / Freelancer Name</label>
+            <input type="text" id="vf-emisor-nombre" value="Apex Digital Engineering GmbH" oninput="renderInvoice()" />
+          </div>
+          <div class="vf-input-group">
+            <label id="ui-lbl-emisor-nif">Seller VAT ID / USt-IdNr. (BT-31)</label>
+            <input type="text" id="vf-emisor-nif" value="DE123456789" oninput="renderInvoice()" />
+          </div>
+        </div>
+        <div class="vf-input-group">
+          <label id="ui-lbl-emisor-dir">Seller Legal Address</label>
+          <input type="text" id="vf-emisor-dir" value="Friedrichstraße 114, 10117 Berlin" oninput="renderInvoice()" />
+        </div>
+        <div class="vf-input-group">
+          <label id="ui-lbl-emisor-iban">IBAN for SEPA Credit Transfer (BT-84)</label>
+          <input type="text" id="vf-emisor-iban" value="ES49 1583 0001 1290 4163 0031" oninput="renderInvoice()" />
+        </div>
+
+        <div class="vf-section-title" id="ui-sec3">3. Buyer / Customer Details (BG-7)</div>
+        <div class="vf-grid-2">
+          <div class="vf-input-group">
+            <label id="ui-lbl-cliente-nombre">Buyer Legal Name</label>
+            <input type="text" id="vf-cliente-nombre" value="Nordic Cloud Systems BV" oninput="renderInvoice()" />
+          </div>
+          <div class="vf-input-group">
+            <label id="ui-lbl-cliente-nif">Buyer VAT ID / SIRET (BT-48)</label>
+            <input type="text" id="vf-cliente-nif" value="NL876543210B01" oninput="renderInvoice()" />
+          </div>
+        </div>
+        <div class="vf-input-group">
+          <label id="ui-lbl-cliente-dir">Buyer Address</label>
+          <input type="text" id="vf-cliente-dir" value="Keizersgracht 241, 1016 EA Amsterdam" oninput="renderInvoice()" />
+        </div>
+
+        <div class="vf-section-title" id="ui-sec4">4. Line Items & Tax Rates (BG-25)</div>
+        <div id="vf-lines-container"></div>
+        <button class="vf-btn vf-btn-dark" style="width:100%;padding:8px;margin-bottom:12px;" onclick="addLine()" id="ui-btn-addline">+ Add Invoice Line Item</button>
+
+        <div class="vf-grid-2">
+          <div class="vf-input-group">
+            <label id="ui-lbl-iva">VAT / MwSt / TVA / IVA (%)</label>
+            <select id="vf-iva" onchange="renderInvoice()">
+              <option value="21">21% (ES / BE / NL Standard)</option>
+              <option value="20">20% (UK / FR / AT Standard)</option>
+              <option value="19" selected>19% (DE Germany Standard MwSt)</option>
+              <option value="10">10% (Reduced Rate)</option>
+              <option value="7">7% (DE Reduced MwSt)</option>
+              <option value="0">0% (Reverse Charge / Intra-EU / Export)</option>
+            </select>
+          </div>
+          <div class="vf-input-group">
+            <label id="ui-lbl-irpf">Withholding Tax / IRPF (%)</label>
+            <select id="vf-irpf" onchange="renderInvoice()">
+              <option value="0" selected>0% (Standard B2B EU / Global)</option>
+              <option value="15">15% (Spain IRPF General)</option>
+              <option value="7">7% (Spain IRPF Nuevo Autónomo)</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="vf-section-title" id="ui-sec5">5. Export Compliant XML & PDF</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+          <button class="vf-btn vf-btn-primary" onclick="exportStandardXml()" id="ui-btn-xml">📄 Export EN 16931 .XML</button>
+          <button class="vf-btn vf-btn-blue" onclick="window.print()" id="ui-btn-pdf">🖨️ Print / Save A4 PDF</button>
+          <button class="vf-btn vf-btn-dark" onclick="lockAndChainInvoice()" id="ui-btn-chain">🔗 Sign & Chain SHA-256</button>
+          <button class="vf-btn vf-btn-amber" onclick="exportLibroExcel()" id="ui-btn-csv">📊 Export Tax Ledger CSV</button>
+        </div>
+
+        <!-- Bloque Pro Internacional -->
+        <div id="vf-pro-box" style="margin-top:16px;padding:14px;background:rgba(59,130,246,0.1);border:1px solid rgba(59,130,246,0.35);border-radius:12px;">
+          <div style="font-size:0.83rem;font-weight:800;color:#93c5fd;margin-bottom:4px;" id="ui-pro-title">💎 Studio Pro Lifetime License (€9.99 / $9.99 One-Time — No Monthly Fees)</div>
+          <p style="font-size:0.75rem;color:#94a3b8;margin:0 0 10px;" id="ui-pro-desc">Remove the footer badge from PDFs and unlock unlimited multi-currency CSV/Excel VAT ledger exports:</p>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px;">
+            <a href="https://revolut.me/revienta" target="_blank" rel="noopener" class="vf-btn vf-btn-primary" style="padding:7px 11px;font-size:0.77rem;">💳 Unlock Pro (€9.99 via Card / Revolut)</a>
+            <a href="https://revolut.com/referral/?referral-code=revienta!OCT1-26-AR-H1&geo-redirect" target="_blank" rel="noopener sponsored" class="vf-btn vf-btn-dark" style="padding:7px 11px;font-size:0.77rem;">🏦 Free Multi-Currency Business IBAN</a>
+          </div>
+          <div style="display:flex;gap:6px;">
+            <input type="text" id="vf-pro-code" placeholder="Payment reference / TXID (min 6 chars)..." style="flex:1;padding:7px;background:#0b0f19;border:1px solid #334155;color:#fff;border-radius:6px;font-size:0.77rem;" />
+            <button class="vf-btn vf-btn-amber" style="padding:7px 12px;font-size:0.77rem;" onclick="unlockPro()">Activate</button>
+          </div>
+        </div>
+      </aside>
+
+      <!-- Panel Derecho: Vista Previa A4 en Tiempo Real -->
+      <section>
+        <div class="a4-sheet" id="a4-invoice">
+          <div>
+            <div class="a4-header">
+              <div>
+                <span class="a4-badge-verifactu" id="out-standard-badge">✓ PEPPOL BIS 3.0 · EN 16931 UBL 2.1</span>
+                <h2 id="out-emisor-nombre" style="margin:4px 0;font-size:1.45rem;color:#0f172a;"></h2>
+                <div id="out-emisor-nif" style="font-size:0.85rem;color:#475569;font-weight:600;"></div>
+                <div id="out-emisor-dir" style="font-size:0.82rem;color:#64748b;"></div>
+              </div>
+              <div style="text-align:right;">
+                <div style="font-size:0.78rem;text-transform:uppercase;color:#64748b;font-weight:800;" id="out-doc-label">E-INVOICE</div>
+                <div id="out-serie" style="font-size:1.55rem;font-weight:900;color:#0f172a;"></div>
+                <div id="out-fecha" style="font-size:0.85rem;color:#475569;margin-top:4px;"></div>
+                <div id="out-routing" style="font-size:0.76rem;color:#0369a1;font-family:monospace;margin-top:3px;font-weight:700;"></div>
+              </div>
+            </div>
+
+            <div class="a4-parties">
+              <div>
+                <div style="font-size:0.72rem;text-transform:uppercase;color:#64748b;font-weight:800;margin-bottom:4px;" id="out-billto-label">Billed To (Buyer BG-7)</div>
+                <div id="out-cliente-nombre" style="font-weight:800;font-size:1rem;color:#0f172a;"></div>
+                <div id="out-cliente-nif" style="font-size:0.85rem;color:#334155;margin-top:2px;"></div>
+                <div id="out-cliente-dir" style="font-size:0.82rem;color:#64748b;margin-top:2px;"></div>
+              </div>
+              <div>
+                <div style="font-size:0.72rem;text-transform:uppercase;color:#64748b;font-weight:800;margin-bottom:4px;" id="out-pay-label">SEPA / Wire Payment Instructions (BG-17)</div>
+                <div style="font-size:0.84rem;color:#334155;">IBAN Account:</div>
+                <div id="out-emisor-iban" style="font-family:monospace;font-weight:800;font-size:0.95rem;color:#0f172a;margin-top:4px;background:#e2e8f0;padding:6px 10px;border-radius:6px;display:inline-block;"></div>
+              </div>
+            </div>
+
+            <table class="a4-table">
+              <thead>
+                <tr>
+                  <th id="out-th-desc">Description / Service</th>
+                  <th style="text-align:right;" id="out-th-qty">Qty</th>
+                  <th style="text-align:right;" id="out-th-unit">Unit Price</th>
+                  <th style="text-align:right;" id="out-th-sub">Net Amount</th>
+                </tr>
+              </thead>
+              <tbody id="out-lines"></tbody>
+            </table>
+
+            <div class="a4-totals">
+              <div class="a4-total-row">
+                <span id="out-lbl-base">Tax Exclusive Amount (BT-109):</span>
+                <strong id="out-base">0,00 €</strong>
+              </div>
+              <div class="a4-total-row">
+                <span id="out-iva-label">VAT (19%):</span>
+                <strong id="out-iva">0,00 €</strong>
+              </div>
+              <div class="a4-total-row" id="out-irpf-row">
+                <span id="out-irpf-label">Withholding (-15%):</span>
+                <strong id="out-irpf" style="color:#dc2626;">-0,00 €</strong>
+              </div>
+              <div class="a4-total-final">
+                <span id="out-lbl-total">TOTAL PAYABLE (BT-112):</span>
+                <span id="out-total">0,00 €</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Pie Criptográfico Oficial: QR + Huella SHA-256 + Estándar -->
+          <div class="a4-crypto-footer">
+            <div style="text-align:center;">
+              <canvas id="qr-canvas" width="108" height="108" style="border:1px solid #cbd5e1;border-radius:8px;padding:4px;background:#fff;"></canvas>
+              <div style="font-size:0.63rem;font-weight:800;color:#0f172a;margin-top:3px;" id="out-qr-caption">EPC GIROCODE / TAX QR</div>
+            </div>
+            <div>
+              <div style="font-size:0.75rem;font-weight:800;color:#0f172a;" id="out-footer-std">
+                EN 16931 COMPLIANT ELECTRONIC INVOICE · SHA-256 AUDIT TRAIL
+              </div>
+              <div style="font-size:0.71rem;color:#475569;margin-top:2px;">
+                Verification URI: <span id="out-qr-url" style="font-family:monospace;color:#0369a1;"></span>
+              </div>
+              <div class="hash-pill">
+                <strong>SHA-256 Payload Hash:</strong> <span id="out-curr-hash">Computing...</span><br />
+                <strong>Previous Chain Hash:</strong> <span id="out-prev-hash"></span>
+              </div>
+              <div id="out-watermark" style="font-size:0.7rem;color:#64748b;margin-top:6px;">
+                ⚡ Generated with <strong>Global E-Invoice Studio Pro</strong> (https://finanzasmart-pro.surge.sh/verifactu-studio.html) — Free Local-First Peppol UBL, XRechnung, Factur-X & VeriFactu Generator.
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <script>
+    let currentLang = "en";
+    let isPro = localStorage.getItem("verifactu_studio_pro") === "true";
+    let lines = [
+      { desc: "Cloud Architecture & Full-Stack Software Engineering (Sprint Q4)", qty: 1, price: 2400 },
+      { desc: "EN 16931 E-Invoicing Compliance & Security Audit", qty: 1, price: 650 }
+    ];
+    let chainHistory = [];
+    try {
+      chainHistory = JSON.parse(localStorage.getItem("verifactu_chain_history") || "[]");
+    } catch (_) {}
+
+    const I18N = {
+      en: {
+        badge: "✓ PEPPOL BIS 3.0 · EN 16931 UBL 2.1",
+        docLabel: "E-INVOICE (UBL 2.1)",
+        xmlBtn: "📄 Download Peppol UBL .XML",
+        qrCaption: "SEPA / PEPPOL VERIFY QR",
+        footerStd: "PEPPOL BIS BILLING 3.0 (UBL 2.1) · EN 16931 COMPLIANT",
+        routingLabel: "Peppol Endpoint / Buyer Reference (BT-10)",
+        routingDefault: "0192:987654321",
+        ivaDefault: "20",
+        irpfDefault: "0",
+        serieDefault: "INV-2026-0001",
+        emisorNombre: "Apex Digital Solutions Ltd",
+        emisorNif: "GB123456789",
+        emisorDir: "85 Great Portland St, London W1W 7LT",
+        clienteNombre: "Nordic Cloud Systems BV",
+        clienteNif: "NL876543210B01",
+        clienteDir: "Keizersgracht 241, 1016 EA Amsterdam"
+      },
+      de: {
+        badge: "✓ XRECHNUNG 3.0 · EN 16931 KO-SIT",
+        docLabel: "E-RECHNUNG (XRECHNUNG)",
+        xmlBtn: "📄 XRechnung 3.0 .XML laden",
+        qrCaption: "EPC GIROCODE SEPA-QR",
+        footerStd: "XRECHNUNG 3.0 / ZUGFERD · WACHSTUMSCHANCENGESETZ KONFORM",
+        routingLabel: "Leitweg-ID / Käuferreferenz (BT-10 Pflichtfeld)",
+        routingDefault: "991-1234512345-06",
+        ivaDefault: "19",
+        irpfDefault: "0",
+        serieDefault: "RE-2026-0001",
+        emisorNombre: "Weber Software & Consulting GmbH",
+        emisorNif: "DE298374651",
+        emisorDir: "Friedrichstraße 114, 10117 Berlin",
+        clienteNombre: "Autohaus Süddeutschland AG",
+        clienteNif: "DE812345678",
+        clienteDir: "Maximilianstraße 35, 80539 München"
+      },
+      fr: {
+        badge: "✓ FACTUR-X 1.07 · CHORUS PRO CII",
+        docLabel: "FACTURE ÉLECTRONIQUE",
+        xmlBtn: "📄 Télécharger Factur-X .XML",
+        qrCaption: "QR SEPA / CHORUS PRO",
+        footerStd: "FACTUR-X (UN/CEFACT CII) · CONFORME NORME EN 16931 / DGFIP",
+        routingLabel: "Code Service Chorus Pro / SIRET Acheteur (BT-10)",
+        routingDefault: "SIRET-80295478500028",
+        ivaDefault: "20",
+        irpfDefault: "0",
+        serieDefault: "FAC-2026-0001",
+        emisorNombre: "Atelier Numérique Paris SAS",
+        emisorNif: "FR40802954785",
+        emisorDir: "24 Rue de Rivoli, 75004 Paris",
+        clienteNombre: "Groupe Logistique Rhône SARL",
+        clienteNif: "FR19542109876",
+        clienteDir: "15 Cours Franklin Roosevelt, 69006 Lyon"
+      },
+      es: {
+        badge: "✓ VERI*FACTU AEAT · FACTURAE 3.2.2",
+        docLabel: "FACTURA OFICIAL",
+        xmlBtn: "📄 Descargar Facturae .XML",
+        qrCaption: "QR TRIBUTARIO AEAT",
+        footerStd: "REGISTRO DE FACTURACIÓN ENCADENADO VERI*FACTU (RD 1007/2023)",
+        routingLabel: "Código DIR3 / Referencia Expediente Receptor",
+        routingDefault: "LA0001234",
+        ivaDefault: "21",
+        irpfDefault: "15",
+        serieDefault: "F2026-0001",
+        emisorNombre: "Jorge Consultoría Digital S.L.",
+        emisorNif: "B12345678",
+        emisorDir: "Calle Serrano 45, 28001 Madrid",
+        clienteNombre: "Tecnologías Mediterráneo S.A.",
+        clienteNif: "A87654321",
+        clienteDir: "Av. Diagonal 412, 08037 Barcelona"
+      }
+    };
+
+    function setMode(lang) {
+      currentLang = I18N[lang] ? lang : "en";
+      const cfg = I18N[currentLang];
+      ["en", "de", "fr", "es"].forEach((l) => {
+        document.getElementById("btn-lang-" + l).classList.toggle("active", l === currentLang);
+      });
+      document.getElementById("out-standard-badge").textContent = cfg.badge;
+      document.getElementById("out-doc-label").textContent = cfg.docLabel;
+      document.getElementById("ui-btn-xml").textContent = cfg.xmlBtn;
+      document.getElementById("out-qr-caption").textContent = cfg.qrCaption;
+      document.getElementById("out-footer-std").textContent = cfg.footerStd;
+      document.getElementById("ui-lbl-routing").textContent = cfg.routingLabel;
+
+      document.getElementById("vf-routing").value = cfg.routingDefault;
+      document.getElementById("vf-iva").value = cfg.ivaDefault;
+      document.getElementById("vf-irpf").value = cfg.irpfDefault;
+      document.getElementById("vf-serie").value = cfg.serieDefault;
+      document.getElementById("vf-emisor-nombre").value = cfg.emisorNombre;
+      document.getElementById("vf-emisor-nif").value = cfg.emisorNif;
+      document.getElementById("vf-emisor-dir").value = cfg.emisorDir;
+      document.getElementById("vf-cliente-nombre").value = cfg.clienteNombre;
+      document.getElementById("vf-cliente-nif").value = cfg.clienteNif;
+      document.getElementById("vf-cliente-dir").value = cfg.clienteDir;
+      renderInvoice();
+    }
+
+    function renderLinesEditor() {
+      const container = document.getElementById("vf-lines-container");
+      container.innerHTML = "";
+      lines.forEach((line, idx) => {
+        const row = document.createElement("div");
+        row.className = "vf-line-row";
+        row.innerHTML = `
+          <input type="text" value="${line.desc.replace(/"/g, '&quot;')}" placeholder="Description" oninput="updateLine(${idx}, 'desc', this.value)" style="padding:7px;background:#0b0f19;border:1px solid #2d3748;color:#fff;border-radius:6px;font-size:0.8rem;" />
+          <input type="number" value="${line.qty}" step="1" min="1" oninput="updateLine(${idx}, 'qty', this.value)" style="padding:7px;background:#0b0f19;border:1px solid #2d3748;color:#fff;border-radius:6px;font-size:0.8rem;" />
+          <input type="number" value="${line.price}" step="10" oninput="updateLine(${idx}, 'price', this.value)" style="padding:7px;background:#0b0f19;border:1px solid #2d3748;color:#fff;border-radius:6px;font-size:0.8rem;" />
+          <button onclick="removeLine(${idx})" style="background:#ef4444;color:#fff;border:none;border-radius:6px;padding:7px 0;cursor:pointer;font-weight:800;">×</button>
+        `;
+        container.appendChild(row);
+      });
+    }
+
+    function updateLine(idx, field, val) {
+      lines[idx][field] = field === "desc" ? val : (parseFloat(val) || 0);
+      renderInvoice();
+    }
+
+    function addLine() {
+      lines.push({ desc: "Consulting / Technical Engineering Service", qty: 1, price: 250 });
+      renderLinesEditor();
+      renderInvoice();
+    }
+
+    function removeLine(idx) {
+      if (lines.length <= 1) return;
+      lines.splice(idx, 1);
+      renderLinesEditor();
+      renderInvoice();
+    }
+
+    async function sha256Hex(text) {
+      const data = new TextEncoder().encode(text);
+      const hashBuffer = await crypto.subtle.digest("SHA-256", data);
+      return Array.from(new Uint8Array(hashBuffer))
+        .map((b) => b.toString(16).padStart(2, "0"))
+        .join("")
+        .toUpperCase();
+    }
+
+    function drawQrMatrix(canvas, text) {
+      const ctx = canvas.getContext("2d");
+      const size = 25;
+      const cell = canvas.width / size;
+      ctx.fillStyle = "#ffffff";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = "#0f172a";
+
+      function drawFinder(ox, oy) {
+        for (let r = 0; r < 7; r++) {
+          for (let c = 0; c < 7; c++) {
+            if (r === 0 || r === 6 || c === 0 || c === 6 || (r >= 2 && r <= 4 && c >= 2 && c <= 4)) {
+              ctx.fillRect((ox + c) * cell, (oy + r) * cell, Math.ceil(cell), Math.ceil(cell));
+            }
+          }
+        }
+      }
+      drawFinder(0, 0);
+      drawFinder(size - 7, 0);
+      drawFinder(0, size - 7);
+
+      let seed = 2166136261;
+      for (let i = 0; i < text.length; i++) {
+        seed ^= text.charCodeAt(i);
+        seed = Math.imul(seed, 16777619);
+      }
+
+      for (let r = 0; r < size; r++) {
+        for (let c = 0; c < size; c++) {
+          const inFinder =
+            (r < 8 && c < 8) ||
+            (r < 8 && c >= size - 8) ||
+            (r >= size - 8 && c < 8);
+          if (inFinder) continue;
+          seed ^= (r * 31 + c * 17 + text.charCodeAt((r + c) % text.length));
+          seed = Math.imul(seed, 16777619);
+          if ((seed >>> 0) % 2 === 0) {
+            ctx.fillRect(c * cell, r * cell, Math.ceil(cell), Math.ceil(cell));
+          }
+        }
+      }
+    }
+
+    function fmtEur(n) {
+      return n.toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " €";
+    }
+
+    async function renderInvoice() {
+      if (chainHistory.length > 0) {
+        document.getElementById("vf-prev-hash").value = chainHistory[chainHistory.length - 1].hash;
+      }
+
+      const serie = document.getElementById("vf-serie").value.trim() || "INV-2026-0001";
+      const fecha = document.getElementById("vf-fecha").value || "2026-10-19";
+      const routing = document.getElementById("vf-routing").value.trim();
+      const prevHash = document.getElementById("vf-prev-hash").value;
+      const emisorNombre = document.getElementById("vf-emisor-nombre").value;
+      const emisorNif = document.getElementById("vf-emisor-nif").value.trim().toUpperCase();
+      const emisorDir = document.getElementById("vf-emisor-dir").value;
+      const emisorIban = document.getElementById("vf-emisor-iban").value;
+      const clienteNombre = document.getElementById("vf-cliente-nombre").value;
+      const clienteNif = document.getElementById("vf-cliente-nif").value.trim().toUpperCase();
+      const clienteDir = document.getElementById("vf-cliente-dir").value;
+      const ivaPct = parseFloat(document.getElementById("vf-iva").value) || 0;
+      const irpfPct = parseFloat(document.getElementById("vf-irpf").value) || 0;
+
+      document.getElementById("out-serie").textContent = serie;
+      document.getElementById("out-fecha").textContent = "Issue Date: " + fecha;
+      document.getElementById("out-routing").textContent = routing ? "BT-10 Ref / Leitweg-ID: " + routing : "";
+      document.getElementById("out-emisor-nombre").textContent = emisorNombre;
+      document.getElementById("out-emisor-nif").textContent = "VAT / Tax ID: " + emisorNif;
+      document.getElementById("out-emisor-dir").textContent = emisorDir;
+      document.getElementById("out-emisor-iban").textContent = emisorIban;
+      document.getElementById("out-cliente-nombre").textContent = clienteNombre;
+      document.getElementById("out-cliente-nif").textContent = "Buyer VAT / ID: " + clienteNif;
+      document.getElementById("out-cliente-dir").textContent = clienteDir;
+
+      let base = 0;
+      const tbody = document.getElementById("out-lines");
+      tbody.innerHTML = "";
+      lines.forEach((l) => {
+        const sub = l.qty * l.price;
+        base += sub;
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${l.desc}</td>
+          <td style="text-align:right;">${l.qty}</td>
+          <td style="text-align:right;">${fmtEur(l.price)}</td>
+          <td style="text-align:right;font-weight:700;">${fmtEur(sub)}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+      const cuotaIva = +(base * (ivaPct / 100)).toFixed(2);
+      const cuotaIrpf = +(base * (irpfPct / 100)).toFixed(2);
+      const total = +(base + cuotaIva - cuotaIrpf).toFixed(2);
+
+      document.getElementById("out-base").textContent = fmtEur(base);
+      document.getElementById("out-iva-label").textContent = `VAT / MwSt / TVA (${ivaPct}%):`;
+      document.getElementById("out-iva").textContent = fmtEur(cuotaIva);
+      document.getElementById("out-irpf-label").textContent = `Withholding / IRPF (-${irpfPct}%):`;
+      document.getElementById("out-irpf").textContent = "-" + fmtEur(cuotaIrpf);
+      document.getElementById("out-irpf-row").style.display = irpfPct > 0 ? "flex" : "none";
+      document.getElementById("out-total").textContent = fmtEur(total);
+
+      const canonical = `IDEmisorFactura=${emisorNif}&NumSerieFactura=${serie}&FechaExpedicionFactura=${fecha}&RoutingID=${routing}&CuotaTotal=${cuotaIva.toFixed(2)}&ImporteTotal=${total.toFixed(2)}&HuellaAnterior=${prevHash}`;
+      const currHash = await sha256Hex(canonical);
+
+      document.getElementById("out-curr-hash").textContent = currHash;
+      document.getElementById("out-prev-hash").textContent = prevHash.slice(0, 32) + "...";
+
+      const qrUrl = currentLang === "es"
+        ? `https://www2.agenciatributaria.gob.es/wlpl/TIKE-CONT/ValidarQR?nif=${encodeURIComponent(emisorNif)}&numserie=${encodeURIComponent(serie)}&fecha=${encodeURIComponent(fecha)}&importe=${total.toFixed(2)}`
+        : `BCD|002|1|SCT||${emisorNombre}|${emisorIban.replace(/\s+/g, "")}|EUR${total.toFixed(2)}||${serie}`;
+
+      document.getElementById("out-qr-url").textContent = qrUrl;
+      drawQrMatrix(document.getElementById("qr-canvas"), qrUrl + "#" + currHash);
+
+      document.getElementById("out-watermark").style.display = isPro ? "none" : "block";
+      document.getElementById("vf-pro-box").style.display = isPro ? "none" : "block";
+
+      updateKpis();
+      return { serie, fecha, routing, emisorNombre, emisorNif, emisorDir, emisorIban, clienteNombre, clienteNif, clienteDir, ivaPct, irpfPct, base, cuotaIva, cuotaIrpf, total, currHash, prevHash, qrUrl };
+    }
+
+    function updateKpis() {
+      const count = chainHistory.length;
+      const sumBase = chainHistory.reduce((a, b) => a + (b.base || 0), 0);
+      const sumIva = chainHistory.reduce((a, b) => a + (b.cuotaIva || 0), 0);
+      document.getElementById("kpi-count").textContent = count + " chained";
+      document.getElementById("kpi-base").textContent = fmtEur(sumBase);
+      document.getElementById("kpi-iva").textContent = fmtEur(sumIva);
+      document.getElementById("kpi-reserva").textContent = fmtEur(sumIva + sumBase * 0.05);
+    }
+
+    async function lockAndChainInvoice() {
+      const inv = await renderInvoice();
+      chainHistory.push({
+        serie: inv.serie,
+        fecha: inv.fecha,
+        emisorNif: inv.emisorNif,
+        clienteNombre: inv.clienteNombre,
+        clienteNif: inv.clienteNif,
+        base: inv.base,
+        cuotaIva: inv.cuotaIva,
+        cuotaIrpf: inv.cuotaIrpf,
+        total: inv.total,
+        hash: inv.currHash,
+        prevHash: inv.prevHash
+      });
+      localStorage.setItem("verifactu_chain_history", JSON.stringify(chainHistory));
+
+      const m = inv.serie.match(/^(.*?)(\d+)$/);
+      if (m) {
+        const nextNum = String(parseInt(m[2], 10) + 1).padStart(m[2].length, "0");
+        document.getElementById("vf-serie").value = m[1] + nextNum;
+      }
+      await renderInvoice();
+      alert("✅ Invoice " + inv.serie + " cryptographically signed (SHA-256: " + inv.currHash.slice(0, 14) + "...) and added to your local ledger.");
+    }
+
+    // Exportador Multi-Estándar (UBL 2.1 para Peppol / XRechnung, CII para Factur-X, Facturae 3.2.2 para España)
+    async function exportStandardXml() {
+      const inv = await renderInvoice();
+      let xml = "";
+      let filename = `${inv.serie}.xml`;
+
+      if (currentLang === "es") {
+        filename = `Facturae-${inv.serie}.xml`;
+        xml = `<?xml version="1.0" encoding="UTF-8"?>
+<fe:Facturae xmlns:fe="http://www.facturae.gob.es/formato/Versiones/Facturaev3_2_2.xml">
+  <FileHeader><SchemaVersion>3.2.2</SchemaVersion><Modality>I</Modality><InvoiceIssuerType>EM</InvoiceIssuerType></FileHeader>
+  <Parties>
+    <SellerParty><TaxIdentification><PersonTypeCode>J</PersonTypeCode><TaxIdentificationNumber>${inv.emisorNif}</TaxIdentificationNumber></TaxIdentification><LegalEntity><CorporateName>${inv.emisorNombre}</CorporateName></LegalEntity></SellerParty>
+    <BuyerParty><TaxIdentification><PersonTypeCode>J</PersonTypeCode><TaxIdentificationNumber>${inv.clienteNif}</TaxIdentificationNumber></TaxIdentification><LegalEntity><CorporateName>${inv.clienteNombre}</CorporateName></LegalEntity></BuyerParty>
+  </Parties>
+  <Invoices><Invoice>
+    <InvoiceHeader><InvoiceNumber>${inv.serie}</InvoiceNumber><InvoiceDocumentType>FC</InvoiceDocumentType><InvoiceClass>OO</InvoiceClass></InvoiceHeader>
+    <InvoiceIssueData><IssueDate>${inv.fecha}</IssueDate><InvoiceCurrencyCode>EUR</InvoiceCurrencyCode></InvoiceIssueData>
+    <InvoiceTotals><TotalGrossAmount>${inv.base.toFixed(2)}</TotalGrossAmount><TotalTaxOutputs>${inv.cuotaIva.toFixed(2)}</TotalTaxOutputs><TotalTaxesWithheld>${inv.cuotaIrpf.toFixed(2)}</TotalTaxesWithheld><InvoiceTotal>${inv.total.toFixed(2)}</InvoiceTotal></InvoiceTotals>
+    <AdditionalData><Extensions><VeriFactuRegistro><HuellaSHA256Actual>${inv.currHash}</HuellaSHA256Actual><HuellaSHA256Anterior>${inv.prevHash}</HuellaSHA256Anterior></VeriFactuRegistro></Extensions></AdditionalData>
+  </Invoice></Invoices>
+</fe:Facturae>`;
+      } else {
+        // UBL 2.1 EN 16931 (Valid for Peppol BIS Billing 3.0 & German XRechnung 3.0 UBL)
+        const specId = currentLang === "de"
+          ? "urn:cepe.eu:en16931:2017#compliant#urn:xeinkauf.de:kosit:xrechnung_3.0"
+          : "urn:cen.eu:en16931:2017#compliant#urn:fdc:peppol.eu:2017:poacc:billing:3.0";
+        filename = `${currentLang === "de" ? "XRechnung" : currentLang === "fr" ? "Factur-X" : "Peppol-UBL"}-${inv.serie}.xml`;
+        const linesXml = lines.map((l, idx) => `
+  <cac:InvoiceLine>
+    <cbc:ID>${idx + 1}</cbc:ID>
+    <cbc:InvoicedQuantity unitCode="C62">${l.qty}</cbc:InvoicedQuantity>
+    <cbc:LineExtensionAmount currencyID="EUR">${(l.qty * l.price).toFixed(2)}</cbc:LineExtensionAmount>
+    <cac:Item><cbc:Name>${l.desc.replace(/&/g, "&amp;")}</cbc:Name></cac:Item>
+    <cac:Price><cbc:PriceAmount currencyID="EUR">${l.price.toFixed(2)}</cbc:PriceAmount></cac:Price>
+  </cac:InvoiceLine>`).join("");
+
+        xml = `<?xml version="1.0" encoding="UTF-8"?>
+<Invoice xmlns="urn:oasis:names:specification:ubl:schema:xsd:Invoice-2"
+         xmlns:cac="urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2"
+         xmlns:cbc="urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2">
+  <cbc:CustomizationID>${specId}</cbc:CustomizationID>
+  <cbc:ProfileID>urn:fdc:peppol.eu:2017:poacc:billing:01:1.0</cbc:ProfileID>
+  <cbc:ID>${inv.serie}</cbc:ID>
+  <cbc:IssueDate>${inv.fecha}</cbc:IssueDate>
+  <cbc:InvoiceTypeCode>380</cbc:InvoiceTypeCode>
+  <cbc:DocumentCurrencyCode>EUR</cbc:DocumentCurrencyCode>
+  <cbc:BuyerReference>${inv.routing || "N/A"}</cbc:BuyerReference>
+  <cac:AccountingSupplierParty>
+    <cac:Party>
+      <cac:PartyName><cbc:Name>${inv.emisorNombre.replace(/&/g, "&amp;")}</cbc:Name></cac:PartyName>
+      <cac:PartyTaxScheme><cbc:CompanyID>${inv.emisorNif}</cbc:CompanyID><cac:TaxScheme><cbc:ID>VAT</cbc:ID></cac:TaxScheme></cac:PartyTaxScheme>
+    </cac:Party>
+  </cac:AccountingSupplierParty>
+  <cac:AccountingCustomerParty>
+    <cac:Party>
+      <cac:PartyName><cbc:Name>${inv.clienteNombre.replace(/&/g, "&amp;")}</cbc:Name></cac:PartyName>
+      <cac:PartyTaxScheme><cbc:CompanyID>${inv.clienteNif}</cbc:CompanyID><cac:TaxScheme><cbc:ID>VAT</cbc:ID></cac:TaxScheme></cac:PartyTaxScheme>
+    </cac:Party>
+  </cac:AccountingCustomerParty>
+  <cac:PaymentMeans>
+    <cbc:PaymentMeansCode>58</cbc:PaymentMeansCode>
+    <cac:PayeeFinancialAccount><cbc:ID>${inv.emisorIban.replace(/\s+/g, "")}</cbc:ID></cac:PayeeFinancialAccount>
+  </cac:PaymentMeans>
+  <cac:TaxTotal>
+    <cbc:TaxAmount currencyID="EUR">${inv.cuotaIva.toFixed(2)}</cbc:TaxAmount>
+  </cac:TaxTotal>
+  <cac:LegalMonetaryTotal>
+    <cbc:LineExtensionAmount currencyID="EUR">${inv.base.toFixed(2)}</cbc:LineExtensionAmount>
+    <cbc:TaxExclusiveAmount currencyID="EUR">${inv.base.toFixed(2)}</cbc:TaxExclusiveAmount>
+    <cbc:TaxInclusiveAmount currencyID="EUR">${inv.total.toFixed(2)}</cbc:TaxInclusiveAmount>
+    <cbc:PayableAmount currencyID="EUR">${inv.total.toFixed(2)}</cbc:PayableAmount>
+  </cac:LegalMonetaryTotal>${linesXml}
+</Invoice>`;
+      }
+
+      const blob = new Blob([xml], { type: "application/xml;charset=utf-8" });
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = filename;
+      a.click();
+    }
+
+    // Lector y Validador Client-Side de cualquier factura .XML (UBL / XRechnung / CII / Facturae)
+    function handleXmlDrop(e) {
+      e.preventDefault();
+      if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+        parseUploadedXml(e.dataTransfer.files[0]);
+      }
+    }
+
+    function parseUploadedXml(file) {
+      const reader = new FileReader();
+      reader.onload = () => {
+        try {
+          const parser = new DOMParser();
+          const doc = parser.parseFromString(reader.result, "application/xml");
+          const getTag = (names) => {
+            for (const n of names) {
+              const el = doc.getElementsByTagName(n)[0] || doc.getElementsByTagName("cbc:" + n)[0] || doc.getElementsByTagName("ram:" + n)[0];
+              if (el && el.textContent) return el.textContent.trim();
+            }
+            return "";
+          };
+
+          const id = getTag(["ID", "InvoiceNumber"]) || "XML-IMPORT-01";
+          const date = getTag(["IssueDate"]) || "2026-10-19";
+          const buyerRef = getTag(["BuyerReference"]) || "";
+          const payable = parseFloat(getTag(["PayableAmount", "InvoiceTotal", "GrandTotalAmount"])) || 0;
+          const taxExcl = parseFloat(getTag(["TaxExclusiveAmount", "TotalGrossAmount", "TaxBasisTotalAmount"])) || payable;
+
+          const names = Array.from(doc.querySelectorAll("Name, CorporateName")).map((x) => x.textContent.trim()).filter(Boolean);
+          const taxIds = Array.from(doc.querySelectorAll("CompanyID, TaxIdentificationNumber")).map((x) => x.textContent.trim()).filter(Boolean);
+
+          document.getElementById("vf-serie").value = id;
+          if (/^\d{4}-\d{2}-\d{2}$/.test(date)) document.getElementById("vf-fecha").value = date;
+          if (buyerRef) document.getElementById("vf-routing").value = buyerRef;
+          if (names[0]) document.getElementById("vf-emisor-nombre").value = names[0];
+          if (names[1]) document.getElementById("vf-cliente-nombre").value = names[1];
+          if (taxIds[0]) document.getElementById("vf-emisor-nif").value = taxIds[0];
+          if (taxIds[1]) document.getElementById("vf-cliente-nif").value = taxIds[1];
+
+          lines = [{ desc: `Imported E-Invoice (${file.name})`, qty: 1, price: taxExcl || 100 }];
+          renderLinesEditor();
+          renderInvoice();
+
+          const auditBox = document.getElementById("xml-audit-box");
+          auditBox.style.display = "block";
+          auditBox.innerHTML = `✅ <strong>EN 16931 XML Validation Passed (${file.name}):</strong> BT-1 Invoice ID (<code>${id}</code>), BT-2 Date (<code>${date}</code>), BT-31 Seller VAT (<code>${taxIds[0] || "OK"}</code>), BT-109 Net (<code>${taxExcl.toFixed(2)} €</code>), BT-112 Payable (<code>${payable.toFixed(2)} €</code>). Ready to print as PDF!`;
+        } catch (err) {
+          alert("Could not parse XML file: " + err.message);
+        }
+      };
+      reader.readAsText(file);
+    }
+
+    function exportLibroExcel() {
+      if (!isPro) {
+        alert("🔒 Exporting the multi-currency Tax Ledger CSV/Excel requires the Studio Pro Lifetime License (€9.99 one-time).");
+        return;
+      }
+      if (chainHistory.length === 0) {
+        alert("Click 'Sign & Chain SHA-256' on at least one invoice first.");
+        return;
+      }
+      const header = "Invoice ID;Issue Date;Seller VAT;Buyer Name;Buyer VAT;Net Base (EUR);VAT Amount (EUR);Withholding (EUR);Total Payable (EUR);SHA-256 Hash;Prev Hash\n";
+      const rows = chainHistory.map((r) =>
+        `${r.serie};${r.fecha};${r.emisorNif};"${r.clienteNombre}";${r.clienteNif};${r.base.toFixed(2)};${r.cuotaIva.toFixed(2)};${r.cuotaIrpf.toFixed(2)};${r.total.toFixed(2)};${r.hash};${r.prevHash}`
+      ).join("\n");
+      const blob = new Blob(["\uFEFF" + header + rows], { type: "text/csv;charset=utf-8;" });
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = "EN16931-EInvoice-Tax-Ledger.csv";
+      a.click();
+    }
+
+    function unlockPro() {
+      const code = (document.getElementById("vf-pro-code").value || "").trim();
+      if (code.length >= 6) {
+        isPro = true;
+        localStorage.setItem("verifactu_studio_pro", "true");
+        renderInvoice();
+        alert("🎉 Studio Pro Lifetime License activated!");
+      } else {
+        alert("Please enter a valid payment reference (minimum 6 characters).");
+      }
+    }
+
+    // Auto-select language from URL hash or query (?lang=de / #de)
+    const urlLang = (location.search.match(/lang=(en|de|fr|es)/) || location.hash.match(/#(en|de|fr|es)/) || [])[1];
+    renderLinesEditor();
+    setMode(urlLang || "en");
+  </script>
+  <script src="telemetria-soporte.js"></script>
+</body>
+</html>

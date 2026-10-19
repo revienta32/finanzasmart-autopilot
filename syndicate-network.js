@@ -64,6 +64,11 @@ async function publishHighAuthorityGists(token) {
       description: "Modelo Pliego de Descargos y Recurso de Multas DGT, Radar y ZBE (Certificado Metrológico Orden ICT/155/2020)",
       filename: "Modelo-Recurrir-Multa-DGT-Radar-ZBE.md",
       content: `# 🚗 Modelo Oficial para Recurrir Multas de Radar DGT y Zonas de Bajas Emisiones (ZBE)\n\nMás del 38% de las multas de velocidad o cámaras municipales se anulan al exigir los dos fotogramas obligatorios, la aplicación del margen de error normativo y el certificado de verificación periódica del cinemómetro (**Orden ICT/155/2020**).\n\n👉 **Genera tu escrito de alegaciones personalizado en 30 segundos:**\n### [📄 Abrir Generador de Recurso de Multas DGT / ZBE](${SITE_URL}/multas-dgt-ia.html)`
+    },
+    {
+      description: "Free Peppol UBL 2.1, German XRechnung 3.0, French Factur-X & Spanish VeriFactu E-Invoice XML Generator + Viewer (EN 16931)",
+      filename: "Global-E-Invoice-XML-Generator-Viewer-EN16931.md",
+      content: `# 🌍 Free Client-Side E-Invoice Generator & XML Viewer (Peppol UBL 2.1 · XRechnung 3.0 · Factur-X · VeriFactu)\n\n100% browser-based, GDPR/DSGVO-compliant electronic invoicing studio supporting European **EN 16931** standards with zero server uploads:\n\n- 🇬🇧 **[Free Peppol BIS 3.0 (UBL 2.1) XML Invoice Generator & Validator](${SITE_URL}/verifactu-studio.html?lang=en)**\n- 🇩🇪 **[Kostenloser XRechnung 3.0 Generator & XML-Viewer (mit Leitweg-ID & GiroCode)](${SITE_URL}/verifactu-studio.html?lang=de)**\n- 🇫🇷 **[Générateur Factur-X / Chorus Pro XML Gratuit en Ligne](${SITE_URL}/verifactu-studio.html?lang=fr)**\n- 🇪🇸 **[Generador Veri*Factu (Huella SHA-256 + QR AEAT) y Facturae 3.2.2 XML](${SITE_URL}/verifactu-studio.html?lang=es)**`
     }
   ];
 
@@ -113,6 +118,13 @@ async function createSatelliteRepos(token) {
       homepage: `${SITE_URL}/laboral-ia.html`,
       topics: ["finiquito", "despido", "indemnizacion", "laboral", "smac", "estatuto-trabajadores", "multas-dgt"],
       readme: `# 💼 Calculadora de Finiquito, Indemnización por Despido y Papeleta SMAC (España 2026)\n\n👉 **Calcular Finiquito + Indemnización y Generar Papeleta SMAC:** **[${SITE_URL}/laboral-ia.html](${SITE_URL}/laboral-ia.html)**\n\n### Herramientas Incluidas:\n- **[Calcular Finiquito e Indemnización por Despido Improcedente (33 días) u Objetivo (20 días)](${SITE_URL}/calcular-finiquito-indemnizacion-despido-improcedente.html)**.\n- **[Generador de Recurso y Pliego de Descargos para Multas DGT, Radar y ZBE](${SITE_URL}/multas-dgt-ia.html)**.`
+    },
+    {
+      name: "xrechnung-peppol-facturx-xml-generator-viewer",
+      description: "Free Client-Side E-Invoice XML Generator & Viewer (EN 16931): Peppol BIS 3.0 UBL 2.1, German XRechnung 3.0, French Factur-X & Spanish VeriFactu SHA-256.",
+      homepage: `${SITE_URL}/verifactu-studio.html`,
+      topics: ["xrechnung", "peppol", "einvoicing", "ubl", "factur-x", "verifactu", "en16931"],
+      readme: `# 🌍 Global E-Invoice & XML Studio Pro (Peppol UBL 2.1 · XRechnung 3.0 · Factur-X · VeriFactu)\n\n👉 **Launch Live Web App (100% Client-Side, No Sign-Up):** **[${SITE_URL}/verifactu-studio.html](${SITE_URL}/verifactu-studio.html)**\n\n### Supported International Standards:\n- 🇬🇧 **[Peppol BIS Billing 3.0 (UBL 2.1 XML) Generator & Validator](${SITE_URL}/peppol-ubl-xml-invoice-generator-validator.html)**\n- 🇩🇪 **[XRechnung 3.0 & ZUGFeRD Generator + XML Viewer (Leitweg-ID & GiroCode)](${SITE_URL}/xrechnung-generator-viewer-kostenlos.html)**\n- 🇫🇷 **[Générateur Factur-X / Chorus Pro XML Gratuit](${SITE_URL}/generateur-factur-x-chorus-pro-gratuit.html)**\n- 🇪🇸 **[Veri*Factu AEAT (SHA-256 + QR) & Facturae 3.2.2 XML](${SITE_URL}/generador-facturas-verifactu-qr-aeat-facturae-xml-gratis.html)**`
     }
   ];
 

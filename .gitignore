@@ -1,2 +1,4 @@
 CNAME
 .mail_tmp.json
+.reddit*
+.env

@@ -6,6 +6,11 @@
     <priority>1.0</priority>
   </url>
   <url>
+    <loc>https://finanzasmart-pro.surge.sh/verifactu-studio.html</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
     <loc>https://finanzasmart-pro.surge.sh/producto-digital-pro.html</loc>
     <changefreq>daily</changefreq>
     <priority>0.9</priority>
@@ -97,6 +102,26 @@
   </url>
   <url>
     <loc>https://finanzasmart-pro.surge.sh/subida-alquiler-ipc-irav-limite-legal-inquilino.html</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://finanzasmart-pro.surge.sh/xrechnung-generator-viewer-kostenlos.html</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://finanzasmart-pro.surge.sh/peppol-ubl-xml-invoice-generator-validator.html</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://finanzasmart-pro.surge.sh/generateur-factur-x-chorus-pro-gratuit.html</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://finanzasmart-pro.surge.sh/generador-facturas-verifactu-qr-aeat-facturae-xml-gratis.html</loc>
     <changefreq>daily</changefreq>
     <priority>0.9</priority>
   </url>
