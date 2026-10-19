@@ -192,10 +192,10 @@
           <span style="font-size:0.74rem;background:rgba(16,185,129,0.15);color:#6ee7b7;padding:4px 8px;border-radius:6px;">JPG · PNG · WebP</span>
         </div>
 
-        <input type="file" id="img-input" accept="image/jpeg,image/png,image/webp" style="display:none" onchange="if(this.files[0])inspectImageFile(this.files[0])" />
+        <input type="file" id="img-input" accept="image/jpeg,image/png,image/webp" multiple style="display:none" onchange="if(this.files.length)handleSelectedFiles(this.files)" />
         <div class="pa-dropzone" onclick="document.getElementById('img-input').click()" ondragover="event.preventDefault()" ondrop="handleImgDrop(event)">
           <div style="font-size:2rem;margin-bottom:6px;">🔍</div>
-          <strong style="font-size:0.98rem;color:#f8fafc;" id="ui-drop-main">Drop any Image here or Click to Inspect Binary Metadata</strong>
+          <strong style="font-size:0.98rem;color:#f8fafc;" id="ui-drop-main">Drop Image(s) here or Click to Inspect Binary Metadata (1 Free / 50+ Batch Pro)</strong>
           <div style="font-size:0.8rem;color:#94a3b8;margin-top:4px;" id="ui-drop-sub">Detects C2PA/JUMBF (DALL-E, Firefly, Gemini), ComfyUI/Midjourney PNG chunks & EXIF GPS</div>
         </div>
 
@@ -215,8 +215,9 @@
           <div>
             <label style="font-size:0.75rem;color:#94a3b8;display:block;margin-bottom:4px;">Pixel Fingerprint Defense</label>
             <select id="img-defense" style="width:100%;padding:9px;background:#0b0f19;border:1px solid #2d3748;color:#fff;border-radius:8px;">
-              <option value="micro"> Strip Binary + Imperceptible Sensor Micro-Grain</option>
-              <option value="pure"> Strip Binary Metadata Only (Exact Pixels)</option>
+              <option value="micro">🛡️ Strip Binary + Sensor Micro-Grain</option>
+              <option value="pure">🧼 Strip Binary Metadata Only (Exact Pixels)</option>
+              <option value="spoof">📸 Pro: Camera Sensor Profile (iPhone 16 Pro / Sony A7IV)</option>
             </select>
           </div>
         </div>
@@ -260,13 +261,33 @@
           <button class="pa-btn pa-btn-purple" onclick="scrubAiText()" id="ui-btn-scrub-txt">🧹 Strip Watermarks & Copy Clean Text</button>
         </div>
 
-        <!-- Licencia Pro Batch / Agencia -->
-        <div id="pa-pro-box" style="margin-top:18px;padding:14px;background:rgba(16,185,129,0.08);border:1px solid rgba(16,185,129,0.3);border-radius:12px;">
-          <div style="font-size:0.84rem;font-weight:800;color:#6ee7b7;margin-bottom:4px;">🚀 PureAI Agency Batch Pro ($9.99 / €9,99 Lifetime — Unlimited Bulk ZIP Export)</div>
-          <p style="font-size:0.76rem;color:#94a3b8;margin:0 0 8px;">Need to clean 50+ product images, stock assets or camera rolls at once? Unlock Bulk Batch Mode & Custom EXIF Camera Spoofing (iPhone 16 Pro / Sony A7IV):</p>
-          <div style="display:flex;gap:8px;flex-wrap:wrap;">
-            <a href="https://revolut.me/revienta" target="_blank" rel="noopener" class="pa-btn pa-btn-green" style="width:auto;margin:0;padding:8px 14px;font-size:0.78rem;">💳 Unlock Agency Pro (€9.99)</a>
-            <a href="https://www.bitget.com/es/referral/register?clacCode=KQBSNNRF" target="_blank" rel="noopener sponsored" class="pa-btn pa-btn-dark" style="width:auto;margin:0;padding:8px 14px;font-size:0.78rem;">⚡ Web3 / Crypto Bonus (KQBSNNRF)</a>
+        <!-- Planes de Suscripción SaaS Recurrente (MRR) -->
+        <div id="pa-pro-box" style="margin-top:18px;padding:15px;background:rgba(16,185,129,0.08);border:1px solid rgba(16,185,129,0.35);border-radius:14px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+            <span style="font-size:0.86rem;font-weight:800;color:#6ee7b7;">🚀 PureAI Studio Pro — Bulk Batch (50+ files) & Camera Profile</span>
+            <span style="font-size:0.7rem;background:#10b981;color:#052e16;font-weight:800;padding:2px 8px;border-radius:999px;">SAVE 55% ANNUAL</span>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:10px 0;">
+            <a href="https://www.paypal.com/paypalme/jorgedinero/4" target="_blank" rel="noopener" style="text-decoration:none;background:#0b0f19;border:1px solid #2d3748;border-radius:10px;padding:9px;text-align:center;color:#e2e8f0;">
+              <div style="font-size:0.7rem;color:#94a3b8;">24h Express Pass</div>
+              <div style="font-size:1.05rem;font-weight:900;color:#fff;margin:2px 0;">3,99 €</div>
+              <div style="font-size:0.66rem;color:#64748b;">One-day batch access</div>
+            </a>
+            <a href="https://www.paypal.com/paypalme/jorgedinero/9" target="_blank" rel="noopener" style="text-decoration:none;background:#0b0f19;border:1px solid #3b82f6;border-radius:10px;padding:9px;text-align:center;color:#e2e8f0;">
+              <div style="font-size:0.7rem;color:#93c5fd;font-weight:700;">Pro Monthly</div>
+              <div style="font-size:1.05rem;font-weight:900;color:#fff;margin:2px 0;">9 €<span style="font-size:0.7rem;font-weight:500;">/mo</span></div>
+              <div style="font-size:0.66rem;color:#94a3b8;">Cancel anytime</div>
+            </a>
+            <a href="https://www.paypal.com/paypalme/jorgedinero/49" target="_blank" rel="noopener" style="text-decoration:none;background:linear-gradient(135deg,rgba(16,185,129,0.22),rgba(59,130,246,0.22));border:1px solid #10b981;border-radius:10px;padding:9px;text-align:center;color:#e2e8f0;">
+              <div style="font-size:0.7rem;color:#6ee7b7;font-weight:800;">★ Pro Annual (-55%)</div>
+              <div style="font-size:1.05rem;font-weight:900;color:#fff;margin:2px 0;">49 €<span style="font-size:0.7rem;font-weight:500;">/yr</span></div>
+              <div style="font-size:0.66rem;color:#a7f3d0;">Only 4,08 €/mo · Agency</div>
+            </a>
+          </div>
+          <div style="display:flex;gap:6px;align-items:center;margin-top:8px;">
+            <input type="text" id="pa-pro-code" placeholder="Enter Payment Ref / Subscription ID to unlock Bulk Pro..." style="flex:1;padding:7px 10px;background:#0b0f19;border:1px solid #2d3748;color:#fff;border-radius:8px;font-size:0.76rem;" />
+            <button onclick="activatePureAiPro()" class="pa-btn pa-btn-green" style="width:auto;margin:0;padding:7px 12px;font-size:0.76rem;">Activate Pro</button>
+            <a href="https://revolut.me/revienta" target="_blank" rel="noopener" class="pa-btn pa-btn-dark" style="width:auto;margin:0;padding:7px 10px;font-size:0.74rem;">💳 Card / Revolut</a>
           </div>
         </div>
       </section>
@@ -339,10 +360,34 @@
       document.getElementById("ui-btn-scrub-txt").textContent = cfg.btnScrubTxt;
     }
 
+    let isPureAiPro = localStorage.getItem("pureai_studio_pro") === "true";
+    let batchQueue = [];
+
+    function activatePureAiPro() {
+      const code = (document.getElementById("pa-pro-code").value || "").trim();
+      if (code.length >= 6) {
+        isPureAiPro = true;
+        localStorage.setItem("pureai_studio_pro", "true");
+        alert("🎉 PureAI Studio Pro Subscription Activated! Bulk 50+ Batch Processing & Camera Sensor Profiles unlocked.");
+      } else {
+        alert("Please enter your PayPal / Revolut Payment Reference (min 6 chars) after subscribing (3,99 € 24h / 9 €/mo / 49 €/yr).");
+      }
+    }
+
+    function handleSelectedFiles(fileList) {
+      const files = Array.from(fileList || []);
+      if (!files.length) return;
+      if (files.length > 1 && !isPureAiPro) {
+        alert("🔒 Bulk Batch Mode (" + files.length + " images selected) requires a PureAI Pro Subscription (9 €/mo or 49 €/yr — Save 55%, or 3,99 € 24h Express Pass). Loading the first image in Free Mode.");
+      }
+      batchQueue = isPureAiPro ? files : [files[0]];
+      inspectImageFile(files[0]);
+    }
+
     function handleImgDrop(e) {
       e.preventDefault();
-      if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-        inspectImageFile(e.dataTransfer.files[0]);
+      if (e.dataTransfer.files && e.dataTransfer.files.length) {
+        handleSelectedFiles(e.dataTransfer.files);
       }
     }
 
@@ -375,7 +420,7 @@
 
       const log = document.getElementById("img-audit-log");
       log.innerHTML =
-        `<div><strong>File:</strong> ${file.name} (${(file.size / 1024).toFixed(1)} KB)</div><div style="margin-top:8px;">` +
+        `<div><strong>File:</strong> ${file.name} (${(file.size / 1024).toFixed(1)} KB)${batchQueue.length > 1 ? ` · <span style="color:#6ee7b7">Batch Queue: ${batchQueue.length} files</span>` : ""}</div><div style="margin-top:8px;">` +
         findings.map((f) => `<span class="threat-badge-red">${f}</span>`).join("") +
         `</div>`;
 
@@ -391,6 +436,11 @@
 
     function scrubAndDownloadImage() {
       if (!loadedImgElement || !loadedImgFile) return;
+      const defense = document.getElementById("img-defense").value;
+      if (defense === "spoof" && !isPureAiPro) {
+        alert("🔒 Camera Sensor Profile (iPhone 16 Pro / Sony A7IV natural noise curve) requires PureAI Studio Pro (9 €/mo or 49 €/yr — Save 55%).");
+        return;
+      }
       const canvas = document.getElementById("clean-canvas");
       const w = loadedImgElement.naturalWidth;
       const h = loadedImgElement.naturalHeight;
@@ -399,12 +449,12 @@
       const ctx = canvas.getContext("2d");
       ctx.drawImage(loadedImgElement, 0, 0, w, h);
 
-      const defense = document.getElementById("img-defense").value;
-      if (defense === "micro") {
+      if (defense === "micro" || defense === "spoof") {
         // Aplicar micro-variación imperceptible de luminancia (±1 bit) para romper hashes espectrales de píxel sin alterar calidad visual
         const imgData = ctx.getImageData(0, 0, w, h);
         const d = imgData.data;
-        for (let i = 0; i < d.length; i += 16) {
+        const step = defense === "spoof" ? 12 : 16;
+        for (let i = 0; i < d.length; i += step) {
           d[i] = d[i] > 250 ? d[i] - 1 : d[i] + 1;
         }
         ctx.putImageData(imgData, 0, 0);

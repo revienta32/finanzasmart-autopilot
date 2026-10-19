@@ -428,16 +428,36 @@
           <button class="vf-btn vf-btn-amber" onclick="exportLibroExcel()" id="ui-btn-csv">📊 Export Tax Ledger CSV</button>
         </div>
 
-        <!-- Bloque Pro Internacional -->
+        <!-- Bloque de Suscripción SaaS Internacional (MRR) -->
         <div id="vf-pro-box" style="margin-top:16px;padding:14px;background:rgba(59,130,246,0.1);border:1px solid rgba(59,130,246,0.35);border-radius:12px;">
-          <div style="font-size:0.83rem;font-weight:800;color:#93c5fd;margin-bottom:4px;" id="ui-pro-title">💎 Studio Pro Lifetime License (€9.99 / $9.99 One-Time — No Monthly Fees)</div>
-          <p style="font-size:0.75rem;color:#94a3b8;margin:0 0 10px;" id="ui-pro-desc">Remove the footer badge from PDFs and unlock unlimited multi-currency CSV/Excel VAT ledger exports:</p>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+            <div style="font-size:0.83rem;font-weight:800;color:#93c5fd;" id="ui-pro-title">💎 E-Invoice Studio Pro (Unlimited XML, PDF White-Label & Tax CSV)</div>
+            <span style="font-size:0.68rem;background:#10b981;color:#052e16;font-weight:800;padding:2px 7px;border-radius:999px;">-55% ANNUAL</span>
+          </div>
+          <p style="font-size:0.74rem;color:#94a3b8;margin:0 0 8px;" id="ui-pro-desc">Remove the footer watermark from PDFs, chain unlimited SHA-256 invoices and export quarterly VAT/MwSt/IVA CSV ledgers:</p>
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:8px;">
+            <a href="https://www.paypal.com/paypalme/jorgedinero/4" target="_blank" rel="noopener" style="text-decoration:none;background:#0b0f19;border:1px solid #334155;border-radius:8px;padding:7px;text-align:center;color:#e2e8f0;">
+              <div style="font-size:0.68rem;color:#94a3b8;">24h Express</div>
+              <div style="font-size:0.98rem;font-weight:900;color:#fff;">3,99 €</div>
+              <div style="font-size:0.63rem;color:#64748b;">Single filing</div>
+            </a>
+            <a href="https://www.paypal.com/paypalme/jorgedinero/9" target="_blank" rel="noopener" style="text-decoration:none;background:#0b0f19;border:1px solid #3b82f6;border-radius:8px;padding:7px;text-align:center;color:#e2e8f0;">
+              <div style="font-size:0.68rem;color:#93c5fd;font-weight:700;">Pro Monthly</div>
+              <div style="font-size:0.98rem;font-weight:900;color:#fff;">9 €<span style="font-size:0.68rem;">/mo</span></div>
+              <div style="font-size:0.63rem;color:#94a3b8;">Freelancers</div>
+            </a>
+            <a href="https://www.paypal.com/paypalme/jorgedinero/49" target="_blank" rel="noopener" style="text-decoration:none;background:linear-gradient(135deg,rgba(16,185,129,0.22),rgba(59,130,246,0.22));border:1px solid #10b981;border-radius:8px;padding:7px;text-align:center;color:#e2e8f0;">
+              <div style="font-size:0.68rem;color:#6ee7b7;font-weight:800;">★ Pro Annual</div>
+              <div style="font-size:0.98rem;font-weight:900;color:#fff;">49 €<span style="font-size:0.68rem;">/yr</span></div>
+              <div style="font-size:0.63rem;color:#a7f3d0;">4,08 €/mo · SME</div>
+            </a>
+          </div>
           <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px;">
-            <a href="https://revolut.me/revienta" target="_blank" rel="noopener" class="vf-btn vf-btn-primary" style="padding:7px 11px;font-size:0.77rem;">💳 Unlock Pro (€9.99 via Card / Revolut)</a>
-            <a href="https://revolut.com/referral/?referral-code=revienta!OCT1-26-AR-H1&geo-redirect" target="_blank" rel="noopener sponsored" class="vf-btn vf-btn-dark" style="padding:7px 11px;font-size:0.77rem;">🏦 Free Multi-Currency Business IBAN</a>
+            <a href="https://revolut.me/revienta" target="_blank" rel="noopener" class="vf-btn vf-btn-primary" style="padding:6px 10px;font-size:0.74rem;">💳 Pay via Card / Revolut</a>
+            <a href="https://revolut.com/referral/?referral-code=revienta!OCT1-26-AR-H1&geo-redirect" target="_blank" rel="noopener sponsored" class="vf-btn vf-btn-dark" style="padding:6px 10px;font-size:0.74rem;">🏦 Free Multi-Currency Business IBAN</a>
           </div>
           <div style="display:flex;gap:6px;">
-            <input type="text" id="vf-pro-code" placeholder="Payment reference / TXID (min 6 chars)..." style="flex:1;padding:7px;background:#0b0f19;border:1px solid #334155;color:#fff;border-radius:6px;font-size:0.77rem;" />
+            <input type="text" id="vf-pro-code" placeholder="Subscription / Payment Ref (min 6 chars)..." style="flex:1;padding:7px;background:#0b0f19;border:1px solid #334155;color:#fff;border-radius:6px;font-size:0.77rem;" />
             <button class="vf-btn vf-btn-amber" style="padding:7px 12px;font-size:0.77rem;" onclick="unlockPro()">Activate</button>
           </div>
         </div>
@@ -990,7 +1010,7 @@
 
     function exportLibroExcel() {
       if (!isPro) {
-        alert("🔒 Exporting the multi-currency Tax Ledger CSV/Excel requires the Studio Pro Lifetime License (€9.99 one-time).");
+        alert("🔒 Exporting the multi-currency Tax Ledger CSV/Excel requires an E-Invoice Studio Pro Subscription (9 €/mo or 49 €/yr — Save 55%, or 3,99 € 24h Express Pass).");
         return;
       }
       if (chainHistory.length === 0) {
@@ -1014,9 +1034,9 @@
         isPro = true;
         localStorage.setItem("verifactu_studio_pro", "true");
         renderInvoice();
-        alert("🎉 Studio Pro Lifetime License activated!");
+        alert("🎉 E-Invoice Studio Pro Subscription activated!");
       } else {
-        alert("Please enter a valid payment reference (minimum 6 characters).");
+        alert("Please enter your Subscription / Payment Reference (minimum 6 characters).");
       }
     }
 
