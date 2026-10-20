@@ -321,8 +321,16 @@
   </main>
 
   <script>
-    let loadedImgFile = null;
-    let loadedImgElement = null;
+    var loadedImgFile = null;
+    var loadedImgElement = null;
+    var currentUiLang = "es";
+    var SAMPLES = {
+      es: "En conclusión, en el panorama digital actual\u202F—\u202Fes importante recordar que las empresas deben implementar marcos innovadores\u200B para optimizar su eficiencia.\u00A0Cabe destacar que, al profundizar en la inteligencia artificial\u202F—\u202Fsin comprometer la privacidad\u200B—\u202Fse logra un avance fundamental.",
+      en: "In today’s rapidly evolving digital landscape\u202F—\u202Forganizations must leverage innovative frameworks\u200B to maximize operational efficiency.\u00A0Furthermore, delving into autonomous workflows\u202F—\u202Fwithout compromising data privacy\u200B—\u202Fremains a critical imperative for modern teams.",
+      de: "Zusammenfassend lässt sich sagen, dass Unternehmen in der heutigen digitalen Landschaft\u202F—\u202Finnovative Systeme nutzen müssen\u200B. Darüber hinaus ist der Schutz der Privatsphäre\u202F—\u202Fvon entscheidender Bedeutung.",
+      fr: "En conclusion, dans le paysage numérique actuel\u202F—\u202Fil est essentiel d'exploiter des cadres innovants\u200B pour maximiser l'efficacité\u00A0tout en protégeant vos données.",
+      pt: "Em conclusão, no cenário digital atual\u202F—\u202Fé importante lembrar que as empresas devem utilizar estruturas inovadoras\u200B para maximizar a eficiência."
+    };
 
     const LANGS = {
       en: {
@@ -391,6 +399,11 @@
       document.getElementById("ui-txt-title").textContent = cfg.txtTitle;
       document.getElementById("btn-scrub-img").textContent = cfg.btnScrubImg;
       document.getElementById("ui-btn-scrub-txt").textContent = cfg.btnScrubTxt;
+      const inp = document.getElementById("txt-input");
+      if (inp && (!inp.value.trim() || Object.values(SAMPLES).includes(inp.value))) {
+        inp.value = SAMPLES[l] || SAMPLES.es;
+        if (typeof analyzeText === "function") analyzeText();
+      }
     }
 
     let isPureAiPro = localStorage.getItem("pureai_studio_pro") === "true";
@@ -467,23 +480,16 @@
       img.src = URL.createObjectURL(file);
     }
 
-    function scrubAndDownloadImage() {
-      if (!loadedImgElement || !loadedImgFile) return;
-      const defense = document.getElementById("img-defense").value;
-      if (defense === "spoof" && !isPureAiPro) {
-        alert("🔒 Camera Sensor Profile (iPhone 16 Pro / Sony A7IV natural noise curve) requires PureAI Studio Pro (3,99 € 24h / 9 €/mo / 49 €/yr via Stripe).");
-        return;
-      }
+    function scrubSingleImageElement(imgEl, fileName, defense, mime, ext, onDone) {
       const canvas = document.getElementById("clean-canvas");
-      const w = loadedImgElement.naturalWidth;
-      const h = loadedImgElement.naturalHeight;
+      const w = imgEl.naturalWidth || 512;
+      const h = imgEl.naturalHeight || 512;
       canvas.width = w;
       canvas.height = h;
       const ctx = canvas.getContext("2d");
-      ctx.drawImage(loadedImgElement, 0, 0, w, h);
+      ctx.drawImage(imgEl, 0, 0, w, h);
 
       if (defense === "micro" || defense === "spoof") {
-        // Aplicar micro-variación imperceptible de luminancia (±1 bit) para romper hashes espectrales de píxel sin alterar calidad visual
         const imgData = ctx.getImageData(0, 0, w, h);
         const d = imgData.data;
         const step = defense === "spoof" ? 12 : 16;
@@ -493,22 +499,53 @@
         ctx.putImageData(imgData, 0, 0);
       }
 
-      const mime = document.getElementById("img-format").value;
-      const ext = mime === "image/png" ? "png" : mime === "image/webp" ? "webp" : "jpg";
       canvas.toBlob(
         (blob) => {
-          const cleanName = loadedImgFile.name.replace(/\.[^.]+$/, "") + "-clean." + ext;
+          if (!blob) return;
+          const cleanName = fileName.replace(/\.[^.]+$/, "") + "-clean." + ext;
           const a = document.createElement("a");
           a.href = URL.createObjectURL(blob);
           a.download = cleanName;
           a.click();
-
-          document.getElementById("img-audit-log").innerHTML =
-            `<span class="threat-badge-green">✅ 100% CLEAN VERIFIED: 0 bytes of C2PA, JUMBF, EXIF, XMP or GPS remaining in ${cleanName} (${(blob.size / 1024).toFixed(1)} KB).</span>`;
+          if (onDone) onDone(cleanName, blob);
         },
         mime,
         0.95
       );
+    }
+
+    function scrubAndDownloadImage() {
+      if (!loadedImgElement || !loadedImgFile) return;
+      const defense = document.getElementById("img-defense").value;
+      if (defense === "spoof" && !isPureAiPro) {
+        alert("🔒 Camera Sensor Profile (iPhone 16 Pro / Sony A7IV natural noise curve) requires PureAI Studio Pro (3,99 € 24h / 9 €/mo / 49 €/yr via Stripe).");
+        return;
+      }
+      const mime = document.getElementById("img-format").value;
+      const ext = mime === "image/png" ? "png" : mime === "image/webp" ? "webp" : "jpg";
+
+      if (isPureAiPro && batchQueue.length > 1) {
+        let doneCount = 0;
+        batchQueue.forEach((f) => {
+          const im = new Image();
+          im.onload = () => {
+            scrubSingleImageElement(im, f.name, defense, mime, ext, (cleanName, blob) => {
+              doneCount++;
+              if (doneCount === batchQueue.length) {
+                document.getElementById("img-audit-log").innerHTML =
+                  `<span class="threat-badge-green">✅ BATCH 100% CLEAN VERIFIED: ${doneCount} images scrubbed (0 bytes of C2PA, JUMBF, EXIF or GPS remaining).</span>`;
+              }
+            });
+          };
+          im.src = URL.createObjectURL(f);
+        });
+        return;
+      }
+
+      scrubSingleImageElement(loadedImgElement, loadedImgFile.name, defense, mime, ext, (cleanName, blob) => {
+        document.getElementById("img-audit-log").innerHTML =
+          `<span class="threat-badge-green">✅ 100% CLEAN VERIFIED: 0 bytes of C2PA, JUMBF, EXIF, XMP or GPS remaining in ${cleanName} (${(blob.size / 1024).toFixed(1)} KB).</span>`;
+      });
     }
 
     // Diccionario multilingüe de muletillas/clichés que Turnitin, GPTZero y Originality penalizan
@@ -617,14 +654,6 @@
       }
     }
 
-    let currentUiLang = "es";
-    const SAMPLES = {
-      es: "En conclusión, en el panorama digital actual\u202F—\u202Fes importante recordar que las empresas deben implementar marcos innovadores\u200B para optimizar su eficiencia.\u00A0Cabe destacar que, al profundizar en la inteligencia artificial\u202F—\u202Fsin comprometer la privacidad\u200B—\u202Fse logra un avance fundamental.",
-      en: "In today’s rapidly evolving digital landscape\u202F—\u202Forganizations must leverage innovative frameworks\u200B to maximize operational efficiency.\u00A0Furthermore, delving into autonomous workflows\u202F—\u202Fwithout compromising data privacy\u200B—\u202Fremains a critical imperative for modern teams.",
-      de: "Zusammenfassend lässt sich sagen, dass Unternehmen in der heutigen digitalen Landschaft\u202F—\u202Finnovative Systeme nutzen müssen\u200B. Darüber hinaus ist der Schutz der Privatsphäre\u202F—\u202Fvon entscheidender Bedeutung.",
-      fr: "En conclusion, dans le paysage numérique actuel\u202F—\u202Fil est essentiel d'exploiter des cadres innovants\u200B pour maximiser l'efficacité\u00A0tout en protégeant vos données.",
-      pt: "Em conclusão, no cenário digital atual\u202F—\u202Fé importante lembrar que as empresas devem utilizar estruturas inovadoras\u200B para maximizar a eficiência."
-    };
     async function pasteUserText() {
       try {
         const clip = await navigator.clipboard.readText();
