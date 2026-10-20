@@ -74,6 +74,11 @@ async function publishHighAuthorityGists(token) {
       description: "Free C2PA Metadata Remover, EXIF GPS Destroyer & Invisible ChatGPT Unicode Watermark Scrubber (100% Client-Side)",
       filename: "C2PA-Metadata-Remover-AI-Unicode-Scrubber.md",
       content: `# 🧬 PureAI Studio: Free Client-Side C2PA Metadata Remover & AI Unicode Watermark Scrubber\n\nInspect and strip **C2PA / JUMBF 'Made with AI' manifests** (DALL-E, Firefly, Gemini, Midjourney), **ComfyUI PNG chunks**, **EXIF GPS coordinates**, and **invisible LLM Unicode watermarks (\`U+202F\`, \`U+200B\`, \`U+00A0\`)** 100% locally in your browser without uploading files to any server:\n\n- 🇬🇧 **[Open PureAI C2PA & Unicode Watermark Scrubber (EN)](${SITE_URL}/clean-ai-studio.html?lang=en)**\n- 🇪🇸 **[Quitar Metadatos IA (C2PA / EXIF) y Marcas Invisibles de ChatGPT (ES)](${SITE_URL}/clean-ai-studio.html?lang=es)**\n- 🇩🇪 **[C2PA KI-Metadaten & ChatGPT-Wasserzeichen Entfernen (DE)](${SITE_URL}/clean-ai-studio.html?lang=de)**`
+    },
+    {
+      description: "How to Remove Invisible ChatGPT Watermarks (U+202F, U+200B) & Humanize AI Text for Turnitin / GPTZero (Free Browser Tool)",
+      filename: "Remove-ChatGPT-Watermarks-U202F-Humanize-AI-Text.md",
+      content: `# 🔎 How to Detect & Remove Invisible ChatGPT Watermarks (\`U+202F\`, \`U+200B\`) & Robotic AI Clichés\n\nWhen you copy text from ChatGPT, Claude, or Gemini, hidden Unicode code points like **\`U+202F\` (Narrow No-Break Space)** and **\`U+200B\` (Zero-Width Space)** are embedded alongside overused AI phrases (*delve into, tapestry, testament to, furthermore*).\n\n👉 **Use our 100% Client-Side Forensic X-Ray Scrubber & 70+ Cliché Humanizer (Supports .DOCX & .TXT upload):**\n- 🇬🇧 **[Remove ChatGPT Watermarks U+202F & Humanize AI Text (EN)](${SITE_URL}/remove-chatgpt-watermarks-invisible-characters-u202f.html)**\n- 🇪🇸 **[Humanizar Texto de ChatGPT Gratis y Quitar Marcas Invisibles (ES)](${SITE_URL}/humanizar-texto-ia-indetectable-turnitin-gratis.html)**\n- 🇩🇪 **[KI-Texte vermenschlichen & ChatGPT-Wasserzeichen entfernen (DE)](${SITE_URL}/ki-text-vermenschlichen-chatgpt-wasserzeichen-entfernen.html)**\n- 🇫🇷 **[Humaniser un Texte IA ChatGPT & Supprimer les Filigranes (FR)](${SITE_URL}/humaniser-texte-ia-chatgpt-indetectable-gratuit.html)**`
     }
   ];
 
@@ -137,6 +142,13 @@ async function createSatelliteRepos(token) {
       homepage: `${SITE_URL}/clean-ai-studio.html`,
       topics: ["c2pa", "exif-remover", "metadata-remover", "ai-watermark", "privacy-tools", "comfyui", "midjourney"],
       readme: `# 🧬 PureAI Studio — Free Client-Side C2PA Metadata Remover & AI Unicode Watermark Scrubber\n\n👉 **Launch Live Web App (Zero Server Upload):** **[${SITE_URL}/clean-ai-studio.html](${SITE_URL}/clean-ai-studio.html)**\n\n### Features (EN / ES / DE / FR / PT):\n- **[Image C2PA, JUMBF & EXIF GPS Destroyer](${SITE_URL}/c2pa-metadata-remover-ai-scrubber.html)**: Strips 'Made with AI' Content Credentials (DALL-E, Firefly, Gemini, Midjourney), ComfyUI PNG chunks, and EXIF geolocation.\n- **[ChatGPT / Claude Invisible Unicode Watermark Scrubber](${SITE_URL}/quitar-metadatos-ia-c2pa-exif-fotos-texto.html)**: Detects and removes hidden \`U+202F\`, \`U+200B\`, and \`U+00A0\` tracking characters.\n- 🇩🇪 **[C2PA KI-Metadaten & Wasserzeichen Kostenlos Entfernen](${SITE_URL}/ki-metadaten-c2pa-entfernen-kostenlos.html)**`
+    },
+    {
+      name: "chatgpt-watermark-remover-ai-humanizer",
+      description: "Free Client-Side ChatGPT Invisible Watermark Remover (U+202F / U+200B), 70+ AI Cliché Humanizer (.DOCX/.TXT) & Batch C2PA Image Scrubber (.ZIP).",
+      homepage: `${SITE_URL}/clean-ai-studio.html?lang=en`,
+      topics: ["chatgpt", "ai-humanizer", "unicode-watermark", "c2pa", "turnitin", "gptzero", "exif-scrubber"],
+      readme: `# ✨ PureAI Studio — ChatGPT Invisible Watermark Remover (U+202F) & AI Text/Image Scrubber\n\n👉 **Open Live Browser App (100% Client-Side, Zero Server Upload):** **[${SITE_URL}/clean-ai-studio.html?lang=en](${SITE_URL}/clean-ai-studio.html?lang=en)**\n\n### Why Creators, Students & Agencies Use PureAI Studio:\n1. **[Remove ChatGPT Invisible Watermarks (U+202F & U+200B)](${SITE_URL}/remove-chatgpt-watermarks-invisible-characters-u202f.html)**: Live X-Ray view highlights hidden LLM characters in red and strips them in 1 click.\n2. **[Free AI Text Humanizer & Burstiness Engine (.DOCX / .TXT)](${SITE_URL}/humanize-ai-text-bypass-turnitin-gptzero-free.html)**: Replaces 70+ flagged AI clichés across EN, ES, DE, FR & PT.\n3. **[Remove 'Made with AI' Labels on Instagram & TikTok (C2PA / EXIF)](${SITE_URL}/remove-made-with-ai-label-instagram-tiktok-c2pa.html)**: Batch-scrub up to 20 images into a clean \`.zip\` archive with 1-click post-scrub verification.`
     }
   ];
 
@@ -163,8 +175,40 @@ async function createSatelliteRepos(token) {
       });
       created.push(`https://github.com/revienta32/${r.name}`);
     }
+    // Activar GitHub Pages (DA 96 en github.io) en cada repositorio satélite
+    await fetch(`https://api.github.com/repos/revienta32/${r.name}/pages`, {
+      method: "POST",
+      headers,
+      body: JSON.stringify({ source: { branch: "main", path: "/" } })
+    }).catch(() => {});
   }
+  // Activar también GitHub Pages en el repositorio principal finanzasmart-autopilot
+  await fetch(`https://api.github.com/repos/revienta32/finanzasmart-autopilot/pages`, {
+    method: "POST",
+    headers,
+    body: JSON.stringify({ source: { branch: "main", path: "/" } })
+  }).catch(() => {});
   return created;
+}
+
+async function pingIndexNowAllUrls() {
+  try {
+    const sitemap = fs.readFileSync(path.join(__dirname, "sitemap.xml"), "utf8");
+    const urlList = [...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => m[1]);
+    const res = await fetch("https://api.indexnow.org/indexnow", {
+      method: "POST",
+      headers: { "Content-Type": "application/json; charset=utf-8" },
+      body: JSON.stringify({
+        host: "finanzasmart-pro.surge.sh",
+        key: "b8f4c2d1e9a74b6c8d3e2f1a0b9c8d7e",
+        keyLocation: `${SITE_URL}/b8f4c2d1e9a74b6c8d3e2f1a0b9c8d7e.txt`,
+        urlList
+      })
+    });
+    return { status: res.status, count: urlList.length };
+  } catch (e) {
+    return { status: 0, count: 0 };
+  }
 }
 
 function buildSuggestedReply(title, targetLink) {
@@ -191,14 +235,28 @@ function buildSuggestedReply(title, targetLink) {
 }
 
 async function scanLiveRedditOpportunities() {
-  const subreddits = ["ESLegal", "SpainFIRE", "HorroresInmobiliarios", "SpainEconomics", "pesadillalaboral"];
-  const keywords = /fianza|alquiler|casero|hipoteca|gastos|renta|irpf|autonomo|autónomo|declaracion|declaración|vuelo|retraso|revolut|cripto|hacienda|irav|impuesto|inmueble|piso|despido|finiquito|smac|indemnizaci|multa|dgt|radar|zbe/i;
+  const subreddits = [
+    "ChatGPT",
+    "StableDiffusion",
+    "comfyui",
+    "midjourney",
+    "copywriting",
+    "ESLegal",
+    "SpainFIRE",
+    "HorroresInmobiliarios",
+    "SpainEconomics",
+    "pesadillalaboral"
+  ];
+  const keywords = /watermark|c2pa|metadata|exif|turnitin|gptzero|detector|humanize|made with ai|u\+202f|em-dash|workflow|fianza|alquiler|casero|hipoteca|gastos|renta|irpf|autonomo|autónomo|declaracion|declaración|vuelo|retraso|revolut|cripto|hacienda|irav|impuesto|inmueble|piso|despido|finiquito|smac|indemnizaci|multa|dgt|radar|zbe/i;
   const matches = [];
 
   for (const sub of subreddits) {
     try {
       const xml = await fetch(`https://www.reddit.com/r/${sub}/new/.rss`, {
-        headers: { "User-Agent": "FinanzaSmart/1.0" }
+        headers: {
+          "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
+          "Accept": "application/atom+xml,application/xml,text/xml;q=0.9,*/*;q=0.8"
+        }
       }).then((r) => r.text());
       const entries = xml.split("<entry>").slice(1);
       for (const entry of entries) {
@@ -206,7 +264,11 @@ async function scanLiveRedditOpportunities() {
         const link = (entry.match(/<link href="([^"]+)"/) || [])[1] || "";
         if (title && link && keywords.test(title)) {
           let targetLink = `${SITE_URL}/reclamaciones-ia.html`;
-          if (/despido|finiquito|smac|indemnizaci|laboral|empresa|baja|vacaciones/i.test(title) || sub === "pesadillalaboral") {
+          let customReply = null;
+          if (/watermark|c2pa|metadata|exif|turnitin|gptzero|detector|humanize|made with ai|u\+202f|em-dash|workflow/i.test(title) || ["ChatGPT", "StableDiffusion", "comfyui", "midjourney", "copywriting"].includes(sub)) {
+            targetLink = `${SITE_URL}/clean-ai-studio.html?lang=en`;
+            customReply = `You can inspect and strip hidden C2PA/JUMBF headers, ComfyUI PNG workflow chunks, EXIF data, and invisible LLM Unicode spaces (U+202F / U+200B) 100% locally in your browser (zero server upload) using PureAI Studio: ${targetLink}`;
+          } else if (/despido|finiquito|smac|indemnizaci|laboral|empresa|baja|vacaciones/i.test(title) || sub === "pesadillalaboral") {
             targetLink = `${SITE_URL}/laboral-ia.html`;
           } else if (/multa|dgt|radar|zbe|trafico|tráfico/i.test(title)) {
             targetLink = `${SITE_URL}/multas-dgt-ia.html`;
@@ -218,20 +280,41 @@ async function scanLiveRedditOpportunities() {
             title,
             url: link,
             recommendedTool: targetLink,
-            replyText: buildSuggestedReply(title, targetLink)
+            replyText: customReply || buildSuggestedReply(title, targetLink)
           });
         }
       }
     } catch (_) {}
   }
 
+  // Escaneo adicional en tiempo real de Hacker News (Algolia API) para debates activos sobre C2PA, AI Watermarks y E-Invoicing
+  const hnQueries = [
+    { q: "C2PA OR watermark AI", tool: `${SITE_URL}/clean-ai-studio.html?lang=en`, reply: `For anyone testing C2PA / JUMBF manifests or invisible LLM Unicode watermarks (U+202F / U+200B), we built a 100% client-side browser inspector & scrubber (zero server uploads, with post-scrub binary verification): ${SITE_URL}/clean-ai-studio.html?lang=en` },
+    { q: "GPTZero OR Turnitin AI detection", tool: `${SITE_URL}/remove-chatgpt-watermarks-invisible-characters-u202f.html`, reply: `A major false-positive trigger in AI detectors is hidden narrow no-break spaces (U+202F) and uniform sentence burstiness pasted from ChatGPT. You can X-ray and strip those code points client-side here: ${SITE_URL}/remove-chatgpt-watermarks-invisible-characters-u202f.html` },
+    { q: "XRechnung OR Peppol OR e-invoice XML", tool: `${SITE_URL}/verifactu-studio.html?lang=en`, reply: `If you need a lightweight, 100% client-side EN 16931 XML generator & viewer (Peppol BIS 3.0 UBL 2.1, German XRechnung 3.0, French Factur-X, Spanish VeriFactu SHA-256) without uploading client invoices to cloud SaaS: ${SITE_URL}/verifactu-studio.html?lang=en` }
+  ];
+  for (const hq of hnQueries) {
+    try {
+      const hnRes = await fetch(`https://hn.algolia.com/api/v1/search_by_date?query=${encodeURIComponent(hq.q)}&tags=story&hitsPerPage=4`).then(r => r.json());
+      for (const hit of (hnRes.hits || [])) {
+        matches.push({
+          subreddit: "HackerNews",
+          title: hit.title,
+          url: `https://news.ycombinator.com/item?id=${hit.objectID}`,
+          recommendedTool: hq.tool,
+          replyText: hq.reply
+        });
+      }
+    } catch (_) {}
+  }
+
   if (matches.length > 0) {
     const md = [
-      "# 🎯 Radar CEO en Tiempo Real: Personas Buscando Tus Herramientas Hoy en Reddit España",
+      "# 🎯 Radar CEO en Tiempo Real: Oportunidades Globales (PureAI Studio & E-Invoice) y España Hoy",
       "",
-      "Estos hilos son de usuarios reales en España preguntando **hoy mismo** sobre alquileres, fianzas, despidos, multas o impuestos, con la **respuesta exacta lista para copiar y pegar**:",
+      "Hilos activos detectados **hoy mismo** en Reddit y Hacker News sobre detección de IA, C2PA, marcas de agua de ChatGPT, facturación electrónica o reclamaciones, con la **respuesta exacta lista para copiar y pegar**:",
       "",
-      ...matches.slice(0, 15).map(
+      ...matches.slice(0, 25).map(
         (m, i) =>
           `${i + 1}. **[${m.subreddit}]** [${m.title}](${m.url})\n   - **Herramienta:** \`${m.recommendedTool}\`\n   - **Respuesta lista para copiar:**\n     > ${m.replyText}`
       )
@@ -246,9 +329,11 @@ async function main() {
   const gists = await publishHighAuthorityGists(token);
   console.log("Published Public GitHub Gists:", gists);
   const satRepos = await createSatelliteRepos(token);
-  console.log("Created Satellite SEO Repos:", satRepos);
+  console.log("Created Satellite SEO Repos & Enabled GitHub Pages:", satRepos);
+  const indexNowRes = await pingIndexNowAllUrls();
+  console.log("IndexNow Instant Search Engine Ping:", indexNowRes);
   const redditCount = await scanLiveRedditOpportunities();
-  console.log("Live Reddit Spain opportunities detected today:", redditCount);
+  console.log("Live Global & Spain Reddit opportunities detected today:", redditCount);
 }
 
 main().catch(console.error);
