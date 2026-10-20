@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://finanzasmart-pro.surge.sh/sitemap.xml
+Sitemap: https://revienta32.github.io/finanzasmart-autopilot/sitemap.xml
