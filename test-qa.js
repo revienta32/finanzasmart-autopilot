@@ -153,7 +153,15 @@ function getPaEl(id) {
 }
 let cleanedBlobs = [];
 const paSandbox = {
-  console, TextDecoder, Uint8Array, Math, Array, Object,
+  console, TextDecoder, TextEncoder, Uint8Array, DataView, Math, Array, Object,
+  Blob: class {
+    constructor(parts) {
+      const bufs = parts.map(p => Buffer.from(p.buffer ? p.buffer.slice(p.byteOffset, p.byteOffset + p.byteLength) : p));
+      this._bytes = Buffer.concat(bufs);
+      this.size = this._bytes.length;
+    }
+    async arrayBuffer() { return this._bytes.buffer.slice(this._bytes.byteOffset, this._bytes.byteOffset + this._bytes.byteLength); }
+  },
   URL: { createObjectURL(o) { if (o && o._bytes) cleanedBlobs.push(o); return "blob:ok"; } },
   Image: class { constructor() { this.naturalWidth = 64; this.naturalHeight = 64; } set src(v) { if (this.onload) this.onload(); } },
   localStorage: { _s: {}, getItem(k) { return this._s[k] || null; }, setItem(k, v) { this._s[k] = String(v); } },
@@ -170,6 +178,9 @@ paSandbox.setLang("de");
 assert(getPaEl("txt-input").value.includes("Zusammenfassend"), "Cambiar idioma a DE debe actualizar el texto de ejemplo a alemán");
 paSandbox.scrubAiText();
 assert(!/[\u202F\u200B\u00A0—]/.test(getPaEl("txt-input").value), "scrubAiText debe eliminar todos los espacios Unicode invisibles y guiones largos");
+const testZip = paSandbox.createZipBlob([{ name: "test.jpg", bytes: new Uint8Array([0xff, 0xd8, 0xff, 0xd9]) }]);
+assert.strictEqual(testZip._bytes[0], 0x50, "El generador ZIP por lotes debe emitir cabecera estándar PK (0x50 0x4B)");
+assert(paSandbox.AI_CLICHE_MAP.length >= 65, "El diccionario multilingüe Pro debe incluir más de 65 clichés de IA");
 
 console.log("✅ QA TEST SUITE PASSED: 100% Stripe Checkout + PureAI Studio E2E VM + Global E-Invoice Studio Pro verificados sin errores.");
 
