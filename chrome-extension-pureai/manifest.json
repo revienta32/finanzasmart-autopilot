@@ -1,12 +1,15 @@
 {
   "manifest_version": 3,
   "name": "PureAI Studio — C2PA Metadata & AI Watermark Scrubber",
-  "version": "1.0.0",
-  "description": "100% client-side C2PA/JUMBF binary AI metadata remover for images (DALL-E, Firefly, Midjourney) & invisible Unicode (U+202F) text cleaner.",
+  "version": "1.0.1",
+  "description": "Client-side C2PA/EXIF AI image metadata remover & invisible ChatGPT Unicode watermark (U+202F) text scrubber.",
+  "icons": {
+    "128": "icon128.png"
+  },
   "action": {
     "default_popup": "popup.html",
+    "default_icon": "icon128.png",
     "default_title": "PureAI Studio — Clean C2PA & AI Watermarks"
   },
-  "permissions": ["clipboardWrite"],
   "homepage_url": "https://finanzasmart-pro.surge.sh/clean-ai-studio.html"
 }
