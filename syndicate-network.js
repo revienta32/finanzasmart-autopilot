@@ -9,7 +9,7 @@ const fs = require("fs");
 const path = require("path");
 const { execSync } = require("child_process");
 
-const SITE_URL = "https://finanzasmart-pro.surge.sh";
+const SITE_URL = "https://revienta32.github.io/finanzasmart-autopilot";
 const REVOLUT_URL = "https://revolut.com/referral/?referral-code=revienta!OCT1-26-AR-H1&geo-redirect";
 const BITGET_URL = "https://www.bitget.com/es/referral/register?clacCode=KQBSNNRF";
 
