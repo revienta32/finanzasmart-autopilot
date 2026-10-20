@@ -207,7 +207,7 @@
           <div style="color:#94a3b8;" id="ui-audit-idle">No image loaded yet. Try loading any AI-generated or smartphone photo to see hidden binary markers.</div>
         </div>
 
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px;">
+        <details style="margin-top:10px;background:#0b0f19;border:1px solid #1e293b;border-radius:10px;padding:8px 12px;"><summary style="cursor:pointer;font-size:0.78rem;color:#94a3b8;font-weight:700;" id="ui-adv-img">⚙️ Opciones avanzadas de formato (Opcional)</summary><div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px;">
           <div>
             <label style="font-size:0.75rem;color:#94a3b8;display:block;margin-bottom:4px;">Output Format</label>
             <select id="img-format" style="width:100%;padding:9px;background:#0b0f19;border:1px solid #2d3748;color:#fff;border-radius:8px;">
@@ -226,6 +226,7 @@
           </div>
         </div>
 
+        </details>
         <canvas id="clean-canvas" style="display:none;"></canvas>
         <button class="pa-btn pa-btn-green" id="btn-scrub-img" onclick="scrubAndDownloadImage()" disabled style="opacity:0.5;">
           ⚡ Scrub All Metadata & Download Clean Image
@@ -250,6 +251,7 @@
           </div>
         </div>
 
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;gap:6px;flex-wrap:wrap;"><div style="display:flex;gap:6px;"><button type="button" onclick="pasteUserText()" id="ui-btn-paste" style="background:#3b82f6;color:#fff;border:none;border-radius:7px;padding:6px 12px;font-size:0.78rem;font-weight:800;cursor:pointer;">📋 Pegar texto</button><button type="button" onclick="clearUserText()" id="ui-btn-clear" style="background:#1e293b;color:#cbd5e1;border:1px solid #334155;border-radius:7px;padding:6px 10px;font-size:0.76rem;font-weight:700;cursor:pointer;">🗑️ Vaciar</button></div><button type="button" onclick="loadSampleAiText()" id="ui-btn-sample-top" style="background:none;border:none;color:#6ee7b7;cursor:pointer;font-size:0.75rem;font-weight:700;padding:0;">🧪 Ver ejemplo</button></div>
         <textarea id="txt-input" class="pa-text" style="min-height:135px;" oninput="analyzeText()" placeholder="Paste text from ChatGPT, Claude, or Gemini here to see hidden red watermarks (U+200B, U+202F) and orange AI clichés..."></textarea>
 
         <!-- Vista de Rayos X en Vivo (Muestra en ROJO los espacios invisibles y en NARANJA los clichés de IA) -->
@@ -371,6 +373,13 @@
     };
 
     function setLang(l) {
+      currentUiLang = l;
+      const isEs = l === "es";
+      const pasteBtn = document.getElementById("ui-btn-paste"); if (pasteBtn) pasteBtn.textContent = isEs ? "📋 Pegar texto" : (l === "de" ? "📋 Text einfügen" : (l === "fr" ? "📋 Coller le texte" : (l === "pt" ? "📋 Colar texto" : "📋 Paste text")));
+      const clearBtn = document.getElementById("ui-btn-clear"); if (clearBtn) clearBtn.textContent = isEs ? "🗑️ Vaciar" : (l === "de" ? "🗑️ Löschen" : (l === "fr" ? "🗑️ Effacer" : (l === "pt" ? "🗑️ Limpar" : "🗑️ Clear")));
+      const sampBtn = document.getElementById("ui-btn-sample-top"); if (sampBtn) sampBtn.textContent = isEs ? "🧪 Ver ejemplo" : "🧪 Try sample";
+      const humBtn = document.getElementById("ui-btn-humanize"); if (humBtn) humBtn.textContent = isEs ? "✨ Humanizar Todo (Pro)" : "✨ Deep AI Humanizer (Pro)";
+      const advImg = document.getElementById("ui-adv-img"); if (advImg) advImg.textContent = isEs ? "⚙️ Opciones avanzadas de formato (Opcional)" : "⚙️ Advanced Format & Sensor Options (Optional)";
       const cfg = LANGS[l] || LANGS.en;
       ["en", "es", "de", "fr", "pt"].forEach((k) => {
         document.getElementById("lang-" + k).classList.toggle("active", k === l);
@@ -608,10 +617,36 @@
       }
     }
 
+    let currentUiLang = "es";
+    const SAMPLES = {
+      es: "En conclusión, en el panorama digital actual\u202F—\u202Fes importante recordar que las empresas deben implementar marcos innovadores\u200B para optimizar su eficiencia.\u00A0Cabe destacar que, al profundizar en la inteligencia artificial\u202F—\u202Fsin comprometer la privacidad\u200B—\u202Fse logra un avance fundamental.",
+      en: "In today’s rapidly evolving digital landscape\u202F—\u202Forganizations must leverage innovative frameworks\u200B to maximize operational efficiency.\u00A0Furthermore, delving into autonomous workflows\u202F—\u202Fwithout compromising data privacy\u200B—\u202Fremains a critical imperative for modern teams.",
+      de: "Zusammenfassend lässt sich sagen, dass Unternehmen in der heutigen digitalen Landschaft\u202F—\u202Finnovative Systeme nutzen müssen\u200B. Darüber hinaus ist der Schutz der Privatsphäre\u202F—\u202Fvon entscheidender Bedeutung.",
+      fr: "En conclusion, dans le paysage numérique actuel\u202F—\u202Fil est essentiel d'exploiter des cadres innovants\u200B pour maximiser l'efficacité\u00A0tout en protégeant vos données.",
+      pt: "Em conclusão, no cenário digital atual\u202F—\u202Fé importante lembrar que as empresas devem utilizar estruturas inovadoras\u200B para maximizar a eficiência."
+    };
+    async function pasteUserText() {
+      try {
+        const clip = await navigator.clipboard.readText();
+        if (clip) {
+          document.getElementById("txt-input").value = clip;
+          analyzeText();
+          return;
+        }
+      } catch (_) {}
+      const inp = document.getElementById("txt-input");
+      inp.value = "";
+      inp.focus();
+      analyzeText();
+    }
+    function clearUserText() {
+      const inp = document.getElementById("txt-input");
+      inp.value = "";
+      inp.focus();
+      analyzeText();
+    }
     function loadSampleAiText() {
-      const sample =
-        "In today’s rapidly evolving digital landscape\u202F—\u202Forganizations must leverage innovative frameworks\u200B to maximize operational efficiency.\u00A0Furthermore, delving into autonomous workflows\u202F—\u202Fwithout compromising data privacy\u200B—\u202Fremains a critical imperative for modern teams.";
-      document.getElementById("txt-input").value = sample;
+      document.getElementById("txt-input").value = SAMPLES[currentUiLang] || SAMPLES.es;
       analyzeText();
     }
 
@@ -664,8 +699,9 @@
       localStorage.setItem("pureai_studio_pro", "true");
     }
     const urlLang = (location.search.match(/lang=(en|es|de|fr|pt)/) || [])[1];
-    if (urlLang) setLang(urlLang);
-    // Auto-cargar demostración interactiva de Rayos X al abrir para enganchar al usuario al instante
+    const navLang = ((navigator.language || "es").slice(0, 2).toLowerCase());
+    const initLang = urlLang || (["en", "es", "de", "fr", "pt"].includes(navLang) ? navLang : "es");
+    setLang(initLang);
     loadSampleAiText();
   </script>
   <script src="telemetria-soporte.js"></script>
