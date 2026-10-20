@@ -3,6 +3,6 @@
 Hilos activos detectados **hoy mismo** en Reddit y Hacker News sobre detección de IA, C2PA, marcas de agua de ChatGPT, facturación electrónica o reclamaciones, con la **respuesta exacta lista para copiar y pegar**:
 
 1. **[HackerNews]** [Ask HN: Filtering AI slop in the browser before it hits our eyeballs?](https://news.ycombinator.com/item?id=43833961)
-   - **Herramienta:** `https://finanzasmart-pro.surge.sh/clean-ai-studio.html?lang=en`
+   - **Herramienta:** `https://revienta32.github.io/finanzasmart-autopilot/clean-ai-studio.html?lang=en`
    - **Respuesta lista para copiar:**
-     > For anyone testing C2PA / JUMBF manifests or invisible LLM Unicode watermarks (U+202F / U+200B), we built a 100% client-side browser inspector & scrubber (zero server uploads, with post-scrub binary verification): https://finanzasmart-pro.surge.sh/clean-ai-studio.html?lang=en
+     > For anyone testing C2PA / JUMBF manifests or invisible LLM Unicode watermarks (U+202F / U+200B), we built a 100% client-side browser inspector & scrubber (zero server uploads, with post-scrub binary verification): https://revienta32.github.io/finanzasmart-autopilot/clean-ai-studio.html?lang=en
