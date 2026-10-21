@@ -51,14 +51,16 @@
     "a3NsQtH0w0Bc",
     "cMxfMwcz9iZk",
     "WG9aawWcMtJZ",
-    "QTMgJ4nFU0ZY"
+    "QTMgJ4nFU0ZY",
+    "orilx0MhOWhS"
   ],
-  "totalPageviews": 50,
+  "totalPageviews": 51,
   "pageviewsByPage": {
     "index.html": 12,
     "verifactu-studio.html": 8,
     "clean-ai-studio.html": 14,
-    "directorio-guias.html": 16
+    "directorio-guias.html": 16,
+    "ki-text-vermenschlichen-chatgpt-wasserzeichen-entfernen.html": 1
   },
   "affiliateClicks": {
     "revolut_referral": 0,
@@ -68,5 +70,5 @@
   "jsErrors": [],
   "userBugReports": [],
   "autoHeals": [],
-  "lastDoctorRun": "2026-10-21T16:36:56.188Z"
+  "lastDoctorRun": "2026-10-21T21:15:18.746Z"
 }
