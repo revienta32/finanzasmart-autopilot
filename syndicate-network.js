@@ -199,7 +199,7 @@ async function pingIndexNowAllUrls() {
       method: "POST",
       headers: { "Content-Type": "application/json; charset=utf-8" },
       body: JSON.stringify({
-        host: "finanzasmart-pro.surge.sh",
+        host: "revienta32.github.io",
         key: "b8f4c2d1e9a74b6c8d3e2f1a0b9c8d7e",
         keyLocation: `${SITE_URL}/b8f4c2d1e9a74b6c8d3e2f1a0b9c8d7e.txt`,
         urlList
