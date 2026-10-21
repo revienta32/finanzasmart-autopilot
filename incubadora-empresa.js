@@ -14,7 +14,7 @@ const https = require("https");
 const ROOT = __dirname;
 const METRICS_FILE = path.join(ROOT, "metricas-y-bugs.json");
 const COMPANY_STATE_FILE = path.join(ROOT, "estado-empresa.json");
-const BASE_URL = "https://finanzasmart-pro.surge.sh";
+const BASE_URL = "https://revienta32.github.io/finanzasmart-autopilot";
 
 function fetchText(url) {
   return new Promise((resolve) => {

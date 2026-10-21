@@ -8,7 +8,7 @@
 const fs = require("fs");
 const path = require("path");
 
-const SITE_URL = "https://finanzasmart-pro.surge.sh";
+const SITE_URL = "https://revienta32.github.io/finanzasmart-autopilot";
 const REVOLUT_URL = "https://revolut.com/referral/?referral-code=revienta!OCT1-26-AR-H1&geo-redirect";
 const BITGET_URL = "https://www.bitget.com/es/referral/register?clacCode=KQBSNNRF";
 const INDEXNOW_KEY = "b8f4c2d1e9a74b6c8d3e2f1a0b9c8d7e";
@@ -540,30 +540,37 @@ async function run() {
     allUrls.push(`${SITE_URL}/${page.slug}`);
   }
 
-  // 2b. Generar Directorio Hub de Enlazado Interno (para indexación rápida de las 20+ páginas long-tail)
-  const dirLinks = SEO_PAGES.map(
-    (p) => `<li style="margin-bottom:0.55rem;"><a href="${p.slug}" style="color:#10b981;font-weight:600;">${p.title}</a></li>`
-  ).join("\n");
+  // 2b. Generar Directorio Hub de Enlazado Interno con TODOS los archivos .html del proyecto (75+ páginas)
+  const allHtmlFiles = fs
+    .readdirSync(__dirname)
+    .filter((f) => f.endsWith(".html") && !f.startsWith("google"))
+    .sort();
+  const dirLinks = allHtmlFiles
+    .map((f) => `<li style="margin-bottom:0.55rem;"><a href="${f}" style="color:#10b981;font-weight:600;">${f.replace(".html", "").replace(/-/g, " ").toUpperCase()}</a></li>`)
+    .join("\n");
   const dirHtml = buildSeoPageHtml({
     slug: "directorio-guias.html",
-    title: "Directorio de Tablas y Guías Financieras: Autónomos, Hipotecas, Interés Compuesto y Cripto",
-    h1: "Todas las Tablas de Cálculo Financiero (España 2026)",
-    lead: "Consulta directamente nuestras simulaciones exactas por tramo de sueldo de autónomo, precio de vivienda y aportación mensual de inversión.",
-    calcLink: "index.html",
+    title: "Directorio Completo de Herramientas y Guías: PureAI Studio, E-Invoice XML, Renta y Legal",
+    h1: "Directorio Global de Herramientas y Guías Interactivas (2026)",
+    lead: "Accede directamente a todas nuestras utilidades 100% Client-Side: limpieza de metadatos C2PA/IA, facturación electrónica europea EN 16931 y calculadoras financieras/legales.",
+    calcLink: "clean-ai-studio.html",
     bodyHtml: `<ul style="margin: 1rem 0 1.5rem 1.25rem;">\n${dirLinks}\n</ul>`
   });
   fs.writeFileSync(path.join(__dirname, "directorio-guias.html"), dirHtml);
   allUrls.push(`${SITE_URL}/directorio-guias.html`);
 
-  // 3. Actualizar sitemap.xml con todas las URLs
+  // 3. Actualizar sitemap.xml y sitemap.txt con ABSOLUTAMENTE TODOS los archivos .html del directorio
+  const fullUrlList = [`${SITE_URL}/`, ...allHtmlFiles.map((f) => `${SITE_URL}/${f}`)];
+  fs.writeFileSync(path.join(__dirname, "sitemap.txt"), fullUrlList.join("\n"));
+
   const sitemapXml = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-${allUrls
+${fullUrlList
   .map(
     (u) => `  <url>
     <loc>${u}</loc>
     <changefreq>daily</changefreq>
-    <priority>${u === SITE_URL + "/" ? "1.0" : "0.9"}</priority>
+    <priority>${u === SITE_URL + "/" || u.includes("clean-ai-studio") || u.includes("verifactu-studio") ? "1.0" : "0.9"}</priority>
   </url>`
   )
   .join("\n")}
@@ -587,10 +594,10 @@ ${allUrls
     method: "POST",
     headers: { "Content-Type": "application/json; charset=utf-8" },
     body: JSON.stringify({
-      host: "finanzasmart-pro.surge.sh",
+      host: "revienta32.github.io",
       key: INDEXNOW_KEY,
       keyLocation: `${SITE_URL}/${INDEXNOW_KEY}.txt`,
-      urlList: allUrls
+      urlList: fullUrlList
     })
   });
   console.log("IndexNow status:", indexRes.status);
@@ -601,7 +608,7 @@ ${allUrls
     updatedAt: new Date().toISOString(),
     mainSite: SITE_URL,
     githubMirror: "https://revienta32.github.io/finanzasmart-autopilot/",
-    seoPages: allUrls,
+    seoPages: fullUrlList,
     telegraphCloudArticles: mergedArticles
   };
   fs.writeFileSync(reportPath, JSON.stringify(report, null, 2));
