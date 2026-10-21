@@ -45,14 +45,20 @@
     "uceDbian9VXy",
     "pds6UqZL3Hgz",
     "6SHHSVSbKxiN",
-    "0ba3ovhABwGe"
+    "0ba3ovhABwGe",
+    "lXVsFRKEgKqJ",
+    "tNsBIcsR5c1W",
+    "a3NsQtH0w0Bc",
+    "cMxfMwcz9iZk",
+    "WG9aawWcMtJZ",
+    "QTMgJ4nFU0ZY"
   ],
-  "totalPageviews": 44,
+  "totalPageviews": 50,
   "pageviewsByPage": {
-    "index.html": 10,
+    "index.html": 12,
     "verifactu-studio.html": 8,
     "clean-ai-studio.html": 14,
-    "directorio-guias.html": 12
+    "directorio-guias.html": 16
   },
   "affiliateClicks": {
     "revolut_referral": 0,
@@ -62,5 +68,5 @@
   "jsErrors": [],
   "userBugReports": [],
   "autoHeals": [],
-  "lastDoctorRun": "2026-10-21T11:09:51.409Z"
+  "lastDoctorRun": "2026-10-21T16:36:56.188Z"
 }
