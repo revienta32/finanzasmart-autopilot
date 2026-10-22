@@ -54,15 +54,37 @@
     "QTMgJ4nFU0ZY",
     "orilx0MhOWhS",
     "gVnyDWz6Awut",
-    "qur0X9Zgq6Aw"
+    "qur0X9Zgq6Aw",
+    "38YkbJfDhkxh",
+    "8mivgdUNIMkX",
+    "MoAPZASJh1Pw",
+    "p2pdyTm5o0xd",
+    "z1aMV4O4rJEC",
+    "Wz8C7NIXv6jG",
+    "4IwnQRQxOsRd",
+    "2h4nqEtcwtEs",
+    "zgGbqrPLPLEk",
+    "MJN460s23i0a",
+    "FyFfLxRwegUE",
+    "ArvWwVjoYNt4",
+    "6JlCDyLjoxEm"
   ],
-  "totalPageviews": 53,
+  "totalPageviews": 66,
   "pageviewsByPage": {
     "index.html": 14,
     "verifactu-studio.html": 8,
     "clean-ai-studio.html": 14,
-    "directorio-guias.html": 16,
-    "ki-text-vermenschlichen-chatgpt-wasserzeichen-entfernen.html": 1
+    "directorio-guias.html": 25,
+    "ki-text-vermenschlichen-chatgpt-wasserzeichen-entfernen.html": 1,
+    "remove-made-with-ai-label-instagram-tiktok-c2pa.html": 2,
+    "remove-chatgpt-watermarks-invisible-characters-u202f.html": 2
+  },
+  "appActions": {
+    "pwa_install_click": 0,
+    "chrome_extension_download": 0,
+    "image_scrub_download": 0,
+    "text_watermark_scrub": 0,
+    "pro_humanizer_click": 0
   },
   "affiliateClicks": {
     "revolut_referral": 0,
@@ -72,5 +94,5 @@
   "jsErrors": [],
   "userBugReports": [],
   "autoHeals": [],
-  "lastDoctorRun": "2026-10-22T16:38:12.909Z"
+  "lastDoctorRun": "2026-10-22T17:04:25.980Z"
 }

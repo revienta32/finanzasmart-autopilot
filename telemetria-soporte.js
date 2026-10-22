@@ -29,12 +29,21 @@
     sendTelemetry({ type: "pageview" });
   }
 
-  // 2. Registrar clics en enlaces de monetización (Stripe Checkout, Revolut Referral, Bitget)
+  // 2. Registrar clics en enlaces de monetización y acciones de uso/descarga del programa
   document.addEventListener("click", (e) => {
+    const btn = e.target.closest("button");
+    if (btn && btn.id) {
+      if (btn.id === "btn-pwa-install") sendTelemetry({ type: "app_action", target: "pwa_install_click" });
+      else if (btn.id === "btn-scrub-img") sendTelemetry({ type: "app_action", target: "image_scrub_download" });
+      else if (btn.id === "ui-btn-scrub-txt") sendTelemetry({ type: "app_action", target: "text_watermark_scrub" });
+      else if (btn.id === "ui-btn-humanize") sendTelemetry({ type: "app_action", target: "pro_humanizer_click" });
+    }
     const link = e.target.closest("a");
     if (!link || !link.href) return;
     if (link.href.includes("buy.stripe.com")) {
       sendTelemetry({ type: "click_checkout", target: "stripe_checkout" });
+    } else if (link.href.includes("chromewebstore.google.com") || link.href.includes("pureai-chrome-extension.zip")) {
+      sendTelemetry({ type: "app_action", target: "chrome_extension_download" });
     } else if (link.href.includes("revolut.com/referral")) {
       sendTelemetry({ type: "click_affiliate", target: "revolut_referral" });
     } else if (link.href.includes("bitget.com")) {

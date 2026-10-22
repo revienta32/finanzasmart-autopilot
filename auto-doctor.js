@@ -57,7 +57,14 @@ async function runAutoDoctor() {
     processedIds: [],
     totalPageviews: 0,
     pageviewsByPage: {},
-    affiliateClicks: { revolut_referral: 0, bitget_referral: 0, revolut_me_card: 0 },
+    appActions: {
+      pwa_install_click: 0,
+      chrome_extension_download: 0,
+      image_scrub_download: 0,
+      text_watermark_scrub: 0,
+      pro_humanizer_click: 0
+    },
+    affiliateClicks: { stripe_checkout: 0, revolut_referral: 0, bitget_referral: 0, revolut_me_card: 0 },
     jsErrors: [],
     userBugReports: [],
     autoHeals: []
@@ -86,6 +93,10 @@ async function runAutoDoctor() {
           stored.totalPageviews = (stored.totalPageviews || 0) + 1;
           const pg = data.page || "index.html";
           stored.pageviewsByPage[pg] = (stored.pageviewsByPage[pg] || 0) + 1;
+        } else if (data.type === "app_action") {
+          stored.appActions = stored.appActions || {};
+          const act = data.target || "other";
+          stored.appActions[act] = (stored.appActions[act] || 0) + 1;
         } else if (data.type === "click_affiliate" || data.type === "click_checkout") {
           const tgt = data.target || "other";
           stored.affiliateClicks[tgt] = (stored.affiliateClicks[tgt] || 0) + 1;
