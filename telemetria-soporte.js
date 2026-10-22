@@ -15,7 +15,8 @@
         body: JSON.stringify({
           ...payload,
           page: pageName,
-          ua: (navigator.userAgent || "").slice(0, 80),
+          ua: (navigator.userAgent || "").slice(0, 160),
+          isBot: /bot|crawl|spider|headless|Nexus 5X Build\/MMB29P|Google-InspectionTool/i.test(navigator.userAgent || ""),
           ts: new Date().toISOString()
         })
       }).catch(() => {});

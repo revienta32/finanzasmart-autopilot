@@ -56,7 +56,10 @@ async function runAutoDoctor() {
   let stored = {
     processedIds: [],
     totalPageviews: 0,
+    humanPageviews: 0,
+    googlebotCrawls: 0,
     pageviewsByPage: {},
+    googlebotCrawlsByPage: {},
     appActions: {
       pwa_install_click: 0,
       chrome_extension_download: 0,
@@ -89,10 +92,19 @@ async function runAutoDoctor() {
         seenIds.add(env.id);
 
         const data = JSON.parse(env.message);
+        const ua = data.ua || "";
+        const isBot = Boolean(data.isBot || /bot|crawl|spider|headless|Nexus 5X Build\/MMB29P|Google-InspectionTool/i.test(ua));
         if (data.type === "pageview") {
           stored.totalPageviews = (stored.totalPageviews || 0) + 1;
           const pg = data.page || "index.html";
-          stored.pageviewsByPage[pg] = (stored.pageviewsByPage[pg] || 0) + 1;
+          if (isBot) {
+            stored.googlebotCrawls = (stored.googlebotCrawls || 0) + 1;
+            stored.googlebotCrawlsByPage = stored.googlebotCrawlsByPage || {};
+            stored.googlebotCrawlsByPage[pg] = (stored.googlebotCrawlsByPage[pg] || 0) + 1;
+          } else {
+            stored.humanPageviews = (stored.humanPageviews || 0) + 1;
+            stored.pageviewsByPage[pg] = (stored.pageviewsByPage[pg] || 0) + 1;
+          }
         } else if (data.type === "app_action") {
           stored.appActions = stored.appActions || {};
           const act = data.target || "other";
@@ -125,7 +137,7 @@ async function runAutoDoctor() {
   fs.writeFileSync(METRICS_FILE, JSON.stringify(stored, null, 2));
 
   console.log(
-    `🩺 Auto-Doctor OK | Visitas Reales: ${stored.totalPageviews} | Clics Monetización: ${
+    `🩺 Auto-Doctor OK | Visitas Humanas: ${stored.humanPageviews || 0} | Rastreos Googlebot: ${stored.googlebotCrawls || 0} | Clics Monetización: ${
       Object.values(stored.affiliateClicks).reduce((a, b) => a + b, 0)
     } | Reportes Usuarios: ${stored.userBugReports.length} | Errores JS: ${stored.jsErrors.length}`
   );
