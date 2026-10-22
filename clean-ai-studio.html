@@ -352,22 +352,25 @@
           <button class="pa-btn pa-btn-green" onclick="deepHumanizePro()" id="ui-btn-humanize" style="margin-top:0;">✨ Deep AI Humanizer (Pro)</button>
         </div>
 
-        <!-- Planes de Suscripción SaaS Recurrente (MRR) -->
+        <!-- Planes de Suscripción SaaS Recurrente (MRR) + Pase Impulso 0,99€ + Escalera de Referidos -->
         <div id="pa-pro-box" style="margin-top:16px;padding:15px;background:rgba(16,185,129,0.08);border:1px solid rgba(16,185,129,0.35);border-radius:14px;">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
-            <span style="font-size:0.85rem;font-weight:800;color:#6ee7b7;">🚀 PureAI Pro — Deep Humanizer + 50x Bulk Image Anti-Shadowban</span>
-            <span style="font-size:0.7rem;background:#10b981;color:#052e16;font-weight:800;padding:2px 8px;border-radius:999px;">SAVE 55% ANNUAL</span>
+          <div id="friend-welcome-banner" style="display:none;margin-bottom:10px;padding:9px 12px;background:linear-gradient(90deg,rgba(16,185,129,0.25),rgba(59,130,246,0.25));border:1px solid #10b981;border-radius:10px;font-size:0.78rem;color:#ecfdf5;">
+            🎁 <strong>¡Invitación VIP Activada!</strong> Tienes <strong>1 Uso Pro Gratis</strong> desbloqueado hoy + Código <strong><code style="background:#064e3b;padding:2px 6px;border-radius:4px;color:#6ee7b7;">FRIEND50</code> (50% DTO 1er mes: 4,50 €)</strong> o Pase Express por solo <strong>0,99 €</strong>.
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;flex-wrap:wrap;gap:4px;">
+            <span style="font-size:0.85rem;font-weight:800;color:#6ee7b7;">🚀 PureAI Pro — Deep Humanizer + Batch .ZIP Anti-Shadowban</span>
+            <span style="font-size:0.7rem;background:#f59e0b;color:#0b0f19;font-weight:900;padding:2px 8px;border-radius:999px;">🔥 PASE 0,99 € · 1er MES -50% (FRIEND50)</span>
           </div>
           <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:10px 0;">
-            <a href="https://buy.stripe.com/9B64gA5zA22x5zq3aW00000" target="_blank" rel="noopener" style="text-decoration:none;background:#0b0f19;border:1px solid #2d3748;border-radius:10px;padding:9px;text-align:center;color:#e2e8f0;">
-              <div style="font-size:0.7rem;color:#94a3b8;">24h Express Pass</div>
-              <div style="font-size:1.05rem;font-weight:900;color:#fff;margin:2px 0;">3,99 €</div>
-              <div style="font-size:0.66rem;color:#64748b;">Stripe Instant Unlock</div>
+            <a href="https://buy.stripe.com/fZuaEY6DE7mR6Du5j400006" target="_blank" rel="noopener" style="text-decoration:none;background:#0b0f19;border:1px solid #f59e0b;border-radius:10px;padding:9px;text-align:center;color:#e2e8f0;">
+              <div style="font-size:0.7rem;color:#fcd34d;font-weight:800;">⚡ Impulse Pass</div>
+              <div style="font-size:1.08rem;font-weight:900;color:#fff;margin:2px 0;">0,99 € <span style="font-size:0.68rem;color:#64748b;text-decoration:line-through;">3,99€</span></div>
+              <div style="font-size:0.65rem;color:#fde68a;">Apple/Google Pay 1-Click</div>
             </a>
             <a href="https://buy.stripe.com/eVqbJ2bXYbD72ne3aW00001" target="_blank" rel="noopener" style="text-decoration:none;background:#0b0f19;border:1px solid #3b82f6;border-radius:10px;padding:9px;text-align:center;color:#e2e8f0;">
-              <div style="font-size:0.7rem;color:#93c5fd;font-weight:700;">Pro Monthly</div>
-              <div style="font-size:1.05rem;font-weight:900;color:#fff;margin:2px 0;">9 €<span style="font-size:0.7rem;font-weight:500;">/mo</span></div>
-              <div style="font-size:0.66rem;color:#94a3b8;">Stripe Auto-Renew</div>
+              <div style="font-size:0.7rem;color:#93c5fd;font-weight:700;">Pro Monthly (-50%)</div>
+              <div style="font-size:1.05rem;font-weight:900;color:#fff;margin:2px 0;">4,50 €<span style="font-size:0.68rem;font-weight:500;"> 1º mes</span></div>
+              <div style="font-size:0.65rem;color:#94a3b8;">Código: <strong>FRIEND50</strong> (luego 9€)</div>
             </a>
             <a href="https://buy.stripe.com/cNi9AUgeedLffa0aDo00002" target="_blank" rel="noopener" style="text-decoration:none;background:linear-gradient(135deg,rgba(16,185,129,0.22),rgba(59,130,246,0.22));border:1px solid #10b981;border-radius:10px;padding:9px;text-align:center;color:#e2e8f0;">
               <div style="font-size:0.7rem;color:#6ee7b7;font-weight:800;">★ Pro Annual (-55%)</div>
@@ -375,10 +378,33 @@
               <div style="font-size:0.66rem;color:#a7f3d0;">Only 4,08 €/mo · Agency</div>
             </a>
           </div>
+
+          <!-- Escalera de Referidos Gamificada: Hasta 50% DTO durante 3 Meses -->
+          <div style="margin:10px 0;padding:10px 12px;background:#0b0f19;border:1px solid #1e293b;border-radius:10px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;font-size:0.75rem;margin-bottom:6px;flex-wrap:wrap;gap:4px;">
+              <span style="color:#e2e8f0;font-weight:800;">🎁 Invita amigos y suma hasta <span style="color:#6ee7b7;">50% DTO por 3 meses</span> (tu amigo recibe 1 Uso Pro Gratis + 50% DTO):</span>
+              <strong id="ref-status-badge" style="color:#fcd34d;font-size:0.74rem;">0/3 amigos · Nivel actual: 0%</strong>
+            </div>
+            <div style="width:100%;height:7px;background:#1e293b;border-radius:999px;overflow:hidden;margin-bottom:7px;">
+              <div id="ref-progress-bar" style="width:8%;height:100%;background:linear-gradient(90deg,#3b82f6,#10b981);transition:width 0.3s ease;"></div>
+            </div>
+            <div style="display:flex;justify-content:space-between;font-size:0.68rem;color:#94a3b8;margin-bottom:8px;">
+              <span>👤 1 Amigo = <strong>15% x 3 meses</strong></span>
+              <span>👥 2 Amigos = <strong>30% x 3 meses</strong></span>
+              <span>🚀 3 Amigos = <strong style="color:#6ee7b7;">50% DTO x 3 meses</strong></span>
+            </div>
+            <div style="display:flex;gap:6px;flex-wrap:wrap;">
+              <button type="button" onclick="sharePureAiReferral('wa')" style="flex:1;background:#059669;color:#fff;border:none;border-radius:7px;padding:6px 10px;font-size:0.74rem;font-weight:800;cursor:pointer;">📲 WhatsApp (+1 Amigo)</button>
+              <button type="button" onclick="sharePureAiReferral('tg')" style="flex:1;background:#0284c7;color:#fff;border:none;border-radius:7px;padding:6px 10px;font-size:0.74rem;font-weight:800;cursor:pointer;">✈️ Telegram (+1 Amigo)</button>
+              <button type="button" onclick="sharePureAiReferral('copy')" style="flex:1;background:#1e293b;color:#cbd5e1;border:1px solid #334155;border-radius:7px;padding:6px 10px;font-size:0.74rem;font-weight:700;cursor:pointer;">🔗 Copiar Link VIP</button>
+            </div>
+            <div id="ref-reward-box" style="display:none;margin-top:7px;padding:6px 10px;background:rgba(16,185,129,0.15);border:1px solid #10b981;border-radius:7px;font-size:0.74rem;color:#a7f3d0;"></div>
+          </div>
+
           <div style="display:flex;gap:6px;align-items:center;margin-top:8px;">
             <input type="text" id="pa-pro-code" placeholder="Stripe Session ID (cs_live_...) or Subscription Email..." style="flex:1;padding:7px 10px;background:#0b0f19;border:1px solid #2d3748;color:#fff;border-radius:8px;font-size:0.76rem;" />
             <button onclick="activatePureAiPro()" class="pa-btn pa-btn-green" style="width:auto;margin:0;padding:7px 12px;font-size:0.76rem;">Activate Pro</button>
-            <a href="https://buy.stripe.com/cNi9AUgeedLffa0aDo00002" target="_blank" rel="noopener" class="pa-btn pa-btn-dark" style="width:auto;margin:0;padding:7px 10px;font-size:0.74rem;">💳 Stripe Checkout</a>
+            <a href="https://buy.stripe.com/fZuaEY6DE7mR6Du5j400006" target="_blank" rel="noopener" class="pa-btn pa-btn-dark" style="width:auto;margin:0;padding:7px 10px;font-size:0.74rem;">⚡ Pase 0,99 €</a>
           </div>
           <div style="margin-top:8px;font-size:0.72rem;color:#94a3b8;text-align:right;">
             Already subscribed? <a href="https://billing.stripe.com/p/login/9B64gA5zA22x5zq3aW00000" target="_blank" rel="noopener" style="color:#6ee7b7;text-decoration:underline;font-weight:700;">Manage or cancel subscription in 1 click (Stripe Customer Portal)</a>
@@ -999,13 +1025,73 @@
         `<span class="threat-badge-green">✅ Hidden Unicode watermarks (U+202F / U+200B) stripped & copied! Click '✨ Deep AI Humanizer (Pro)' to also replace flagged orange AI clichés.</span>`;
     }
 
+    var freeProCredits = parseInt(localStorage.getItem("pureai_free_pro_credits") || "0", 10);
+    var refFriendsCount = parseInt(localStorage.getItem("pureai_ref_friends") || "0", 10);
+
+    function updateReferralUi() {
+      var badge = document.getElementById("ref-status-badge");
+      var bar = document.getElementById("ref-progress-bar");
+      var box = document.getElementById("ref-unlocked-box");
+      var codeLabel = document.getElementById("ref-code-label");
+      if (!badge || !bar) return;
+      var pct = Math.min(100, Math.round((refFriendsCount / 3) * 100));
+      bar.style.width = pct + "%";
+      if (refFriendsCount >= 3) {
+        badge.textContent = "3/3 Amigos · 🏆 ¡50% DTO. (3 Meses) DESBLOQUEADO!";
+        if (box && codeLabel) {
+          box.style.display = "block";
+          codeLabel.innerHTML = "🎉 ¡Nivel Máximo (3/3)! Usa el código <span style='background:#10b981;color:#022c22;padding:2px 8px;border-radius:5px;'>REF50</span> en Stripe para tu <strong>50% DTO. durante 3 meses</strong> (+ " + freeProCredits + " crédito Pro gratis activo)";
+        }
+      } else if (refFriendsCount === 2) {
+        badge.textContent = "2/3 Amigos · 🔥 30% DTO. (3 Meses) Activo";
+        if (box && codeLabel) {
+          box.style.display = "block";
+          codeLabel.innerHTML = "🎁 Nivel 2/3 desbloqueado: Código <span style='background:#10b981;color:#022c22;padding:2px 8px;border-radius:5px;'>REF30</span> (30% DTO. x 3 meses). ¡Comparte 1 vez más para llegar al 50% DTO. (REF50)!";
+        }
+      } else if (refFriendsCount === 1) {
+        badge.textContent = "1/3 Amigos · ✨ 15% DTO. (3 Meses) + 1 Uso Pro Gratis";
+        if (box && codeLabel) {
+          box.style.display = "block";
+          codeLabel.innerHTML = "🎁 Nivel 1/3 desbloqueado: Código <span style='background:#10b981;color:#022c22;padding:2px 8px;border-radius:5px;'>REF15</span> (15% DTO. x 3 meses) + <strong>1 Crédito Deep Humanizer Pro Gratis</strong> listo para usar arriba.";
+        }
+      } else {
+        badge.textContent = "0/3 Amigos · Nivel Actual: 0% DTO.";
+      }
+    }
+
+    function sharePureAiReferral(channel) {
+      var myRefId = localStorage.getItem("pureai_my_ref") || ("vip" + Math.floor(1000 + Math.random() * 9000));
+      localStorage.setItem("pureai_my_ref", myRefId);
+      var shareUrl = "https://revienta32.github.io/finanzasmart-autopilot/clean-ai-studio.html?ref=" + myRefId;
+      var msg = "🛡️ Te regalo 1 Uso Pro GRATIS + 50% de descuento (código FRIEND50) en PureAI Studio para limpiar metadatos C2PA y huellas invisibles de ChatGPT/Turnitin: " + shareUrl;
+      if (channel === "whatsapp") {
+        window.open("https://api.whatsapp.com/send?text=" + encodeURIComponent(msg), "_blank");
+      } else if (channel === "telegram") {
+        window.open("https://t.me/share/url?url=" + encodeURIComponent(shareUrl) + "&text=" + encodeURIComponent(msg), "_blank");
+      } else if (navigator.clipboard) {
+        navigator.clipboard.writeText(shareUrl).catch(function () {});
+      }
+      if (refFriendsCount === 0 && freeProCredits === 0) {
+        freeProCredits = 1;
+        localStorage.setItem("pureai_free_pro_credits", "1");
+      }
+      refFriendsCount = Math.min(3, refFriendsCount + 1);
+      localStorage.setItem("pureai_ref_friends", String(refFriendsCount));
+      updateReferralUi();
+    }
+
     function deepHumanizePro() {
       let txt = document.getElementById("txt-input").value;
       if (!txt.trim()) return;
-      if (!isPureAiPro) {
-        alert("🔒 Deep AI Vocabulary & Burstiness Humanizer (replaces Turnitin/GPTZero flagged phrases highlighted in orange) requires PureAI Studio Pro (3,99 € 24h Pass / 9 €/mo / 49 €/yr via Stripe Checkout below).");
+      if (!isPureAiPro && freeProCredits <= 0) {
+        alert("🔒 Deep AI Vocabulary & Burstiness Humanizer requires PureAI Studio Pro (⚡ 0,99 € 24h Impulse Pass / 9 €/mo with 50% OFF code FRIEND50 via Stripe Checkout below, or unlock 1 Free Credit by sharing with a friend!).");
         document.getElementById("pa-pro-box").scrollIntoView({ behavior: "smooth" });
         return;
+      }
+      if (!isPureAiPro && freeProCredits > 0) {
+        freeProCredits--;
+        localStorage.setItem("pureai_free_pro_credits", String(freeProCredits));
+        updateReferralUi();
       }
       txt = txt
         .replace(/[\u200B-\u200D\uFEFF\u2060\u180E]/g, "")
@@ -1030,6 +1116,16 @@
       isPureAiPro = true;
       localStorage.setItem("pureai_studio_pro", "true");
     }
+    if (location.search.includes("ref=")) {
+      var fwBanner = document.getElementById("friend-welcome-banner");
+      if (fwBanner) fwBanner.style.display = "block";
+      if (!localStorage.getItem("pureai_friend_gift_claimed")) {
+        freeProCredits = Math.max(freeProCredits, 1);
+        localStorage.setItem("pureai_free_pro_credits", String(freeProCredits));
+        localStorage.setItem("pureai_friend_gift_claimed", "true");
+      }
+    }
+    updateReferralUi();
     const urlLang = (location.search.match(/lang=(en|es|de|fr|pt)/) || [])[1];
     const navLang = ((navigator.language || "es").slice(0, 2).toLowerCase());
     const initLang = urlLang || (["en", "es", "de", "fr", "pt"].includes(navLang) ? navLang : "es");
