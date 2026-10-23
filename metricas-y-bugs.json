@@ -33,10 +33,11 @@
     "pptxChamN5dd",
     "Xp1tztzoEoWF",
     "LAJE0xCJf6QZ",
-    "uHY0dzFxHrN9"
+    "uHY0dzFxHrN9",
+    "7ZEqXun0bMrp"
   ],
-  "totalPageviews": 34,
-  "humanPageviews": 13,
+  "totalPageviews": 35,
+  "humanPageviews": 14,
   "googlebotCrawls": 21,
   "pageviewsByPage": {
     "directorio-guias.html": 3,
@@ -45,7 +46,8 @@
     "e-rechnung-pflicht-deutschland-xrechnung-zugferd-generator.html": 2,
     "quitar-etiqueta-hecho-con-ia-instagram-tiktok-fotos.html": 3,
     "humanizar-texto-chatgpt-remover-marcas-ia-gratis.html": 1,
-    "clean-ai-studio.html": 1
+    "clean-ai-studio.html": 1,
+    "index.html": 1
   },
   "googlebotCrawlsByPage": {
     "directorio-guias.html": 6,
@@ -72,5 +74,5 @@
   "jsErrors": [],
   "userBugReports": [],
   "autoHeals": [],
-  "lastDoctorRun": "2026-10-23T11:00:35.207Z"
+  "lastDoctorRun": "2026-10-23T16:27:58.919Z"
 }
