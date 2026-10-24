@@ -77,10 +77,11 @@
     "5CfP1uQKIvQD",
     "KfSVIi7MAt4a",
     "rYSj5KZ5iyuC",
-    "aVP0YZ0T3QKr"
+    "aVP0YZ0T3QKr",
+    "mL1ZQORuyToh"
   ],
-  "totalPageviews": 78,
-  "humanPageviews": 16,
+  "totalPageviews": 79,
+  "humanPageviews": 17,
   "googlebotCrawls": 62,
   "pageviewsByPage": {
     "directorio-guias.html": 3,
@@ -90,7 +91,7 @@
     "quitar-etiqueta-hecho-con-ia-instagram-tiktok-fotos.html": 3,
     "humanizar-texto-chatgpt-remover-marcas-ia-gratis.html": 1,
     "clean-ai-studio.html": 3,
-    "index.html": 1
+    "index.html": 2
   },
   "googlebotCrawlsByPage": {
     "directorio-guias.html": 6,
@@ -124,5 +125,5 @@
   "jsErrors": [],
   "userBugReports": [],
   "autoHeals": [],
-  "lastDoctorRun": "2026-10-24T03:17:07.200Z"
+  "lastDoctorRun": "2026-10-24T10:17:21.004Z"
 }
