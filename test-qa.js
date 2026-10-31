@@ -11,83 +11,10 @@ const path = require("path");
 const telemetriaCode = fs.readFileSync(path.join(__dirname, "telemetria-soporte.js"), "utf8");
 new Function(telemetriaCode);
 
-// 5b. Aplicar y garantizar parches de Ciberseguridad (CSP, Referrer-Policy, Anti-DOM-XSS en file.name, eliminación de polling público ntfy.sh y validación HTTPS en ?ext_img=) en clean-ai-studio.html
-let rawCleanHtml = fs.readFileSync(path.join(__dirname, "clean-ai-studio.html"), "utf8");
-let cleanHtmlModified = false;
-if (!rawCleanHtml.includes('http-equiv="Content-Security-Policy"')) {
-  rawCleanHtml = rawCleanHtml.replace(
-    '<meta name="viewport" content="width=device-width, initial-scale=1.0" />',
-    '<meta name="viewport" content="width=device-width, initial-scale=1.0" />\n  <meta name="referrer" content="strict-origin-when-cross-origin" />\n  <meta http-equiv="Content-Security-Policy" content="default-src \'self\' https: data: blob:; script-src \'self\' \'unsafe-inline\'; style-src \'self\' \'unsafe-inline\'; img-src \'self\' data: blob: https:; media-src \'self\' data: blob:; connect-src \'self\' https://ntfy.sh https:; frame-ancestors \'self\';" />'
-  );
-  cleanHtmlModified = true;
-}
-if (rawCleanHtml.includes('Vídeo corto cargado: "${file.name}"')) {
-  rawCleanHtml = rawCleanHtml
-    .replace('Vídeo corto cargado: "${file.name}"', 'Vídeo corto cargado: "${escapeHtml(file.name)}"')
-    .replace('Metadatos detectados en "${file.name}"', 'Metadatos detectados en "${escapeHtml(file.name)}"')
-    .replace('Metadata detected in "${file.name}"', 'Metadata detected in "${escapeHtml(file.name)}"')
-    .replace(/File <strong>\$\{lastCleanedName\}<\/strong>/g, 'File <strong>${escapeHtml(lastCleanedName)}</strong>')
-    .replace('remaining in ${cleanVidName}.', 'remaining in ${escapeHtml(cleanVidName)}.')
-    .replace('remaining in ${cleanName} (Before:', 'remaining in ${escapeHtml(cleanName)} (Before:');
-  cleanHtmlModified = true;
-}
-if (rawCleanHtml.includes("https://ntfy.sh/pureai_studio_ops_telemetry_94c2e1/json?poll=1&since=48h")) {
-  rawCleanHtml = rawCleanHtml.replace(
-    /if\s*\(typeof fetch === "function"\)\s*\{\s*fetch\("https:\/\/ntfy\.sh\/pureai_studio_ops_telemetry_94c2e1",\s*\{\s*method:\s*"POST",\s*body:\s*JSON\.stringify\(\{\s*type:\s*"quota_sync"[^}]+\}\)\s*\}\)\.catch\(function\s*\(\)\s*\{\}\);\s*\}/,
-    "/* PRIV-01: Sincronización de cuota mantenida 100% en el dispositivo sin enviar huella a terceros */"
-  );
-  rawCleanHtml = rawCleanHtml.replace(
-    /if\s*\(usedImgCredits === 0 && typeof fetch === "function"\)\s*\{\s*fetch\("https:\/\/ntfy\.sh\/pureai_studio_ops_telemetry_94c2e1\/json\?poll=1&since=48h"\)[\s\S]*?\}\)\.catch\(function\s*\(\)\s*\{\}\);\s*\}/,
-    "/* APP-02: Eliminado polling público de ntfy.sh desde clientes para proteger la privacidad de eventos */"
-  );
-  cleanHtmlModified = true;
-}
-if (!rawCleanHtml.includes("history.replaceState(null, \"\", cleanSearchUrl)")) {
-  rawCleanHtml = rawCleanHtml.replace(
-    'var codeInp = document.getElementById("pa-pro-code");\r\n      if (codeInp && !codeInp.value) codeInp.value = myProKey;',
-    'var codeInp = document.getElementById("pa-pro-code");\r\n      if (codeInp && !codeInp.value) codeInp.value = myProKey;\r\n      if (typeof history !== "undefined" && history.replaceState && typeof location !== "undefined") {\r\n        var cleanSearchUrl = (location.pathname || "/") + (location.search || "").replace(/[?&]session_id=[^&]+/g, "").replace(/^&/, "?");\r\n        history.replaceState(null, "", cleanSearchUrl);\r\n      }'
-  ).replace(
-    'var codeInp = document.getElementById("pa-pro-code");\n      if (codeInp && !codeInp.value) codeInp.value = myProKey;',
-    'var codeInp = document.getElementById("pa-pro-code");\n      if (codeInp && !codeInp.value) codeInp.value = myProKey;\n      if (typeof history !== "undefined" && history.replaceState && typeof location !== "undefined") {\n        var cleanSearchUrl = (location.pathname || "/") + (location.search || "").replace(/[?&]session_id=[^&]+/g, "").replace(/^&/, "?");\n        history.replaceState(null, "", cleanSearchUrl);\n      }'
-  );
-  cleanHtmlModified = true;
-}
-if (!rawCleanHtml.includes('/^https:\\/\\//i.test(imgUrl)')) {
-  rawCleanHtml = rawCleanHtml.replace(
-    /var imgUrl = decodeURIComponent\(extImgMatch\[1\]\);\s*fetch\(imgUrl\)\s*\.then\(function \(r\) \{ return r\.blob\(\); \}\)/,
-    'var imgUrl = decodeURIComponent(extImgMatch[1]);\n          if (!/^https:\\/\\//i.test(imgUrl) || /^https:\\/\\/(localhost|127\\.|0\\.0\\.0\\.0|10\\.|192\\.168\\.)/i.test(imgUrl)) return;\n          fetch(imgUrl)\n            .then(function (r) {\n              if (!r.ok) throw new Error("HTTP error");\n              var ct = (r.headers && r.headers.get && r.headers.get("content-type")) || "image/jpeg";\n              if (!/^image\\//i.test(ct)) throw new Error("Invalid content-type");\n              return r.blob();\n            })'
-  );
-  cleanHtmlModified = true;
-}
-if (!rawCleanHtml.includes('event_name: "paywall_viewed"')) {
-  rawCleanHtml = rawCleanHtml.replace(
-    'function showProModal(msg) {',
-    'function showProModal(msg, triggerTool) {\n      if (typeof fetch === "function") {\n        fetch("https://ntfy.sh/pureai_studio_ops_telemetry_94c2e1", {\n          method: "POST",\n          body: JSON.stringify({ type: "app_action", event_name: "paywall_viewed", trigger_tool: triggerTool || "img_c2pa_scrubber", usedCredits: usedImgCredits, ts: new Date().toISOString() })\n        }).catch(function () {});\n      }'
-  );
-  cleanHtmlModified = true;
-}
-if (rawCleanHtml.includes("frame-ancestors 'self';")) {
-  rawCleanHtml = rawCleanHtml.replace(" frame-ancestors 'self';", "");
-  cleanHtmlModified = true;
-}
-if (!rawCleanHtml.includes("MAX_VIDEO_BYTES")) {
-  rawCleanHtml = rawCleanHtml.replace(
-    "async function inspectVideoFile(file) {",
-    "var MAX_VIDEO_BYTES = 150 * 1024 * 1024;\n    var MAX_IMAGE_BYTES = 50 * 1024 * 1024;\n    async function inspectVideoFile(file) {\n      if (!file || !file.size || file.size <= 0 || file.size > MAX_VIDEO_BYTES) {\n        var errLogV = document.getElementById(\"img-audit-log\");\n        if (errLogV) errLogV.innerHTML = '<span class=\"threat-badge-red\">⚠️ Invalid or oversized video file (must be between 1 byte and 150 MB).</span>';\n        var errBtnV = document.getElementById(\"btn-scrub-img\");\n        if (errBtnV) errBtnV.disabled = true;\n        loadedImgFile = null;\n        loadedImgElement = null;\n        return false;\n      }"
-  ).replace(
-    "async function inspectImageFile(file) {",
-    "async function inspectImageFile(file) {\n      if (!file || !file.size || file.size <= 0 || file.size > MAX_IMAGE_BYTES) {\n        var errLogI = document.getElementById(\"img-audit-log\");\n        if (errLogI) errLogI.innerHTML = '<span class=\"threat-badge-red\">⚠️ Invalid, empty, or oversized image file (must be between 1 byte and 50 MB).</span>';\n        var errBtnI = document.getElementById(\"btn-scrub-img\");\n        if (errBtnI) errBtnI.disabled = true;\n        loadedImgFile = null;\n        loadedImgElement = null;\n        return false;\n      }"
-  ).replace(
-    "img.src = file._dataUrl || URL.createObjectURL(file);",
-    "var objUrl = file._dataUrl ? null : URL.createObjectURL(file);\n      img.onerror = function () {\n        if (objUrl && URL.revokeObjectURL) URL.revokeObjectURL(objUrl);\n        loadedImgElement = null;\n        var b = document.getElementById(\"btn-scrub-img\");\n        if (b) b.disabled = true;\n        var l = document.getElementById(\"img-audit-log\");\n        if (l) l.innerHTML = '<span class=\"threat-badge-red\">⚠️ Corrupted or unsupported image container.</span>';\n      };\n      img.src = file._dataUrl || objUrl;"
-  );
-  cleanHtmlModified = true;
-}
-if (cleanHtmlModified) {
-  fs.writeFileSync(path.join(__dirname, "clean-ai-studio.html"), rawCleanHtml, "utf8");
-}
-
+// 5b. Verificar que clean-ai-studio.html ya incluye todos los controles de Ciberseguridad (CSP, Referrer-Policy, Anti-DOM-XSS, sin ntfy.sh expuesto en cliente, y validación HTTPS en ?ext_img=)
 const cleanAiHtml = fs.readFileSync(path.join(__dirname, "clean-ai-studio.html"), "utf8");
+assert(!cleanAiHtml.includes("https://ntfy.sh"), "clean-ai-studio.html no debe exponer URLs directas de ntfy.sh en el cliente");
+assert(!telemetriaCode.includes("https://ntfy.sh"), "telemetria-soporte.js debe enviar eventos al relay /telemetry y nunca exponer el topic de ntfy.sh en cliente");
 assert(cleanAiHtml.includes("trainedAlgorithmicMedia") && cleanAiHtml.includes("\\u202F"), "Falta motor C2PA y Unicode Scrubber en clean-ai-studio.html");
 assert(cleanAiHtml.includes("https://buy.stripe.com/aFaaEY0fgcHbd1SeTE0000c") && cleanAiHtml.includes("https://buy.stripe.com/5kQ28sfaa0Yt5zqfXI0000d"), "Faltan enlaces de Stripe Checkout en vivo (4,99 €/mes y 39 €/año)");
 assert(!cleanAiHtml.includes("paypal.me") && !cleanAiHtml.includes("revolut.me"), "No deben existir pasarelas ajenas a Stripe en la suite principal");
@@ -169,99 +96,60 @@ const scrubbedVidStr = new TextDecoder("latin1").decode(scrubbedVid);
 assert(!/c2pa|sora|trainedalgorithmicmedia/i.test(scrubbedVidStr), "scrubVideoBytesInPlace debe limpiar firmas C2PA/Sora sin importar mayúsculas/minúsculas");
 assert(!cleanAiHtml.includes("3cI28s2no0Yt6Du5j400008") && !cleanAiHtml.includes("9B6aEY4vwgXre5W7rc0000b"), "El Pase 24h (1,99€) y Licencia Vitalicia (179€) deben eliminarse para evitar canibalización del MRR");
 
-// 8. Sincronizar index.html con clean-ai-studio.html, sanear todas las páginas SEO de IA y asegurar que sitemap.xml / sitemap.txt usen el dominio pureaistudios.com sin calculadoras ni facturas
-fs.copyFileSync(path.join(__dirname, "clean-ai-studio.html"), path.join(__dirname, "index.html"));
+// 8. Verificar sincronización entre index.html y clean-ai-studio.html, saneamiento de las páginas SEO de IA y que sitemap.xml / sitemap.txt usen el dominio pureaistudios.com (100% solo lectura)
+const indexHtmlContent = fs.readFileSync(path.join(__dirname, "index.html"), "utf8");
+assert.strictEqual(indexHtmlContent, cleanAiHtml, "index.html debe estar 100% sincronizado con clean-ai-studio.html");
 const NON_AI_FINANCE_PATTERN = /^(cfo-control-financiero|cuota-hipoteca|regla-50-30-20|sueldo-neto-autonomo|indemnizacion-despido|invertir-|reclamar-|recurrir-multa|calculadora-irav|calculadoras-PureAI Studio|calcular-finiquito|codigo-promocional-bitget|como-declarar-criptomonedas|cuanto-queda-neto-autonomo|gestor-renta-ia|invitacion-revolut|laboral-ia|modelo-burofax|multas-dgt-ia|producto-digital-pro|reclamaciones-ia|simulador-declaracion-renta|subida-alquiler|verifactu|xrechnung|e-rechnung|generateur-factur|generador-facturas|peppol-ubl|panel-reclutamiento|kit-marca-canal)/i;
 const SITE_CANONICAL = "https://pureaistudios.com";
 const aiFiles = fs.readdirSync(__dirname).filter(f => f.endsWith(".html") && !f.startsWith("google") && !NON_AI_FINANCE_PATTERN.test(f)).sort();
 
-// 8b. Sanear las páginas satélites de IA (canonical URL a pureaistudios.com, eliminar enlaces 1,99€ 3cI28s2no0Yt6Du5j400008 y escapar cleanName contra DOM XSS)
-for (const seoFile of aiFiles) {
-  if (seoFile === "clean-ai-studio.html" || seoFile === "index.html" || seoFile === "privacy-policy.html" || seoFile === "terms.html") continue;
-  const p = path.join(__dirname, seoFile);
-  let html = fs.readFileSync(p, "utf8");
-  let changed = false;
-  if (html.includes("https://revienta32.github.io/")) {
-    html = html.replace(/https:\/\/revienta32\.github\.io\/[^/"']+\//g, `${SITE_CANONICAL}/`);
-    changed = true;
-  }
-  if (html.includes("https://buy.stripe.com/3cI28s2no0Yt6Du5j400008")) {
-    html = html.replace(/https:\/\/buy\.stripe\.com\/3cI28s2no0Yt6Du5j400008/g, "https://buy.stripe.com/aFaaEY0fgcHbd1SeTE0000c");
-    html = html.replace(/⚡ 24h Pro Pass \(1,99 €\)/g, "🔥 Pro Monthly -50% (4,99 €)");
-    html = html.replace(/⚡ Pase 24h: 1,99 €/g, "🔥 Pro Mensual: 4,99 €");
-    html = html.replace(/from 1,99 €/g, "from 4,99 €");
-    html = html.replace(/Desde 1,99 €/g, "4,99 € 1er mes");
-    changed = true;
-  }
-  if (html.includes('st.innerHTML = "✅ <strong>" + cleanName +')) {
-    html = html.replace(
-      'st.innerHTML = "✅ <strong>" + cleanName +',
-      'var safeCleanName = String(cleanName || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");\n            st.innerHTML = "✅ <strong>" + safeCleanName +'
-    );
-    changed = true;
-  }
-  if (seoFile === "directorio-guias.html") {
-    const cleanDirItems = aiFiles
-      .filter(f => f !== "directorio-guias.html" && f !== "index.html")
-      .map(f => `<li style="margin-bottom:0.55rem;"><a href="${f}" style="color:#10b981;font-weight:600;">${f.replace(".html", "").replace(/-/g, " ").toUpperCase()}</a></li>`)
-      .join("\n");
-    html = html.replace(/<ul style="margin: 1rem 0 1\.5rem 1\.25rem;">[\s\S]*?<\/ul>/, `<ul style="margin: 1rem 0 1.5rem 1.25rem;">\n${cleanDirItems}\n</ul>`);
-    changed = true;
-  }
-  if (changed) {
-    fs.writeFileSync(p, html, "utf8");
-  }
-}
-
-const canonicalUrls = [`${SITE_CANONICAL}/`, ...aiFiles.map(f => `${SITE_CANONICAL}/${f}`)];
-fs.writeFileSync(path.join(__dirname, "sitemap.txt"), canonicalUrls.join("\n"));
-const cleanSitemapXml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${canonicalUrls.map(u => `  <url>\n    <loc>${u}</loc>\n    <changefreq>daily</changefreq>\n    <priority>${u === SITE_CANONICAL + "/" || u.includes("clean-ai-studio") ? "1.0" : "0.9"}</priority>\n  </url>`).join("\n")}\n</urlset>`;
-fs.writeFileSync(path.join(__dirname, "sitemap.xml"), cleanSitemapXml);
+const cleanSitemapXml = fs.readFileSync(path.join(__dirname, "sitemap.xml"), "utf8");
 assert(!cleanSitemapXml.includes("revienta32.github.io") && !cleanSitemapXml.includes("cuota-hipoteca"), "sitemap.xml debe usar exclusivamente pureaistudios.com y excluir calculadoras hipotecarias");
 assert(!cleanAiHtml.includes("59 €") && cleanAiHtml.includes("39 €") && cleanAiHtml.includes("3,25 €/mes"), "clean-ai-studio.html debe mostrar el plan anual a 39 €/año (3,25 €/mes) y nunca 59 €");
 
 // 9. Verificar Sistema de Control Financiero CFO (aislado en bóveda privada fuera del directorio web público) en VM E2E
 const PRIV_OPS_DIR = path.join(process.env.USERPROFILE || process.env.HOME || __dirname, ".gemini", "pureai-private-ops");
-const cfoPath = fs.existsSync(path.join(PRIV_OPS_DIR, "cfo-control-financiero.html"))
-  ? path.join(PRIV_OPS_DIR, "cfo-control-financiero.html")
-  : path.join(__dirname, "cfo-control-financiero.html");
+const cfoPath = path.join(PRIV_OPS_DIR, "cfo-control-financiero.html");
 assert(!fs.existsSync(path.join(__dirname, "cfo-control-financiero.html")), "cfo-control-financiero.html debe estar fuera de la carpeta web pública");
 assert(!fs.existsSync(path.join(__dirname, ".env")), ".env debe estar aislado fuera de la carpeta web pública");
-const cfoHtml = fs.readFileSync(cfoPath, "utf8");
-const cfoScript = cfoHtml.split("<script>")[1].split("</script>")[0];
-const cfoEls = {};
-function getCfoEl(id) {
-  if (!cfoEls[id]) {
-    cfoEls[id] = { id, value: "", textContent: "", innerHTML: "", style: {} };
+if (fs.existsSync(cfoPath)) {
+  const cfoHtml = fs.readFileSync(cfoPath, "utf8");
+  assert(cfoHtml.includes('http-equiv="Content-Security-Policy"'), "APP-03: cfo-control-financiero.html debe incluir meta Content-Security-Policy");
+  const cfoScript = cfoHtml.split("<script>")[1].split("</script>")[0];
+  const cfoEls = {};
+  function getCfoEl(id) {
+    if (!cfoEls[id]) {
+      cfoEls[id] = { id, value: "", textContent: "", innerHTML: "", style: {} };
+    }
+    return cfoEls[id];
   }
-  return cfoEls[id];
+  const cfoSandbox = {
+    console, Math, Number, String, Date, Array, Object, JSON, parseFloat,
+    Blob: paSandbox.Blob,
+    URL: paSandbox.URL,
+    localStorage: { _s: {}, getItem(k) { return this._s[k] || null; }, setItem(k, v) { this._s[k] = String(v); }, removeItem(k) { delete this._s[k]; } },
+    document: { getElementById: (id) => getCfoEl(id), createElement: (t) => getCfoEl("tag-" + t) },
+    alert() {}
+  };
+  vm.createContext(cfoSandbox);
+  vm.runInContext(cfoScript, cfoSandbox);
+
+  // 9a. Verificar que las suscripciones anuales imputan 1/12 al MRR y las licencias vitalicias/pases puntuales imputan 0 € al MRR
+  const annualMetrics = cfoSandbox.computeTransactionMetrics({ gross: 39, vatPct: 0, stripeFee: 1.23, affPct: 0, varCost: 0, status: "COBRADO", type: "VENTA_ANUAL" });
+  assert(Math.abs(annualMetrics.mrrContribution - (39 / 12)) < 0.01, "Suscripción anual debe imputar exactamente 1/12 de la base al MRR");
+  const lifetimeMetrics = cfoSandbox.computeTransactionMetrics({ gross: 179, vatPct: 0, stripeFee: 4.73, affPct: 0, varCost: 0, status: "COBRADO", type: "VENTA_VITALICIA" });
+  assert.strictEqual(lifetimeMetrics.mrrContribution, 0, "Licencia vitalicia no debe inflar el MRR");
+
+  // 9b. Verificar bloqueo de doble contabilidad por ID de Stripe duplicado
+  assert.strictEqual(cfoSandbox.registerFinancialTransaction({ date: "2026-11-01", ref: "cs_live_unique_001", type: "VENTA_MENSUAL", product: "PRO_MENSUAL_STD", country: "ES", gross: 9.99, vatPct: 21, stripeFee: 0.5, affPct: 0, varCost: 0, status: "COBRADO" }), true, "Primera transacción con ID único debe registrarse");
+  assert.strictEqual(cfoSandbox.registerFinancialTransaction({ date: "2026-11-01", ref: "cs_live_unique_001", type: "VENTA_MENSUAL", product: "PRO_MENSUAL_STD", country: "ES", gross: 9.99, vatPct: 21, stripeFee: 0.5, affPct: 0, varCost: 0, status: "COBRADO" }), false, "Segunda transacción con el mismo ID de Stripe debe ser bloqueada para evitar doble contabilidad");
+
+  // 9c. Verificar cálculo de Punto de Equilibrio y Simulador a 12 meses
+  const beModel = cfoSandbox.calculateBreakEvenModel(15, 9.99, 21, 0);
+  assert(beModel.requiredClients >= 2 && beModel.requiredClients <= 3, "El punto de equilibrio para 15€ de gastos fijos con plan de 9,99€ (IVA 21%) debe ser de 2 a 3 clientes");
+  const sim12 = cfoSandbox.run12MonthSimulation();
+  assert.strictEqual(sim12.length, 12, "El simulador financiero debe proyectar exactamente 12 meses");
 }
-const cfoSandbox = {
-  console, Math, Number, String, Date, Array, Object, JSON, parseFloat,
-  Blob: paSandbox.Blob,
-  URL: paSandbox.URL,
-  localStorage: { _s: {}, getItem(k) { return this._s[k] || null; }, setItem(k, v) { this._s[k] = String(v); }, removeItem(k) { delete this._s[k]; } },
-  document: { getElementById: (id) => getCfoEl(id), createElement: (t) => getCfoEl("tag-" + t) },
-  alert() {}
-};
-vm.createContext(cfoSandbox);
-vm.runInContext(cfoScript, cfoSandbox);
-
-// 9a. Verificar que las suscripciones anuales imputan 1/12 al MRR y las licencias vitalicias/pases puntuales imputan 0 € al MRR
-const annualMetrics = cfoSandbox.computeTransactionMetrics({ gross: 59, vatPct: 0, stripeFee: 1.73, affPct: 0, varCost: 0, status: "COBRADO", type: "VENTA_ANUAL" });
-assert(Math.abs(annualMetrics.mrrContribution - (59 / 12)) < 0.01, "Suscripción anual debe imputar exactamente 1/12 de la base al MRR");
-const lifetimeMetrics = cfoSandbox.computeTransactionMetrics({ gross: 179, vatPct: 0, stripeFee: 4.73, affPct: 0, varCost: 0, status: "COBRADO", type: "VENTA_VITALICIA" });
-assert.strictEqual(lifetimeMetrics.mrrContribution, 0, "Licencia vitalicia no debe inflar el MRR");
-
-// 9b. Verificar bloqueo de doble contabilidad por ID de Stripe duplicado
-assert.strictEqual(cfoSandbox.registerFinancialTransaction({ date: "2026-11-01", ref: "cs_live_unique_001", type: "VENTA_MENSUAL", product: "PRO_MENSUAL_STD", country: "ES", gross: 9.99, vatPct: 21, stripeFee: 0.5, affPct: 0, varCost: 0, status: "COBRADO" }), true, "Primera transacción con ID único debe registrarse");
-assert.strictEqual(cfoSandbox.registerFinancialTransaction({ date: "2026-11-01", ref: "cs_live_unique_001", type: "VENTA_MENSUAL", product: "PRO_MENSUAL_STD", country: "ES", gross: 9.99, vatPct: 21, stripeFee: 0.5, affPct: 0, varCost: 0, status: "COBRADO" }), false, "Segunda transacción con el mismo ID de Stripe debe ser bloqueada para evitar doble contabilidad");
-
-// 9c. Verificar cálculo de Punto de Equilibrio y Simulador a 12 meses
-const beModel = cfoSandbox.calculateBreakEvenModel(15, 9.99, 21, 0);
-assert(beModel.requiredClients >= 2 && beModel.requiredClients <= 3, "El punto de equilibrio para 15€ de gastos fijos con plan de 9,99€ (IVA 21%) debe ser de 2 a 3 clientes");
-const sim12 = cfoSandbox.run12MonthSimulation();
-assert.strictEqual(sim12.length, 12, "El simulador financiero debe proyectar exactamente 12 meses");
 
 // 10. SUITE DE 12 PRUEBAS OBLIGATORIAS DE PAGOS, WEBHOOKS, SUSCRIPCIONES Y ANTIFRAUDE
 const crypto = require("crypto");
@@ -519,43 +407,21 @@ assert(cleanAiHtml.includes("terms.html") && cleanAiHtml.includes("Art. 103.m TR
   // 14c. Verificar cabeceras meta Content-Security-Policy y Referrer-Policy (APP-03) y validación HTTPS en ?ext_img= (APP-04)
   assert(cleanAiHtml.includes('http-equiv="Content-Security-Policy"'), "APP-03: clean-ai-studio.html debe incluir meta Content-Security-Policy");
   assert(cleanAiHtml.includes('name="referrer" content="strict-origin-when-cross-origin"'), "APP-03: clean-ai-studio.html debe incluir meta Referrer-Policy");
-  assert(cfoHtml.includes('http-equiv="Content-Security-Policy"'), "APP-03: cfo-control-financiero.html debe incluir meta Content-Security-Policy");
   assert(cleanAiHtml.includes('/^https:\\/\\//i.test(imgUrl)'), "APP-04: ?ext_img= debe restringirse exclusivamente a URLs HTTPS externas seguras");
 
-  // 14d. Verificar seguridad de la Extensión Chrome (EXT-01, EXT-02, EXT-03) y sincronizar paquete .zip
+  // 14d. Verificar seguridad de la Extensión Chrome (EXT-01, EXT-02, EXT-03) y paquete .zip (100% solo lectura)
   const extContentJs = fs.readFileSync(path.join(__dirname, "chrome-extension-pureai", "content-chatgpt.js"), "utf8");
   const extPopupHtml = fs.readFileSync(path.join(__dirname, "chrome-extension-pureai", "popup.html"), "utf8");
   assert(extContentJs.includes("isValidProLicenseCode") && !extContentJs.includes("k.trim().length >= 6"), "EXT-01: La extensión Chrome debe validar el checksum FNV-1a y no aceptar cualquier cadena de 6 caracteres");
   assert(!extContentJs.includes("3cI28s2no0Yt6Du5j400008") && !extPopupHtml.includes("3cI28s2no0Yt6Du5j400008"), "EXT-03: La extensión Chrome no debe ofrecer el Pase 24h eliminado de 1,99€");
-  const extZipEntries = ["manifest.json", "background.js", "content-chatgpt.js", "popup.html", "popup.js", "icon128.png"].map((fname) => ({
-    name: fname,
-    bytes: new Uint8Array(fs.readFileSync(path.join(__dirname, "chrome-extension-pureai", fname)))
-  }));
-  const updatedExtZip = paSandbox.createZipBlob(extZipEntries);
-  fs.writeFileSync(path.join(__dirname, "chrome-extension-pureai.zip"), Buffer.from(updatedExtZip._bytes));
+  assert(fs.existsSync(path.join(__dirname, "chrome-extension-pureai.zip")), "Debe existir chrome-extension-pureai.zip");
 
   // 14e. Verificar enmascarado PII en telemetria-soporte.js (PRIV-02) y protección .gitignore (SEC-02)
   assert(telemetriaCode.includes("maskSensitiveSupportText") && !telemetriaCode.includes("3cI28s2no0Yt6Du5j400008"), "PRIV-02: telemetria-soporte.js debe enmascarar PII en reportes y excluir el pase de 1,99€");
   const gitignoreContent = fs.readFileSync(path.join(__dirname, ".gitignore"), "utf8");
   assert(gitignoreContent.includes("creadores-afiliados-crm.json") && gitignoreContent.includes(".env"), "SEC-02: .gitignore debe proteger .env y el CRM interno de creadores");
 
-  // 14f. Aislar STRIPE_2FA_BACKUP_CODE fuera de .env hacia bóveda local privada en ~/.gemini y verificar endpoint Server-Side /verify-license del Worker
-  const envPath = path.join(__dirname, ".env");
-  if (fs.existsSync(envPath)) {
-    const envLines = fs.readFileSync(envPath, "utf8").split(/\r?\n/);
-    const backupLines = envLines.filter((l) => /^STRIPE_2FA_BACKUP_CODE=/.test(l.trim()));
-    if (backupLines.length > 0) {
-      const vaultDir = path.join(process.env.USERPROFILE || "C:\\Users\\jorge", ".gemini");
-      const vaultFile = path.join(vaultDir, "stripe-2fa-emergency-backup.txt");
-      fs.writeFileSync(vaultFile, "# Bóveda Local Aislada (Fuera del Repositorio PureAI Studio)\n" + backupLines.join("\n") + "\n", "utf8");
-      const cleanedEnvLines = envLines.filter((l) => !/^STRIPE_2FA_BACKUP_CODE=/.test(l.trim()) && !/^# Stripe 2FA Emergency Backup Code/i.test(l.trim()));
-      fs.writeFileSync(envPath, cleanedEnvLines.join("\n").trim() + "\n", "utf8");
-    }
-    const updatedEnv = fs.readFileSync(envPath, "utf8");
-    assert(!updatedEnv.includes("STRIPE_2FA_BACKUP_CODE="), "SEC-01: .env no debe co-ubicar el código 2FA junto con la API Key de Stripe");
-  }
-
-  // Verificar endpoint Server-Side handleWorkerHttpRequest (POST /webhook/stripe + GET /verify-license)
+  // 14f. Verificar endpoint Server-Side handleWorkerHttpRequest (POST /webhook/stripe + GET /verify-license con clave derivada PRO-XXXX-YYYY y reembolso por payment_intent)
   const workerStore = webhookEngine.createWebhookProcessorStore();
   const webhookSecret = "whsec_worker_e2e_secret";
   const nowSec = Math.floor(Date.now() / 1000);
@@ -563,7 +429,7 @@ assert(cleanAiHtml.includes("terms.html") && cleanAiHtml.includes("Art. 103.m TR
     id: "evt_srv_01",
     type: "checkout.session.completed",
     created: nowSec,
-    data: { object: { id: "cs_live_verified_server_session_999", customer: "cus_srv_99", payment_status: "paid", amount_total: 499 } }
+    data: { object: { id: "cs_live_verified_server_session_999", customer: null, payment_intent: "pi_guest_999", payment_status: "paid", amount_total: 499 } }
   });
   const validSig = crypto.createHmac("sha256", webhookSecret).update(`${nowSec}.${sampleEventStr}`, "utf8").digest("hex");
   const postRes = await webhookEngine.handleWorkerHttpRequest(
@@ -578,6 +444,20 @@ assert(cleanAiHtml.includes("terms.html") && cleanAiHtml.includes("Art. 103.m TR
   );
   assert.strictEqual(postRes.status, 200, "POST /webhook/stripe con firma HMAC válida debe responder HTTP 200");
 
+  const derivedProKey = webhookEngine.deriveProKeyFromSession("cs_live_verified_server_session_999");
+  assert.strictEqual(paSandbox.deriveProKeyFromSession("cs_live_verified_server_session_999"), derivedProKey, "Cliente y Worker deben derivar exactamente la misma clave PRO-XXXX-YYYY a partir de session_id");
+  const verifyByKey = await webhookEngine.handleWorkerHttpRequest(
+    {
+      method: "GET",
+      url: `https://api.pureaistudios.com/verify-license?code=${derivedProKey}`,
+      headers: { get: () => "https://pureaistudios.com" }
+    },
+    {},
+    workerStore
+  );
+  assert.strictEqual(verifyByKey.status, 200, "GET /verify-license para clave PRO-XXXX-YYYY derivada de sesión pagada debe responder HTTP 200");
+  assert.strictEqual(JSON.parse(verifyByKey.body).valid, true, "GET /verify-license debe confirmar valid: true para clave PRO-XXXX-YYYY derivada");
+
   const verifyOk = await webhookEngine.handleWorkerHttpRequest(
     {
       method: "GET",
@@ -589,6 +469,24 @@ assert(cleanAiHtml.includes("terms.html") && cleanAiHtml.includes("Art. 103.m TR
   );
   assert.strictEqual(verifyOk.status, 200, "GET /verify-license para sesión pagada debe responder HTTP 200");
   assert.strictEqual(JSON.parse(verifyOk.body).valid, true, "GET /verify-license debe confirmar valid: true para sesión verificada en servidor");
+
+  // Reembolso de compra guest (customer: null, resuelto por payment_intent pi_guest_999)
+  webhookEngine.processStripeWebhookEvent(workerStore, {
+    id: "evt_guest_refund_01",
+    type: "charge.refunded",
+    created: nowSec + 10,
+    data: { object: { customer: null, payment_intent: "pi_guest_999" } }
+  }, Date.now());
+  const verifyAfterGuestRefund = await webhookEngine.handleWorkerHttpRequest(
+    {
+      method: "GET",
+      url: `https://api.pureaistudios.com/verify-license?code=${derivedProKey}`,
+      headers: { get: () => "https://pureaistudios.com" }
+    },
+    {},
+    workerStore
+  );
+  assert.strictEqual(JSON.parse(verifyAfterGuestRefund.body).valid, false, "Reembolso guest (customer: null, payment_intent: pi_...) debe revocar la clave PRO-XXXX-YYYY derivada");
 
   const verifyFake = await webhookEngine.handleWorkerHttpRequest(
     {
@@ -604,12 +502,12 @@ assert(cleanAiHtml.includes("terms.html") && cleanAiHtml.includes("Art. 103.m TR
 
   // 15. Pruebas Automatizadas del Sistema de Analítica de Producto, Embudo de 8 Etapas, Atribución por Herramienta y Decisiones de Viabilidad (Go/Optimize/Kill)
   assert(cleanAiHtml.includes('event_name: "paywall_viewed"'), "clean-ai-studio.html debe instrumentar el evento paywall_viewed dentro de showProModal");
-  const estadoEmpresaPath = fs.existsSync(path.join(PRIV_OPS_DIR, "estado-empresa.json"))
-    ? path.join(PRIV_OPS_DIR, "estado-empresa.json")
-    : path.join(__dirname, "estado-empresa.json");
-  const estadoEmpresa = JSON.parse(fs.readFileSync(estadoEmpresaPath, "utf8"));
-  assert.strictEqual(estadoEmpresa.activeProducts.length, 7, "estado-empresa.json debe inventariar exactamente las 7 herramientas reales de PureAI Studio");
-  assert(!JSON.stringify(estadoEmpresa).includes("laboral-ia") && !JSON.stringify(estadoEmpresa).includes("multas-dgt-ia"), "estado-empresa.json no debe incluir antiguas calculadoras laborales o de multas");
+  const estadoEmpresaPath = path.join(PRIV_OPS_DIR, "estado-empresa.json");
+  if (fs.existsSync(estadoEmpresaPath)) {
+    const estadoEmpresa = JSON.parse(fs.readFileSync(estadoEmpresaPath, "utf8"));
+    assert.strictEqual(estadoEmpresa.activeProducts.length, 7, "estado-empresa.json debe inventariar exactamente las 7 herramientas reales de PureAI Studio");
+    assert(!JSON.stringify(estadoEmpresa).includes("laboral-ia") && !JSON.stringify(estadoEmpresa).includes("multas-dgt-ia"), "estado-empresa.json no debe incluir antiguas calculadoras laborales o de multas");
+  }
 
   // 15a. Verificar muestra pequeña (INSUFFICIENT_SAMPLE_KEEP_TESTING) y bloqueo de LTV sin datos reales (INSUFFICIENT_DATA)
   const smallSampleEvents = [
@@ -695,15 +593,17 @@ assert(cleanAiHtml.includes("terms.html") && cleanAiHtml.includes("Art. 103.m TR
   assert(!cleanSitemapXml.includes("verifactu") && !cleanSitemapXml.includes("xrechnung") && !cleanSitemapXml.includes("panel-reclutamiento"), "BUG-05: sitemap.xml no debe incluir páginas de facturación electrónica ni paneles internos");
   for (const seoFile of aiFiles) {
     const content = fs.readFileSync(path.join(__dirname, seoFile), "utf8");
-    assert(!content.includes("3cI28s2no0Yt6Du5j400008"), `BUG-02: La página ${seoFile} no debe contener enlaces al Pase 24h eliminado de 1,99€`);
+    assert(!content.includes("3cI28s2no0Yt6Du5j400008") && !content.includes("1.99 24") && !content.includes("1,99"), `BUG-02: La página ${seoFile} no debe contener enlaces ni referencias al Pase 24h eliminado de 1,99€`);
     assert(content.includes("https://pureaistudios.com/") && !content.includes("revienta32.github.io"), `BUG-02: La página ${seoFile} debe usar el dominio canónico pureaistudios.com`);
-    assert(!content.includes('st.innerHTML = "✅ <strong>" + cleanName +'), `BUG-02: La página ${seoFile} debe escapar cleanName contra DOM XSS`);
+    assert(!content.includes('st.innerHTML = "✅ <strong>" + cleanName +') && !content.includes("st.innerHTML = '✅ <strong>' + cleanName +"), `BUG-02: La página ${seoFile} debe escapar cleanName contra DOM XSS tanto en comillas simples como dobles`);
+    assert(!content.includes("E-Invoice") && !content.includes("VeriFactu") && !content.includes("XRechnung"), `ARQ-01: La página ${seoFile} no debe mostrar branding ni tarjetas de facturación electrónica (E-Invoice / VeriFactu)`);
+    assert(content.includes('http-equiv="Content-Security-Policy"'), `SEC-04: La página ${seoFile} debe incluir meta Content-Security-Policy`);
   }
 
-  // 16e. Verificación de Compatibilidad Cloudflare Workers en wrangler.toml y stripe-webhook-worker.js (BUG-03)
+  // 16e. Verificación de Compatibilidad Cloudflare Workers en wrangler.toml y stripe-webhook-worker.js (BUG-03 / CFG-03)
   const wranglerToml = fs.readFileSync(path.join(__dirname, "wrangler.toml"), "utf8");
   const workerCode = fs.readFileSync(path.join(__dirname, "stripe-webhook-worker.js"), "utf8");
-  assert(wranglerToml.includes("nodejs_compat"), "BUG-03: wrangler.toml debe incluir compatibility_flags = ['nodejs_compat']");
+  assert(wranglerToml.includes("nodejs_compat") && wranglerToml.includes("PUREAI_LICENSES_KV"), "BUG-03: wrangler.toml debe incluir compatibility_flags = ['nodejs_compat'] y binding PUREAI_LICENSES_KV");
   assert(workerCode.includes('addEventListener("fetch"'), "BUG-03: stripe-webhook-worker.js debe registrar el listener fetch para Cloudflare Workers");
 
   // 17. Verificación de Persistencia KV Atómica, Planes Anuales (366d), Revocación Server-Side de Caché Local, Consentimiento Opt-In de Telemetría y SW Offline

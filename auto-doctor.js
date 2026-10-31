@@ -243,7 +243,7 @@ function computeProductAnalyticsFunnel(rawEvents = [], options = {}) {
 
   const byChannel = {};
   const byLang = {};
-  const byPlan = { PRO_MONTHLY_499: 0, PRO_MONTHLY_999: 0, PRO_ANNUAL_5900: 0 };
+  const byPlan = { PRO_MONTHLY_499: 0, PRO_MONTHLY_999: 0, PRO_ANNUAL_3900: 0 };
   const cohorts = {};
 
   for (const ev of rawEvents) {
@@ -507,11 +507,12 @@ async function runAutoDoctor() {
             stored.pageviewsByPage[pg] = (stored.pageviewsByPage[pg] || 0) + 1;
           }
         } else if (data.type === "sale_verified_session") {
+          const isAnnual = data.planInterval === "year" || Number(data.amountCents) >= 3500;
           financialEvents.push({
             id: data.maskedSession || env.id,
-            type: "SALE_MONTHLY",
-            amountCents: 499,
-            taxCents: 86,
+            type: isAnnual ? "SALE_ANNUAL" : "SALE_MONTHLY",
+            amountCents: Number(data.amountCents) || (isAnnual ? 3900 : 499),
+            taxCents: Number(data.taxCents) || (isAnnual ? 677 : 86),
             affiliateId: data.partner || "organic"
           });
         } else if (data.type === "user_bug_report") {

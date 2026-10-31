@@ -167,6 +167,7 @@ function buildSeoPageHtml(page) {
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="referrer" content="strict-origin-when-cross-origin" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self' https: data: blob:; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; connect-src 'self' https:;" />
   <title>${page.title} | PureAI Studio</title>
   <meta name="description" content="${page.lead}" />
   <link rel="canonical" href="${SITE_URL}/${page.slug}" />

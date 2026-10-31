@@ -97,9 +97,23 @@
       <a href="https://buy.stripe.com/5kQ28sfaa0Yt5zqfXI0000d" target="_blank" rel="noopener" style="background:#38bdf8;color:#082f49;padding:3px 8px;border-radius:6px;font-weight:800;text-decoration:none;">💎 Pro Anual (39 €/año)</a>
       <button type="button" class="pureai-key-btn" style="background:#1e293b;color:#cbd5e1;border:1px solid #475569;padding:3px 7px;border-radius:6px;cursor:pointer;font-size:11px;">🔑 Activar Clave Pro</button>
     `;
-    box.querySelector(".pureai-key-btn").addEventListener("click", () => {
+    box.querySelector(".pureai-key-btn").addEventListener("click", async () => {
       const k = prompt("Introduce tu Clave Multi-Dispositivo verificada (PRO-XXXX-YYYY) o ID de Sesión de Stripe (cs_live_...):");
       if (isValidProLicenseCode(k)) {
+        try {
+          const resp = await fetch("https://pureaistudios.com/verify-license?code=" + encodeURIComponent(k.trim()), {
+            method: "GET",
+            headers: { Accept: "application/json" }
+          });
+          const ct = (resp.headers && resp.headers.get && resp.headers.get("content-type")) || "";
+          if (ct.includes("application/json")) {
+            const data = await resp.json();
+            if (resp.status === 404 || data.valid === false) {
+              alert("⚠️ Esta clave no figura como pagada o activa en el servidor de Stripe.");
+              return;
+            }
+          }
+        } catch (_) {}
         cachedExtPro = true;
         localStorage.setItem("pureai_ext_pro", "true");
         if (typeof chrome !== "undefined" && chrome.storage && chrome.storage.local) {
@@ -127,7 +141,7 @@
 
       const btn = document.createElement("button");
       btn.type = "button";
-      btn.textContent = "✨ Copiar Humanizado (0% IA)";
+      btn.textContent = "✨ Copiar Texto Limpio";
       btn.style.cssText =
         "background:linear-gradient(135deg,#00e5a3,#06b6d4);color:#042f1e;border:none;border-radius:999px;padding:5px 12px;font-size:12px;font-weight:800;cursor:pointer;box-shadow:0 4px 12px rgba(0,229,163,0.3);";
 
@@ -140,10 +154,10 @@
         const clean = scrubAndHumanizeText(msgEl.innerText || msgEl.textContent || "");
         navigator.clipboard.writeText(clean).catch(() => {});
         btn.textContent = isProUnlocked()
-          ? "✅ ¡Copiado Pro (0% IA)!"
+          ? "✅ ¡Copiado Pro (Texto Limpio)!"
           : `✅ ¡Copiado! (${Math.max(0, MAX_DAILY_FREE - used)}/${MAX_DAILY_FREE} gratis hoy)`;
         setTimeout(() => {
-          btn.textContent = "✨ Copiar Humanizado (0% IA)";
+          btn.textContent = "✨ Copiar Texto Limpio";
         }, 2000);
       });
 

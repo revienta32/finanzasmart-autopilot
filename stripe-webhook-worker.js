@@ -115,6 +115,37 @@ function resolveSubscriptionPeriod(obj, nowMs, previousPlanInterval) {
   return { planInterval, expiresAt };
 }
 
+function computeKeyChecksumBlock(block4) {
+  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  let h = 0x811c9dc5;
+  const seed = "PUREAI2026:" + String(block4 || "").toUpperCase();
+  for (let i = 0; i < seed.length; i++) {
+    h ^= seed.charCodeAt(i);
+    h = Math.imul(h, 0x01000193) >>> 0;
+  }
+  let out = "";
+  for (let j = 0; j < 4; j++) {
+    out += chars.charAt((h >>> (j * 5)) % chars.length);
+  }
+  return out;
+}
+
+function deriveProKeyFromSession(seedId) {
+  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  const clean = String(seedId || "PUREAI").trim();
+  let h = 0x811c9dc5;
+  for (let i = 0; i < clean.length; i++) {
+    h ^= clean.charCodeAt(i);
+    h = Math.imul(h, 0x01000193) >>> 0;
+  }
+  let p1 = "";
+  for (let j = 0; j < 4; j++) {
+    p1 += chars.charAt((h >>> (j * 5)) % chars.length);
+  }
+  const p2 = computeKeyChecksumBlock(p1);
+  return `PRO-${p1}-${p2}`;
+}
+
 function createWebhookProcessorStore() {
   return {
     processedEventIds: new Set(),
@@ -138,7 +169,8 @@ function processStripeWebhookEvent(store, event, nowMs, options) {
   }
 
   const obj = (event.data && event.data.object) || {};
-  const customerId = obj.customer || obj.id || "cust_unknown";
+  const mappedCustomer = (obj.payment_intent && store.subscriptionsByCustomer.get(`pi:${obj.payment_intent}`)) || null;
+  const customerId = obj.customer || (mappedCustomer && mappedCustomer.customerId) || obj.id || "cust_unknown";
   const eventCreated = Number(event.created) || Math.floor(now / 1000);
   const prevRecord = store.subscriptionsByCustomer.get(customerId);
   const existing = prevRecord
@@ -150,8 +182,10 @@ function processStripeWebhookEvent(store, event, nowMs, options) {
         expiresAt: 0,
         graceEndsAt: 0,
         lastEventCreated: 0,
-        cancelAtPeriodEnd: false
+        cancelAtPeriodEnd: false,
+        verifiedByServer: true
       };
+  existing.verifiedByServer = true;
 
   // 2. Gestión de eventos fuera de orden (Out-of-order protection)
   // Excepción: disputas y reembolsos tienen prioridad crítica de seguridad siempre
@@ -186,6 +220,12 @@ function processStripeWebhookEvent(store, event, nowMs, options) {
         existing.graceEndsAt = existing.expiresAt + 72 * 3600 * 1000;
         if (obj.id && String(obj.id).startsWith("cs_")) {
           existing.lastCheckoutSessionId = String(obj.id);
+          existing.proKey = deriveProKeyFromSession(String(obj.id));
+        } else if (!existing.proKey) {
+          existing.proKey = deriveProKeyFromSession(customerId);
+        }
+        if (obj.payment_intent) {
+          existing.lastPaymentIntentId = String(obj.payment_intent);
         }
         const ref = String(obj.client_reference_id || "");
         if (ref.startsWith("aff_")) {
@@ -270,6 +310,12 @@ function processStripeWebhookEvent(store, event, nowMs, options) {
     if (existing.lastCheckoutSessionId) {
       store.subscriptionsByCustomer.set(existing.lastCheckoutSessionId, existing);
     }
+    if (existing.proKey) {
+      store.subscriptionsByCustomer.set(existing.proKey, existing);
+    }
+    if (existing.lastPaymentIntentId) {
+      store.subscriptionsByCustomer.set(`pi:${existing.lastPaymentIntentId}`, existing);
+    }
     if (pendingAffiliateKey && pendingAffiliateEntry) {
       store.affiliateLedger.set(pendingAffiliateKey, pendingAffiliateEntry);
     }
@@ -327,7 +373,20 @@ async function hydrateStoreFromKv(env, store, eventObj) {
     }
   }
   const obj = (eventObj.data && eventObj.data.object) || {};
-  const customerId = obj.customer || obj.id || "cust_unknown";
+  let customerId = obj.customer || obj.id || "cust_unknown";
+  if (!obj.customer && obj.payment_intent && typeof kv.get === "function") {
+    const piRaw = await kv.get(`pi:${obj.payment_intent}`);
+    if (piRaw) {
+      try {
+        const piSub = JSON.parse(piRaw);
+        if (piSub && piSub.customerId) {
+          customerId = piSub.customerId;
+          store.subscriptionsByCustomer.set(`pi:${obj.payment_intent}`, piSub);
+          store.subscriptionsByCustomer.set(customerId, piSub);
+        }
+      } catch (_) {}
+    }
+  }
   if (customerId && typeof kv.get === "function") {
     const subRaw = await kv.get(`sub:${customerId}`);
     if (subRaw) {
@@ -361,8 +420,13 @@ async function persistWebhookResultToKv(env, eventObj, result) {
 
   if (result.subscription) {
     const serializedSub = JSON.stringify(result.subscription);
-    if (customerId) await kv.put(`sub:${customerId}`, serializedSub);
+    const effectiveCustId = result.subscription.customerId || customerId;
+    const proKey = result.subscription.proKey;
+    const piId = result.subscription.lastPaymentIntentId || obj.payment_intent;
+    if (effectiveCustId) await kv.put(`sub:${effectiveCustId}`, serializedSub);
     if (sessId) await kv.put(`sess:${sessId}`, serializedSub);
+    if (proKey) await kv.put(`key:${proKey.toUpperCase()}`, serializedSub);
+    if (piId) await kv.put(`pi:${piId}`, serializedSub);
   }
   if (result.pendingAffiliateKey && result.pendingAffiliateEntry) {
     await kv.put(
@@ -459,7 +523,12 @@ async function handleWorkerHttpRequest(req, env, sharedStore) {
     // Priorizar KV de Cloudflare para garantizar consistencia entre instancias y reinicios
     let subRecord = null;
     if (env && env.PUREAI_LICENSES_KV && typeof env.PUREAI_LICENSES_KV.get === "function") {
-      const kvRaw = await env.PUREAI_LICENSES_KV.get(code.startsWith("cs_") ? `sess:${code}` : `sub:${code}`);
+      const kvKey = code.startsWith("cs_")
+        ? `sess:${code}`
+        : /^PRO-[A-Z2-9]{4}-[A-Z2-9]{4}$/i.test(code)
+          ? `key:${code.toUpperCase()}`
+          : `sub:${code}`;
+      const kvRaw = await env.PUREAI_LICENSES_KV.get(kvKey);
       if (kvRaw) {
         try {
           subRecord = JSON.parse(kvRaw);
@@ -468,7 +537,7 @@ async function handleWorkerHttpRequest(req, env, sharedStore) {
       }
     }
     if (!subRecord) {
-      subRecord = store.subscriptionsByCustomer.get(code) || null;
+      subRecord = store.subscriptionsByCustomer.get(code) || store.subscriptionsByCustomer.get(code.toUpperCase()) || null;
     }
     if (!subRecord) {
       return { status: 404, headers, body: JSON.stringify({ valid: false, status: SUBSCRIPTION_STATES.PENDING, reason: "license_not_found" }) };
@@ -485,12 +554,36 @@ async function handleWorkerHttpRequest(req, env, sharedStore) {
       body: JSON.stringify({
         valid: isActive,
         verifiedByServer: true,
+        proKey: subRecord.proKey || deriveProKeyFromSession(code),
         status: subRecord.status,
         planInterval: subRecord.planInterval || "month",
         expiresAt: subRecord.expiresAt,
         graceEndsAt: subRecord.graceEndsAt
       })
     };
+  }
+
+  // 3. Endpoint Server-Side de Soporte y Telemetría Opt-In (POST /telemetry | POST /support) para no exponer temas públicos en cliente
+  if (req.method === "POST" && (url.pathname === "/telemetry" || url.pathname === "/support")) {
+    const rawBody = typeof req.text === "function" ? await req.text() : String(req.body || "");
+    if (!rawBody || rawBody.length > 4096) {
+      return { status: 400, headers, body: JSON.stringify({ ok: false, error: "invalid_payload_size" }) };
+    }
+    let parsed;
+    try {
+      parsed = JSON.parse(rawBody);
+    } catch (_) {
+      return { status: 400, headers, body: JSON.stringify({ ok: false, error: "invalid_json" }) };
+    }
+    delete parsed.ua;
+    delete parsed.countryTz;
+    delete parsed.deviceFp;
+    if (env && env.NTFY_SECRET_TOPIC_URL && typeof fetch === "function") {
+      try {
+        await fetch(env.NTFY_SECRET_TOPIC_URL, { method: "POST", body: JSON.stringify(parsed) });
+      } catch (_) {}
+    }
+    return { status: 200, headers, body: JSON.stringify({ ok: true, relayed: true }) };
   }
 
   return { status: 404, headers, body: JSON.stringify({ ok: false, error: "not_found" }) };
@@ -519,6 +612,8 @@ module.exports = {
   verifyStripeWebhookSignature,
   calculateAffiliateNetCommission,
   resolveSubscriptionPeriod,
+  computeKeyChecksumBlock,
+  deriveProKeyFromSession,
   createWebhookProcessorStore,
   processStripeWebhookEvent,
   handleWorkerHttpRequest,

@@ -3,6 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="referrer" content="strict-origin-when-cross-origin" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self' https: data: blob:; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; connect-src 'self' https:;" />
   <title>How to Remove 'Made with AI' Label on Instagram, TikTok & LinkedIn (C2PA Scrubber)</title>
   <meta name="description" content="Strip hidden C2PA Content Credentials, JUMBF manifests, and IPTC trainedAlgorithmicMedia tags from DALL-E 3, Firefly, Gemini & Midjourney images." />
   <link rel="canonical" href="https://pureaistudios.com/remove-made-with-ai-label-instagram-tiktok-c2pa.html" />
@@ -46,7 +48,7 @@
       <a href="clean-ai-studio.html" class="brand" style="text-decoration:none;color:inherit;">
         <span class="brand-icon">🧬</span>
         <div>
-          <strong>PureAI &amp; E-Invoice Studio</strong>
+          <strong>PureAI Studio</strong>
           <span class="brand-tag">100% Client-Side Privacy Tools</span>
         </div>
       </a>
@@ -103,7 +105,8 @@
             a.href = URL.createObjectURL(blob);
             a.download = cleanName;
             a.click();
-            st.innerHTML = '✅ <strong>' + cleanName + ' downloaded (0% C2PA / 0% EXIF)!</strong> Need <strong>iPhone 16 Pro / Sony A7IV EXIF Injection</strong> or <strong>50-Photo Batch .ZIP</strong>? <a href="clean-ai-studio.html" style="color:#fcd34d;font-weight:800;">Unlock Pro (from 4,99 €) →</a>';
+            var safeCleanName = String(cleanName || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+            st.innerHTML = '✅ <strong>' + safeCleanName + ' downloaded (0% C2PA / 0% EXIF)!</strong> Need <strong>iPhone 16 Pro / Sony A7IV EXIF Injection</strong> or <strong>50-Photo Batch .ZIP</strong>? <a href="clean-ai-studio.html" style="color:#fcd34d;font-weight:800;">Unlock Pro (from 4,99 €) →</a>';
           }, 'image/jpeg', 0.95);
         };
         img.src = URL.createObjectURL(file);
@@ -129,24 +132,11 @@
     </article>
 
     <aside class="affiliate-sidebar">
-      <div class="offer-card" style="border-color:#10b981;">
-        <span class="offer-badge">🧬 PureAI Studio Pro</span>
-        <h2>100% Undetectable AI Text &amp; Clean C2PA Images</h2>
-        <p>Inspect hidden ChatGPT Unicode watermarks (U+202F), humanize 70+ AI clichés, and batch-scrub C2PA/EXIF metadata into a clean .ZIP archive.</p>
-        <a href="clean-ai-studio.html" class="cta-button">Launch PureAI Studio →</a>
-      </div>
-
-      <div class="offer-card" style="background: linear-gradient(160deg, #1e293b 0%, #2e1065 100%); border-color: #8b5cf6;">
-        <span class="offer-badge" style="background: rgba(139, 92, 246, 0.2); color: #ddd6fe;">🌍 EN 16931 E-Invoicing</span>
-        <h2>Peppol UBL · XRechnung · Factur-X · VeriFactu</h2>
-        <p>Generate and validate compliant European XML e-invoices 100% locally in your browser.</p>
-        
-      </div>
     </aside>
   </main>
 
   <footer class="footer container">
-    <p>© 2026 PureAI Studio — <a href="clean-ai-studio.html" style="color:#10b981;">C2PA &amp; AI Watermark Scrubber</a> |  | <a href="directorio-guias.html" style="color:#10b981;">All Guides &amp; Tools</a></p>
+    <p>© 2026 PureAI Studio — <a href="clean-ai-studio.html" style="color:#10b981;">C2PA &amp; AI Watermark Scrubber</a> | <a href="directorio-guias.html" style="color:#10b981;">All Guides &amp; Tools</a></p>
   </footer>
   <script src="telemetria-soporte.js"></script>
 </body>

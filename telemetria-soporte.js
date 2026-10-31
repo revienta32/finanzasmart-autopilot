@@ -6,7 +6,7 @@
  *    de soporte marcando la casilla de privacidad, se transmite el evento minimizado con enmascaramiento PII (maskSensitiveSupportText).
  */
 (function () {
-  const BUS_URL = "https://ntfy.sh/pureai_studio_ops_telemetry_94c2e1";
+  const BUS_URL = (typeof window !== "undefined" && window.PUREAI_TELEMETRY_ENDPOINT) || "/telemetry";
   const pageName = (window.location.pathname.split("/").pop() || "index.html") + (window.location.hash || "");
 
   function maskSensitiveSupportText(raw) {
@@ -213,9 +213,13 @@
         <strong style="display:block;font-size:0.88rem;margin-bottom:0.35rem;">🛠️ Reportar fallo o pedir mejora</strong>
         <p style="font-size:0.74rem;color:#94a3b8;margin-bottom:0.5rem;">No incluyas datos sensibles; los emails y claves se enmascaran automáticamente antes del envío:</p>
         <textarea id="fs-bug-text" rows="3" placeholder="Ej: Duda sobre formato MP4 o sugerencia de mejora..." style="width:100%;background:#0f172a;color:#f8fafc;border:1px solid #334155;border-radius:0.4rem;padding:0.5rem;font-size:0.8rem;margin-bottom:0.45rem;resize:vertical;"></textarea>
-        <label style="display:flex;align-items:flex-start;gap:6px;font-size:0.7rem;color:#cbd5e1;margin-bottom:0.55rem;cursor:pointer;">
+        <label style="display:flex;align-items:flex-start;gap:6px;font-size:0.7rem;color:#cbd5e1;margin-bottom:0.45rem;cursor:pointer;">
           <input type="checkbox" id="fs-bug-consent" style="margin-top:2px;" />
           <span>Acepto enviar este mensaje a soporte conforme a la <a href="privacy-policy.html" target="_blank" style="color:#6ee7b7;">Política de Privacidad</a>.</span>
+        </label>
+        <label style="display:flex;align-items:flex-start;gap:6px;font-size:0.68rem;color:#94a3b8;margin-bottom:0.55rem;cursor:pointer;">
+          <input type="checkbox" id="fs-telemetry-optin-chk" style="margin-top:2px;" />
+          <span>Permitir telemetría técnica anónima (Opt-In voluntario, desactivado por defecto).</span>
         </label>
         <div style="display:flex;justify-content:space-between;align-items:center;gap:0.5rem;">
           <button type="button" id="fs-bug-send" style="background:#10b981;color:#052e16;border:none;padding:0.45rem 0.8rem;border-radius:0.4rem;font-weight:700;font-size:0.78rem;cursor:pointer;flex:1;">Enviar a Soporte</button>
@@ -239,7 +243,15 @@
   const sendBtn = document.getElementById("fs-bug-send");
   const txtArea = document.getElementById("fs-bug-text");
   const consentChk = document.getElementById("fs-bug-consent");
+  const optinChk = document.getElementById("fs-telemetry-optin-chk");
   const okMsg = document.getElementById("fs-bug-ok");
+
+  if (optinChk) {
+    optinChk.checked = hasTelemetryConsent();
+    optinChk.addEventListener("change", () => {
+      setTelemetryConsent(Boolean(optinChk.checked));
+    });
+  }
 
   if (toggleBtn && modal && closeBtn && sendBtn && txtArea && okMsg) {
     toggleBtn.addEventListener("click", () => {

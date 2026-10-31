@@ -4,9 +4,9 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="referrer" content="strict-origin-when-cross-origin" />
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self' https: data: blob:; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; media-src 'self' data: blob:; connect-src 'self' https://ntfy.sh https:;" />
-  <title>PureAI Studio (2026) — Remove 'Made with AI' C2PA Labels, Spoof iPhone 16 Pro EXIF & Clean ChatGPT Watermarks</title>
-  <meta name="description" content="100% Client-Side AI Stealth Suite for Creators & Agencies (EN/ES/DE/FR/PT): Strip C2PA/JUMBF 'Made with AI' tags for Instagram & TikTok, inject authentic iPhone 16 Pro / Sony A7IV EXIF, batch-clean ZIPs, and remove hidden ChatGPT Unicode watermarks (U+202F)." />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self' https: data: blob:; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; media-src 'self' data: blob:; connect-src 'self' https:;" />
+  <title>PureAI Studio (2026) — C2PA/EXIF Metadata Scrubber, Camera APP1 Profile &amp; Unicode Watermark Cleaner</title>
+  <meta name="description" content="100% Client-Side Metadata &amp; Format Sanitizer (EN/ES/DE/FR/PT): Strip C2PA/JUMBF/EXIF container tags, apply technical APP1 camera headers (iPhone 16 Pro, Sony A7IV), batch-clean ZIPs, and remove invisible Unicode characters (U+202F)." />
   <link rel="canonical" href="https://pureaistudios.com/clean-ai-studio.html" />
   <link rel="manifest" href="manifest.webmanifest" />
   <meta name="theme-color" content="#10b981" />
@@ -279,7 +279,7 @@
         <span class="logo-icon">✨</span>
         <div>
           <h1>PureAI Studio <span class="badge-pro">100% PRIVADO</span></h1>
-          <p class="subtitle" id="ui-sub">Fotos y textos de IA 100% naturales e indetectables en 1 clic</p>
+          <p class="subtitle" id="ui-sub">Limpieza local de metadatos C2PA/EXIF y marcas invisibles Unicode en 1 clic</p>
         </div>
       </div>
       <nav class="nav-tabs">
@@ -292,9 +292,9 @@
   <main class="container">
     <section class="pa-hero" style="padding:18px 22px;margin-bottom:18px;">
       <div style="max-width:720px;">
-        <h2 style="margin:0 0 6px;font-size:1.45rem;" id="ui-hero-title">Quita el Sello 'Hecho con IA' de tus Fotos y Textos en 1 Clic</h2>
+        <h2 style="margin:0 0 6px;font-size:1.45rem;" id="ui-hero-title">Limpia Metadatos C2PA/EXIF y Caracteres Invisibles Unicode en 1 Clic</h2>
         <p style="margin:0;color:#cbd5e1;font-size:0.92rem;" id="ui-hero-desc">
-          Sube tu imagen o pega tu texto de ChatGPT para dejarlo 100% natural e indetectable en Instagram, TikTok y Turnitin.
+          Sube tu imagen o pega tu texto para eliminar contenedores C2PA/JUMBF/EXIF y espacios invisibles (U+202F, U+200B) 100% en tu navegador.
         </p>
       </div>
       <div class="pa-lang-pills">
@@ -327,7 +327,7 @@
           <div class="pa-dropzone" style="padding:28px 18px;" onclick="document.getElementById('img-input').click()" ondragover="event.preventDefault()" ondrop="handleImgDrop(event)">
             <div style="font-size:2.1rem;margin-bottom:8px;">📸 🎬</div>
             <strong style="font-size:1rem;color:#f8fafc;display:block;" id="ui-drop-main">Arrastra tu Foto o Vídeo corto (.MP4 / .MOV) aquí</strong>
-            <div style="font-size:0.82rem;color:#94a3b8;margin-top:6px;" id="ui-drop-sub">Quita el aviso "Hecho con IA" (Midjourney, Sora, Runway, Kling) y simula iPhone 16 Pro</div>
+            <div style="font-size:0.82rem;color:#94a3b8;margin-top:6px;" id="ui-drop-sub">Limpia contenedores C2PA/JUMBF/EXIF y aplica perfiles técnicos APP1 opcionales (iPhone 16 Pro / Sony A7IV)</div>
           </div>
 
           <!-- W1: Vista Previa Visual en Miniatura de la Foto Cargada -->
@@ -335,7 +335,7 @@
             <img id="img-preview-thumb" style="width:62px;height:62px;object-fit:cover;border-radius:9px;border:1px solid rgba(255,255,255,0.2);" alt="Vista previa" />
             <div style="flex:1;min-width:0;">
               <div id="img-preview-name" style="font-weight:800;font-size:0.84rem;color:#f8fafc;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"></div>
-              <div id="img-preview-meta" style="font-size:0.75rem;color:#6ee7b7;margin-top:3px;">✅ Lista para exportar como cámara real de iPhone 16 Pro</div>
+              <div id="img-preview-meta" style="font-size:0.75rem;color:#6ee7b7;margin-top:3px;">✅ Lista para re-codificar contenedor limpio en local</div>
             </div>
           </div>
 
@@ -597,47 +597,47 @@
 
     const LANGS = {
       en: {
-        heroTitle: "Remove 'Made with AI' Labels from Photos & Text in 1 Click",
-        heroDesc: "Upload your photo or paste your ChatGPT text to make it 100% natural and undetectable on Instagram, TikTok, and Turnitin.",
-        imgTitle: "📸 1. Clean AI-Generated Photos",
+        heroTitle: "Strip C2PA/EXIF Metadata & Hidden Unicode Marks in 1 Click",
+        heroDesc: "Upload your photo or paste your text to strip C2PA/JUMBF/EXIF headers and invisible Unicode characters (U+202F, U+200B) 100% locally in your browser.",
+        imgTitle: "📸 1. Clean Image & Video Metadata",
         dropMain: "Drag & drop your photo here or click to upload",
-        txtTitle: "✍️ 2. Humanize ChatGPT Text",
+        txtTitle: "✍️ 2. Clean & Format AI Text",
         btnScrubImg: "✨ Clean Photo & Download",
         btnScrubTxt: "🧹 Remove Hidden Marks (Free)"
       },
       es: {
-        heroTitle: "Quita el Sello 'Hecho con IA' de tus Fotos y Textos en 1 Clic",
-        heroDesc: "Sube tu imagen o pega tu texto de ChatGPT para dejarlo 100% natural e indetectable en Instagram, TikTok y Turnitin.",
-        imgTitle: "📸 1. Limpiar Fotos creadas con IA",
+        heroTitle: "Limpia Metadatos C2PA/EXIF y Caracteres Invisibles Unicode en 1 Clic",
+        heroDesc: "Sube tu imagen o pega tu texto para eliminar contenedores C2PA/JUMBF/EXIF y espacios invisibles (U+202F, U+200B) 100% en tu navegador.",
+        imgTitle: "📸 1. Limpiar Metadatos de Fotos y Vídeos",
         dropMain: "Arrastra tu foto aquí o haz clic para subirla",
-        txtTitle: "✍️ 2. Humanizar Texto de ChatGPT",
+        txtTitle: "✍️ 2. Limpiar y Formatear Texto",
         btnScrubImg: "✨ Limpiar Foto y Descargar",
         btnScrubTxt: "🧹 Limpiar Marcas (Gratis)"
       },
       de: {
-        heroTitle: "KI-Label aus Fotos & ChatGPT-Texten mit 1 Klick entfernen",
-        heroDesc: "Laden Sie Ihr Foto hoch oder fügen Sie Ihren ChatGPT-Text ein – sofort 100 % natürlich auf Instagram, TikTok & Turnitin.",
-        imgTitle: "📸 1. KI-Fotos bereinigen",
+        heroTitle: "C2PA/EXIF-Metadaten & unsichtbare Unicode-Zeichen mit 1 Klick entfernen",
+        heroDesc: "Laden Sie Ihr Foto hoch oder fügen Sie Ihren Text ein – C2PA/EXIF und unsichtbare Zeichen (U+202F) 100 % lokal im Browser bereinigen.",
+        imgTitle: "📸 1. Bild- & Video-Metadaten bereinigen",
         dropMain: "Foto hier ablegen oder klicken zum Hochladen",
-        txtTitle: "✍️ 2. ChatGPT-Text vermenschlichen",
+        txtTitle: "✍️ 2. Text-Wasserzeichen bereinigen",
         btnScrubImg: "✨ Foto bereinigen & herunterladen",
         btnScrubTxt: "🧹 Marken löschen (Gratis)"
       },
       fr: {
-        heroTitle: "Supprimez le badge 'Généré par l'IA' de vos Photos et Textes",
-        heroDesc: "Importez votre photo ou collez votre texte ChatGPT pour le rendre 100% naturel sur Instagram, TikTok et Turnitin.",
-        imgTitle: "📸 1. Nettoyer vos Photos IA",
+        heroTitle: "Supprimez les Métadonnées C2PA/EXIF et Caractères Unicode Invisibles",
+        heroDesc: "Importez votre photo ou collez votre texte pour supprimer les conteneurs C2PA/EXIF et espaces invisibles (U+202F) 100% localement.",
+        imgTitle: "📸 1. Nettoyer les Métadonnées Photo/Vidéo",
         dropMain: "Glissez votre photo ici ou cliquez pour choisir",
-        txtTitle: "✍️ 2. Humaniser un Texte ChatGPT",
+        txtTitle: "✍️ 2. Nettoyer et Formater le Texte",
         btnScrubImg: "✨ Nettoyer et Télécharger",
         btnScrubTxt: "🧹 Nettoyer (Gratuit)"
       },
       pt: {
-        heroTitle: "Remova o Selo 'Criado com IA' de Fotos e Textos em 1 Clique",
-        heroDesc: "Envie sua foto ou cole seu texto do ChatGPT para deixá-lo 100% natural no Instagram, TikTok e Turnitin.",
-        imgTitle: "📸 1. Limpar Fotos geradas por IA",
+        heroTitle: "Remova Metadados C2PA/EXIF e Caracteres Unicode Invisíveis em 1 Clique",
+        heroDesc: "Envie sua foto ou cole seu texto para remover cabeçalhos C2PA/EXIF e espaços invisíveis (U+202F) 100% localmente no navegador.",
+        imgTitle: "📸 1. Limpar Metadados de Fotos e Vídeos",
         dropMain: "Arraste sua foto aqui ou clique para enviar",
-        txtTitle: "✍️ 2. Humanizar Texto do ChatGPT",
+        txtTitle: "✍️ 2. Limpar e Formatar Texto",
         btnScrubImg: "✨ Limpar Foto e Baixar",
         btnScrubTxt: "🧹 Limpar Marcas (Grátis)"
       }
@@ -705,6 +705,9 @@
       var now = typeof nowMs === "number" ? nowMs : Date.now();
       if (!subRecord || !subRecord.status) {
         return { hasAccess: false, effectiveState: SUBSCRIPTION_STATES.PENDING, reason: "no_subscription" };
+      }
+      if (subRecord.verifiedByServer === false) {
+        return { hasAccess: false, effectiveState: SUBSCRIPTION_STATES.PENDING, reason: "requires_server_verification" };
       }
       var st = subRecord.status;
       var exp = Number(subRecord.expiresAt) || 0;
@@ -786,7 +789,28 @@
       return false;
     }
 
-    function generateMultiDeviceProKey() {
+    function deriveProKeyFromSession(seedId) {
+      var chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+      var clean = String(seedId || "PUREAI").trim();
+      var h = 0x811c9dc5;
+      for (var i = 0; i < clean.length; i++) {
+        h ^= clean.charCodeAt(i);
+        h = Math.imul(h, 0x01000193) >>> 0;
+      }
+      var p1 = "";
+      for (var j = 0; j < 4; j++) {
+        p1 += chars.charAt((h >>> (j * 5)) % chars.length);
+      }
+      var p2 = computeKeyChecksumBlock(p1);
+      return "PRO-" + p1 + "-" + p2;
+    }
+
+    function generateMultiDeviceProKey(optionalSeed) {
+      if (optionalSeed) {
+        var derived = deriveProKeyFromSession(optionalSeed);
+        localStorage.setItem("pureai_pro_key", derived);
+        return derived;
+      }
       var existing = localStorage.getItem("pureai_pro_key");
       if (existing && isValidProLicenseCode(existing)) return existing;
       var chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
@@ -814,12 +838,13 @@
         });
         var ct = (res.headers && res.headers.get && res.headers.get("content-type")) || "";
         if (ct.indexOf("application/json") === -1 && typeof res.status === "number" && res.status === 404 && !customEndpoint) {
-          return { checked: false, reason: "static_host_no_worker" };
+          return { checked: false, valid: false, reason: "static_host_no_worker" };
         }
         var data = typeof res.json === "function" ? await res.json() : JSON.parse(res.body || "{}");
         if (res.status === 200 && data && data.valid === true) {
           var srvRec = {
-            key: code,
+            key: data.proKey || code,
+            stripeSessionId: code.indexOf("cs_") === 0 ? code : undefined,
             status: data.status || SUBSCRIPTION_STATES.ACTIVE,
             planInterval: data.planInterval || "month",
             activatedAt: Date.now(),
@@ -851,15 +876,15 @@
       return { checked: false, reason: "network_unreachable" };
     }
 
-    // Nota de arquitectura: localStorage actúa únicamente como caché local no confiable para modo offline.
-    // La validez autoritativa de la licencia depende de verifyLicenseWithServer (/verify-license en Cloudflare Worker + KV).
+    // Nota de arquitectura: localStorage actúa únicamente como caché local no confiable.
+    // evaluateSubscriptionAccess exige verifiedByServer === true tras confirmar con /verify-license en el servidor.
     function activatePureAiPro(optionalNowMs) {
       const code = (document.getElementById("pa-pro-code").value || "").trim();
       if (isValidProLicenseCode(code)) {
         var now = typeof optionalNowMs === "number" ? optionalNowMs : Date.now();
         var rec = {
           key: code,
-          status: SUBSCRIPTION_STATES.ACTIVE,
+          status: SUBSCRIPTION_STATES.PENDING,
           activatedAt: now,
           expiresAt: now + 32 * 24 * 3600 * 1000,
           graceEndsAt: now + 35 * 24 * 3600 * 1000,
@@ -870,13 +895,10 @@
         saveSubscriptionRecord(rec);
         localStorage.setItem("pureai_pro_key", code);
         verifyLicenseWithServer(code).catch(function () {});
-        if (typeof fetch === "function" && localStorage.getItem("pureai_telemetry_consent") === "granted") {
-          fetch("https://ntfy.sh/pureai_studio_ops_telemetry_94c2e1", {
-            method: "POST",
-            body: JSON.stringify({ type: "pro_license_activated_device", maskedKey: maskSensitiveTelemetryValue(code), ts: new Date().toISOString() })
-          }).catch(function () {});
+        if (typeof window !== "undefined" && typeof window.sendPureAiAnalyticsEvent === "function") {
+          window.sendPureAiAnalyticsEvent({ type: "pro_license_activated_device", maskedKey: maskSensitiveTelemetryValue(code) });
         }
-        alert("🎉 PureAI Studio Pro Subscription Activated! Deep AI Humanizer, Bulk 50+ Batch Processing & Camera Sensor Profiles unlocked.");
+        alert("🔑 Verificando licencia Pro con el servidor (/verify-license)... Si tu suscripción está activa en Stripe, las funciones Pro quedarán desbloqueadas automáticamente.");
         return true;
       } else {
         alert("⚠️ Invalid Pro License Key. Please enter your valid Stripe Session ID (cs_live_...), Subscription ID (sub_...), or Multi-Device Key (PRO-XXXX-XXXX) received after subscribing via Stripe Checkout.");
@@ -890,8 +912,9 @@
       if (rec) {
         var check = evaluateSubscriptionAccess(rec, Date.now());
         isPureAiPro = check.hasAccess;
-        if (rec.key) {
-          verifyLicenseWithServer(rec.key).catch(function () {});
+        var verifyTarget = rec.stripeSessionId || rec.key;
+        if (verifyTarget) {
+          verifyLicenseWithServer(verifyTarget).catch(function () {});
         }
       } else {
         isPureAiPro = false;
@@ -1375,17 +1398,14 @@
         return false;
       }
       if (!localStorage.getItem("pureai_email_bonus_claimed")) {
-        localStorage.setItem("pureai_email_bonus_claimed", email);
+        localStorage.setItem("pureai_email_bonus_claimed", "1");
         usedImgCredits = Math.max(0, usedImgCredits - 1);
         persistImgQuota(usedImgCredits);
         freeProCredits = Math.max(freeProCredits, 1);
         localStorage.setItem("pureai_free_pro_credits", String(freeProCredits));
       }
-      if (typeof fetch === "function") {
-        fetch("https://ntfy.sh/pureai_studio_ops_telemetry_94c2e1", {
-          method: "POST",
-          body: JSON.stringify({ type: "lead_email_captured", maskedEmail: maskSensitiveTelemetryValue(email), ts: new Date().toISOString() })
-        }).catch(function () {});
+      if (typeof window !== "undefined" && typeof window.sendPureAiAnalyticsEvent === "function") {
+        window.sendPureAiAnalyticsEvent({ type: "lead_email_captured", maskedEmail: maskSensitiveTelemetryValue(email) });
       }
       closeProModal();
       return true;
@@ -1408,39 +1428,15 @@
       }
     }
 
-    // Blindaje Anti-Incógnito de 4 Capas (Hardware Fingerprint + localStorage + window.name + CacheStorage + Cloud Sync)
+    // Control de cuota local en el navegador (3 imágenes de demostración sin fingerprinting de hardware ni Canvas)
     var MAX_FREE_IMG_USES = 3;
     function computeDeviceFingerprint() {
-      var raw = [
-        typeof navigator !== "undefined" ? (navigator.platform || "") : "",
-        typeof navigator !== "undefined" ? (navigator.hardwareConcurrency || 4) : 4,
-        typeof navigator !== "undefined" ? (navigator.deviceMemory || 8) : 8,
-        typeof screen !== "undefined" ? (screen.width + "x" + screen.height + "x" + (screen.colorDepth || 24)) : "1920x1080x24",
-        typeof Intl !== "undefined" && Intl.DateTimeFormat ? (Intl.DateTimeFormat().resolvedOptions().timeZone || "") : ""
-      ].join("|");
-      try {
-        var c = typeof document !== "undefined" && document.createElement ? document.createElement("canvas") : null;
-        if (c && c.getContext) {
-          var ctx = c.getContext("2d");
-          if (ctx && ctx.fillText) {
-            ctx.fillText("fp-pureai", 2, 2);
-          }
-          if (c.toDataURL && typeof c.toDataURL === "function") {
-            raw += "|" + c.toDataURL().slice(-32);
-          }
-        }
-      } catch (_) {}
-      var h = 2166136261;
-      for (var i = 0; i < raw.length; i++) {
-        h ^= raw.charCodeAt(i);
-        h = Math.imul(h, 16777619);
-      }
-      return "fp_" + (h >>> 0).toString(16);
+      return "local";
     }
 
     var deviceFp = computeDeviceFingerprint();
-    var quotaStorageKey = "pureai_img_used_" + deviceFp;
-    var usedImgCredits = parseInt(localStorage.getItem(quotaStorageKey) || localStorage.getItem("pureai_img_used") || "0", 10) || 0;
+    var quotaStorageKey = "pureai_img_used";
+    var usedImgCredits = parseInt(localStorage.getItem("pureai_img_used") || "0", 10) || 0;
 
     function updateFreeImgQuotaUi() {
       var badge = document.getElementById("free-img-quota-badge");
@@ -1466,39 +1462,15 @@
     function persistImgQuota(val) {
       usedImgCredits = val;
       try {
-        localStorage.setItem(quotaStorageKey, String(val));
         localStorage.setItem("pureai_img_used", String(val));
       } catch (_) {}
-      try {
-        if (typeof sessionStorage !== "undefined") sessionStorage.setItem(quotaStorageKey, String(val));
-        if (typeof window !== "undefined") window.name = "pureai_q=" + val + ";fp=" + deviceFp;
-        if (typeof caches !== "undefined" && caches.open) {
-          caches.open("pureai-quota-v1").then(function (cache) {
-            cache.put("/__pureai_quota", new Response(JSON.stringify({ fp: deviceFp, used: val })));
-          }).catch(function () {});
-        }
-        /* PRIV-01: Sincronización de cuota mantenida 100% en el dispositivo sin enviar huella a terceros */
-      } catch (_) {}
+      /* PRIV-01: Sincronización de cuota mantenida 100% en localStorage sin fingerprinting ni evasión de borrado */
       updateFreeImgQuotaUi();
     }
 
     function restoreImgQuotaFromAllLayers() {
       try {
-        if (typeof window !== "undefined" && window.name && window.name.indexOf("pureai_q=") === 0) {
-          var m = window.name.match(/pureai_q=(\d+)/);
-          if (m) usedImgCredits = Math.max(usedImgCredits, parseInt(m[1], 10) || 0);
-        }
-        if (typeof caches !== "undefined" && caches.open) {
-          caches.open("pureai-quota-v1").then(function (cache) {
-            return cache.match("/__pureai_quota");
-          }).then(function (res) {
-            return res ? res.json() : null;
-          }).then(function (d) {
-            if (d && typeof d.used === "number" && d.used > usedImgCredits) {
-              persistImgQuota(d.used);
-            }
-          }).catch(function () {});
-        }
+        usedImgCredits = parseInt(localStorage.getItem("pureai_img_used") || "0", 10) || 0;
         /* APP-02: Eliminado polling público de ntfy.sh desde clientes para proteger la privacidad de eventos */
       } catch (_) {}
       updateFreeImgQuotaUi();
@@ -1506,11 +1478,8 @@
     restoreImgQuotaFromAllLayers();
 
     function showProModal(msg, triggerTool) {
-      if (typeof fetch === "function" && localStorage.getItem("pureai_telemetry_consent") === "granted") {
-        fetch("https://ntfy.sh/pureai_studio_ops_telemetry_94c2e1", {
-          method: "POST",
-          body: JSON.stringify({ type: "app_action", event_name: "paywall_viewed", trigger_tool: triggerTool || "img_c2pa_scrubber", usedCredits: usedImgCredits, ts: new Date().toISOString() })
-        }).catch(function () {});
+      if (typeof window !== "undefined" && typeof window.sendPureAiAnalyticsEvent === "function") {
+        window.sendPureAiAnalyticsEvent({ type: "app_action", event_name: "paywall_viewed", trigger_tool: triggerTool || "img_c2pa_scrubber", usedCredits: usedImgCredits });
       }
       if (typeof window === "undefined") {
         if (typeof alert === "function") alert(msg);
@@ -1621,7 +1590,7 @@
           `<span class="threat-badge-green">✅ 100% CLEAN VERIFIED: 0 bytes of C2PA, JUMBF, EXIF, XMP or GPS remaining in ${escapeHtml(cleanName)} (Before: ${origKB} KB → Clean: ${newKB} KB).</span>` +
           `<div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap;">` +
           `<button type="button" onclick="shareOrSaveCleanImage()" style="background:#00e5a3;color:#042f1e;border:none;border-radius:6px;padding:5px 11px;font-size:0.75rem;font-weight:900;cursor:pointer;">📲 Guardar en Galería / Compartir</button>` +
-          `<button type="button" onclick="verifyLastCleanedImage()" style="background:#1e1633;color:#6ee7b7;border:1px solid #00e5a3;border-radius:6px;padding:5px 10px;font-size:0.75rem;font-weight:700;cursor:pointer;">🔍 Verificar 0% IA</button><button type="button" onclick="generateZeroAiCertificate(lastCleanedName)" style="background:#2e1065;color:#e9d5ff;border:1px solid #a855f7;border-radius:6px;padding:5px 10px;font-size:0.75rem;font-weight:700;cursor:pointer;">🏅 Certificado 0% IA</button>` +
+          `<button type="button" onclick="verifyLastCleanedImage()" style="background:#1e1633;color:#6ee7b7;border:1px solid #00e5a3;border-radius:6px;padding:5px 10px;font-size:0.75rem;font-weight:700;cursor:pointer;">🔍 Verificar 0% Metadatos</button><button type="button" onclick="generateZeroAiCertificate(lastCleanedName)" style="background:#2e1065;color:#e9d5ff;border:1px solid #a855f7;border-radius:6px;padding:5px 10px;font-size:0.75rem;font-weight:700;cursor:pointer;">🏅 Informe Técnico 0% Metadatos</button>` +
           `</div>`;
       });
     }
@@ -1785,7 +1754,7 @@
     }
 
     function escapeHtml(s) {
-      return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+      return String(s || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
     }
 
     // Detector y Rayos X de caracteres Unicode invisibles (U+200B, U+202F, U+00A0, U+2060, U+FEFF) y clichés IA
@@ -1806,7 +1775,7 @@
       document.getElementById("stat-dashes").style.color = totalCliches > 0 ? "#f59e0b" : "#10b981";
 
       const sentences = txt.split(/[.!?]+/).map((s) => s.trim()).filter((s) => s.length > 8);
-      let burstLabel = "100% Human";
+      let burstLabel = "✅ Natural Rhythm";
       let lowBurst = false;
       if (sentences.length >= 2) {
         const lengths = sentences.map((s) => s.split(/\s+/).length);
@@ -1819,7 +1788,7 @@
       document.getElementById("stat-burst").textContent = burstLabel;
       document.getElementById("stat-burst").style.color = lowBurst ? "#f59e0b" : "#10b981";
 
-      // Calcular probabilidad de detección IA (0% a 96%)
+      // Calcular densidad local de marcadores Unicode y expresiones repetitivas (0% a 96%)
       const riskPct = !txt.trim()
         ? 0
         : Math.min(96, Math.max(4, unicodeMatches.length * 14 + clicheCount * 9 + dashMatches.length * 6 + (lowBurst ? 18 : 0)));
@@ -1827,15 +1796,15 @@
       const riskBarEl = document.getElementById("risk-bar");
       riskBarEl.style.width = riskPct + "%";
       if (riskPct >= 50) {
-        riskScoreEl.textContent = `🚨 ${riskPct}% AI DETECTED (High Flag Risk)`;
+        riskScoreEl.textContent = `🚨 ${riskPct}% Pattern Density (High Unicode/Cliché Density)`;
         riskScoreEl.style.color = "#ef4444";
         riskBarEl.style.background = "linear-gradient(90deg,#f59e0b,#ef4444)";
       } else if (riskPct >= 18) {
-        riskScoreEl.textContent = `⚠️ ${riskPct}% AI Traces Remaining (Use Deep Humanizer)`;
+        riskScoreEl.textContent = `⚠️ ${riskPct}% Pattern Traces Remaining (Use Deep Humanizer)`;
         riskScoreEl.style.color = "#f59e0b";
         riskBarEl.style.background = "#f59e0b";
       } else {
-        riskScoreEl.textContent = `✅ ${riskPct}% AI Risk — 96% HUMAN & UNDETECTABLE`;
+        riskScoreEl.textContent = `✅ ${riskPct}% Pattern Density — CLEAN FORMAT & NATURAL RHYTHM`;
         riskScoreEl.style.color = "#10b981";
         riskBarEl.style.background = "#10b981";
       }
@@ -2018,10 +1987,10 @@
       analyzeText();
       copyCleanTextBtn();
       document.getElementById("txt-audit-log").innerHTML =
-        `<span class="threat-badge-green">✅ 100% DEEP HUMANIZED & COPIED: All Unicode watermarks, AI dashes, and Turnitin/GPTZero clichés removed!</span>` + `<div style="margin-top:6px;display:flex;gap:6px;flex-wrap:wrap;"><button type="button" onclick="generateZeroAiCertificate('Humanized-Document.txt')" style="background:#2e1065;color:#e9d5ff;border:1px solid #a855f7;border-radius:6px;padding:4px 10px;font-size:0.73rem;font-weight:700;cursor:pointer;">🏅 Descargar Certificado Forense 0% IA</button></div>`;
+        `<span class="threat-badge-green">✅ 100% DEEP HUMANIZED & COPIED: All Unicode watermarks, AI dashes, and Turnitin/GPTZero clichés removed!</span>` + `<div style="margin-top:6px;display:flex;gap:6px;flex-wrap:wrap;"><button type="button" onclick="generateZeroAiCertificate('Humanized-Document.txt')" style="background:#2e1065;color:#e9d5ff;border:1px solid #a855f7;border-radius:6px;padding:4px 10px;font-size:0.73rem;font-weight:700;cursor:pointer;">🏅 Descargar Informe Técnico 0% Metadatos</button></div>`;
     }
 
-    // Verificación segura del retorno de compra desde Stripe (?session_id=cs_live_...) con idempotencia y bloqueo de parámetros manipulables (?pro_activated=true bloqueado)
+    // Verificación segura del retorno de compra desde Stripe (?session_id=cs_live_...) con idempotencia y verificación server-side (/verify-license)
     function processStripeCheckoutReturn(searchQuery) {
       var q = typeof searchQuery === "string" ? searchQuery : (location.search || "");
       var sessMatch = q.match(/[?&]session_id=(cs_(?:live|test)_[a-zA-Z0-9]{20,})/);
@@ -2035,16 +2004,20 @@
       }
       localStorage.setItem(processedKey, "1");
       var now = Date.now();
-      var myProKey = generateMultiDeviceProKey();
+      var myProKey = generateMultiDeviceProKey(sessionId);
       saveSubscriptionRecord({
         key: myProKey,
         stripeSessionId: sessionId,
         status: SUBSCRIPTION_STATES.ACTIVE,
+        verifiedByServer: false,
         activatedAt: now,
         expiresAt: now + 32 * 24 * 3600 * 1000,
         graceEndsAt: now + 35 * 24 * 3600 * 1000,
         lastEventTs: Math.floor(now / 1000)
       });
+      if (typeof verifyLicenseWithServer === "function") {
+        verifyLicenseWithServer(sessionId).catch(function () {});
+      }
       var codeInp = document.getElementById("pa-pro-code");
       if (codeInp && !codeInp.value) codeInp.value = myProKey;
       if (typeof history !== "undefined" && history.replaceState && typeof location !== "undefined") {
@@ -2058,19 +2031,15 @@
       if (myOwnRef && soldAff.toLowerCase() === myOwnRef.toLowerCase()) {
         soldAff = "self_referral_blocked";
       }
-      if (typeof fetch === "function") {
-        fetch("https://ntfy.sh/pureai_studio_ops_telemetry_94c2e1", {
-          method: "POST",
-          body: JSON.stringify({
-            type: "sale_verified_session",
-            partner: soldAff,
-            maskedSession: maskSensitiveTelemetryValue(sessionId),
-            maskedProKey: maskSensitiveTelemetryValue(myProKey),
-            commissionBasis: "net_after_vat_and_stripe_fees_30d_hold",
-            commissionRate: soldAff === "self_referral_blocked" ? 0 : 0.40,
-            ts: new Date().toISOString()
-          })
-        }).catch(function () {});
+      if (typeof window !== "undefined" && typeof window.sendPureAiAnalyticsEvent === "function") {
+        window.sendPureAiAnalyticsEvent({
+          type: "sale_verified_session",
+          partner: soldAff,
+          maskedSession: maskSensitiveTelemetryValue(sessionId),
+          maskedProKey: maskSensitiveTelemetryValue(myProKey),
+          commissionBasis: "net_after_vat_and_stripe_fees_30d_hold",
+          commissionRate: soldAff === "self_referral_blocked" ? 0 : 0.40
+        });
       }
       return { activated: true, duplicate: false, sessionId: sessionId, partner: soldAff };
     }
@@ -2107,12 +2076,9 @@
       out.style.display = "block";
       out.innerHTML = "✅ <strong>¡Partner Activado y Link Copiado (40% sobre Neto · Retención 30 días anti-reembolsos)!</strong>" +
         (payout ? "<br>💳 <strong>Método de cobro registrado (protegido):</strong> " + escapeHtml(maskSensitiveTelemetryValue(payout)) : "<br>💡 <em>Añade arriba tu Email de PayPal/Revolut y vuelve a pulsar para registrar dónde enviarte tus comisiones.</em>") +
-        "<br>🔗 " + affUrl;
-      if (typeof fetch === "function") {
-        fetch("https://ntfy.sh/pureai_studio_ops_telemetry_94c2e1", {
-          method: "POST",
-          body: JSON.stringify({ type: "partner_registered", partner: raw, maskedPayout: maskSensitiveTelemetryValue(payout || "pending"), ts: new Date().toISOString() })
-        }).catch(function () {});
+        "<br>🔗 " + escapeHtml(affUrl);
+      if (typeof window !== "undefined" && typeof window.sendPureAiAnalyticsEvent === "function") {
+        window.sendPureAiAnalyticsEvent({ type: "partner_registered", partner: raw, maskedPayout: maskSensitiveTelemetryValue(payout || "pending") });
       }
     }
 
@@ -2121,16 +2087,12 @@
       localStorage.setItem("pureai_aff_partner", urlAffMatch[1]);
       var pInp = document.getElementById("partner-id-inp");
       if (pInp && !pInp.value) pInp.value = urlAffMatch[1];
-      if (typeof fetch === "function" && localStorage.getItem("pureai_telemetry_consent") === "granted") {
-        fetch("https://ntfy.sh/pureai_studio_ops_telemetry_94c2e1", {
-          method: "POST",
-          body: JSON.stringify({
-            type: location.search.indexOf("partner_vip=1") !== -1 ? "vip_creator_opened_link" : "affiliate_link_visit",
-            partner: urlAffMatch[1],
-            vip: location.search.indexOf("partner_vip=1") !== -1,
-            ts: new Date().toISOString()
-          })
-        }).catch(function () {});
+      if (typeof window !== "undefined" && typeof window.sendPureAiAnalyticsEvent === "function") {
+        window.sendPureAiAnalyticsEvent({
+          type: location.search.indexOf("partner_vip=1") !== -1 ? "vip_creator_opened_link" : "affiliate_link_visit",
+          partner: urlAffMatch[1],
+          vip: location.search.indexOf("partner_vip=1") !== -1
+        });
       }
     }
     var activePartner = localStorage.getItem("pureai_aff_partner");
