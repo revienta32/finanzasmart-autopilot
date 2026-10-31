@@ -1,0 +1,17 @@
+{
+  "name": "PureAI Studio — C2PA Metadata & AI Watermark Scrubber",
+  "short_name": "PureAI Studio",
+  "description": "100% Client-Side C2PA/EXIF AI Image Scrubber & ChatGPT Invisible Unicode Watermark Humanizer.",
+  "start_url": "./clean-ai-studio.html",
+  "display": "standalone",
+  "background_color": "#070a12",
+  "theme_color": "#10b981",
+  "icons": [
+    {
+      "src": "pureai-icon-128x128.png",
+      "sizes": "128x128",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

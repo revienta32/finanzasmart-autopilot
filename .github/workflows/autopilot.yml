@@ -1,0 +1,35 @@
+name: PureAI Studio — Daily Operations, Support Triage, Health Monitor & QA
+
+on:
+  schedule:
+    # Ejecución diaria optimizada (Coste 0 € y mínimo consumo de minutos de CI/CD)
+    - cron: "0 8 * * *"
+  workflow_dispatch:
+
+jobs:
+  daily-operations:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Run Operations Monitor, Support Triage, SEO Sitemaps & Mandatory QA Suite
+        run: |
+          node auto-doctor.js
+          node autopilot-ceo.js
+          node test-qa.js
+
+      - name: Commit and push verified operational metrics
+        run: |
+          git config user.name "PureAI Studio Ops Bot"
+          git config user.email "ops@pureaistudios.com"
+          git add sitemap.xml sitemap.txt index.html directorio-guias.html
+          git diff --staged --quiet || git commit -m "chore(ops): daily health monitor, support triage & verified sitemap sync"
+          git push

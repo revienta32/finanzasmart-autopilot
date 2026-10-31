@@ -1,0 +1,8 @@
+name = "pureai-stripe-webhook-worker"
+main = "stripe-webhook-worker.js"
+compatibility_date = "2026-10-01"
+compatibility_flags = ["nodejs_compat"]
+
+# Despliegue 100% Gratuito en Cloudflare Workers (Free Tier: 100.000 peticiones/día)
+# Para configurar tu clave secreta de Stripe sin exponerla jamás en el código:
+# npx wrangler secret put STRIPE_WEBHOOK_SECRET

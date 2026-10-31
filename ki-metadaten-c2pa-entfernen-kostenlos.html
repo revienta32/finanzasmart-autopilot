@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="referrer" content="strict-origin-when-cross-origin" />
+  <title>C2PA KI-Metadaten, EXIF-GPS & ChatGPT-Wasserzeichen Online Entfernen Kostenlos (2026) | PureAI Studio</title>
+  <meta name="description" content="Entfernen Sie 'Mit KI erstellt'-Signaturen (C2PA / JUMBF), EXIF-Standortdaten und unsichtbare ChatGPT Unicode-Zeichen (U+202F / U+200B) ohne Server-Upload." />
+  <link rel="canonical" href="https://pureaistudios.com/ki-metadaten-c2pa-entfernen-kostenlos.html" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="container topbar-inner">
+      <a href="clean-ai-studio.html" class="brand" style="text-decoration:none;color:inherit;">
+        <span class="brand-icon">🧬</span>
+        <div>
+          <strong>PureAI Studio</strong>
+          <span class="brand-tag">C2PA Scrubber · EXIF Profile · Unicode Hygiene</span>
+        </div>
+      </a>
+      <nav class="tabs">
+        <a href="clean-ai-studio.html" class="tab-btn active" style="text-decoration:none;">🖼️ PureAI Studio</a>
+        <a href="https://chromewebstore.google.com/detail/pureai-studio-%E2%80%94-c2pa-meta/pdebjlkmjdhpgiigepojdcpfbfimcgmo" target="_blank" rel="noopener" class="tab-btn" style="text-decoration:none;">🧩 Extensión Chrome</a>
+        <a href="directorio-guias.html" class="tab-btn" style="text-decoration:none;">🗂️ Directorio IA</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container main-grid">
+    <article class="calc-card" style="line-height: 1.75;">
+      <h1>🇩🇪 Kostenloser C2PA-, EXIF- & KI-Wasserzeichen-Entferner (100% Lokal im Browser)</h1>
+      <p class="subtitle">Entfernen Sie 'Mit KI erstellt'-Signaturen (C2PA / JUMBF), EXIF-Standortdaten und unsichtbare ChatGPT Unicode-Zeichen (U+202F / U+200B) ohne Server-Upload.</p>
+      
+      <div style="margin: 1.25rem 0 1.6rem; padding: 1.35rem; background: linear-gradient(145deg, rgba(16,185,129,0.16), rgba(15,23,42,0.98)); border: 2px solid #10b981; border-radius: 14px; box-shadow: 0 10px 30px rgba(0,0,0,0.45);">
+        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:10px;">
+          <strong style="color:#6ee7b7;font-size:1.02rem;">⚡ Instant C2PA &amp; EXIF Photo Scrubber (100% Local Browser Tool)</strong>
+          <a href="https://chromewebstore.google.com/detail/pureai-studio-%E2%80%94-c2pa-meta/pdebjlkmjdhpgiigepojdcpfbfimcgmo" target="_blank" rel="noopener" style="background:#1e293b;color:#93c5fd;border:1px solid #3b82f6;padding:4px 10px;border-radius:999px;font-size:0.75rem;font-weight:800;text-decoration:none;">🧩 Add to Chrome (Free Extension)</a>
+        </div>
+        <input type="file" id="quick-img-inp" accept="image/jpeg,image/png,image/webp" style="display:none" onchange="if(this.files[0])quickCleanImg(this.files[0])" />
+        <div onclick="document.getElementById('quick-img-inp').click()" style="border:2px dashed #10b981;border-radius:12px;padding:18px;text-align:center;cursor:pointer;background:rgba(11,15,25,0.75);transition:all 0.2s;">
+          <div style="font-size:1.7rem;margin-bottom:4px;">🖼️</div>
+          <strong style="color:#f8fafc;font-size:0.95rem;">Click or Drop Photo Here to Strip C2PA / 'Made with AI' Metadata Instantly</strong>
+          <div style="color:#94a3b8;font-size:0.78rem;margin-top:4px;">Zero server upload · Rebuilds clean pixel buffer locally in 1 second</div>
+        </div>
+        <div id="quick-img-status" style="margin-top:10px;font-family:monospace;font-size:0.8rem;color:#a7f3d0;"></div>
+        <canvas id="quick-canvas" style="display:none;"></canvas>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;">
+          <a href="clean-ai-studio.html?lang=de" class="cta-button" style="flex:1;text-align:center;padding:0.75rem 1rem;font-weight:800;">🧬 Open Full Studio (Camera EXIF Profile · Batch .ZIP) →</a>
+          <a href="https://buy.stripe.com/aFaaEY0fgcHbd1SeTE0000c" target="_blank" rel="noopener" style="background:#00e5a3;color:#042f1e;text-decoration:none;padding:0.75rem 1rem;border-radius:10px;font-weight:900;font-size:0.85rem;">🔥 Pro Monthly -50% (4,99 €)</a>
+        </div>
+      </div>
+      <script>
+      function escapeSeoHtml(s) {
+        return String(s || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+      }
+      function quickCleanImg(file) {
+        if (!file || !file.size) return;
+        var st = document.getElementById("quick-img-status");
+        st.textContent = "⏳ Scanning & stripping C2PA / EXIF binary containers...";
+        var img = new Image();
+        img.onload = function () {
+          var c = document.getElementById("quick-canvas");
+          c.width = img.naturalWidth || 512;
+          c.height = img.naturalHeight || 512;
+          var ctx = c.getContext("2d");
+          ctx.drawImage(img, 0, 0);
+          var d = ctx.getImageData(0, 0, c.width, c.height);
+          for (var i = 0; i < d.data.length; i += 16) {
+            d.data[i] = d.data[i] > 250 ? d.data[i] - 1 : d.data[i] + 1;
+          }
+          ctx.putImageData(d, 0, 0);
+          c.toBlob(function (blob) {
+            var a = document.createElement("a");
+            var cleanName = file.name.replace(/\.[^.]+$/, "") + "-clean.jpg";
+            a.href = URL.createObjectURL(blob);
+            a.download = cleanName;
+            a.click();
+            st.innerHTML = "✅ <strong>" + escapeSeoHtml(cleanName) + " downloaded (0% C2PA / 0% EXIF)!</strong> Want to clean 50+ photos in a .ZIP or apply optical EXIF headers? <a href='clean-ai-studio.html' style='color:#fcd34d;font-weight:800;'>Unlock in PureAI Studio Pro (from 4,99 €) →</a>";
+          }, "image/jpeg", 0.95);
+        };
+        img.src = URL.createObjectURL(file);
+      }
+      </script>
+      
+      <p>Soziale Netzwerke und Prüfprogramme analysieren versteckte <strong>C2PA-Manifeste</strong> in Bildern sowie unsichtbare Unicode-Steuerzeichen in KI-Texten. Unser Studio bereinigt Ihre Dateien zu 100 % lokal auf Ihrem Gerät (DSGVO-konform).</p>
+    
+      <div style="margin-top: 2rem; padding: 1.25rem; background: #0f172a; border: 1px solid #10b981; border-radius: 0.75rem;">
+        <h3 style="margin-bottom: 0.5rem;">⚡ Abrir Suite Completa en 1 Clic</h3>
+        <p style="color: #94a3b8; font-size: 0.9rem; margin-bottom: 1rem;">Accede a la herramienta interactiva completa sin registro y 100% en tu navegador:</p>
+        <a href="clean-ai-studio.html?lang=de" class="cta-button" style="display:inline-block; padding: 0.7rem 1.4rem;">Abrir Herramienta Interactiva →</a>
+      </div>
+    </article>
+
+    <aside class="affiliate-sidebar">
+      <div class="offer-card" style="border-color:#10b981;background:linear-gradient(160deg,#0f172a 0%,#064e3b 100%);">
+        <span class="offer-badge">🧬 PureAI Studio Pro (4,99 € 1er mes)</span>
+        <h2>Limpia Metadatos C2PA / JUMBF + Lotes .ZIP + EXIF Cámara</h2>
+        <p>Procesa fotos y vídeos cortos MP4 por lotes (.ZIP), aplica perfiles técnicos EXIF JPEG y limpia caracteres invisibles Unicode. <strong>50% DTO 1er mes (4,99 €) con código FRIEND50</strong>.</p>
+        <a href="clean-ai-studio.html" class="cta-button">Abrir PureAI Studio Gratis →</a>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:8px;">
+          <a href="https://buy.stripe.com/aFaaEY0fgcHbd1SeTE0000c" target="_blank" rel="noopener" style="background:#00e5a3;color:#042f1e;text-decoration:none;padding:6px;border-radius:7px;font-size:0.75rem;font-weight:900;text-align:center;">🔥 Pro Mensual: 4,99 €</a>
+          <a href="https://buy.stripe.com/5kQ28sfaa0Yt5zqfXI0000d" target="_blank" rel="noopener" style="background:#1e293b;color:#93c5fd;border:1px solid #3b82f6;text-decoration:none;padding:6px;border-radius:7px;font-size:0.75rem;font-weight:800;text-align:center;">💎 Pro Anual: 39 €</a>
+        </div>
+      </div>
+    </aside>
+  </main>
+
+  <footer class="footer container">
+    <p>© 2026 PureAI Studio — <a href="clean-ai-studio.html" style="color:#10b981;">C2PA &amp; EXIF Metadata Suite</a> | <a href="directorio-guias.html" style="color:#10b981;">AI Guides Directory</a> | <a href="terms.html" style="color:#94a3b8;">Terms</a> | <a href="privacy-policy.html" style="color:#94a3b8;">Privacy</a></p>
+  </footer>
+  <script src="telemetria-soporte.js"></script>
+</body>
+</html>

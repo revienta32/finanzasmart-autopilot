@@ -1,0 +1,35 @@
+{
+  "manifest_version": 3,
+  "name": "PureAI Studio — C2PA Metadata & AI Watermark Scrubber",
+  "version": "1.2.1",
+  "description": "Client-side C2PA/EXIF AI photo & video remover, camera EXIF profile tool & 1-click ChatGPT humanizer button.",
+  "permissions": [
+    "contextMenus",
+    "storage"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://chatgpt.com/*",
+        "https://chat.openai.com/*",
+        "https://claude.ai/*"
+      ],
+      "js": [
+        "content-chatgpt.js"
+      ],
+      "run_at": "document_idle"
+    }
+  ],
+  "icons": {
+    "128": "icon128.png"
+  },
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": "icon128.png",
+    "default_title": "PureAI Studio — Clean C2PA & AI Watermarks"
+  },
+  "homepage_url": "https://pureaistudios.com/"
+}

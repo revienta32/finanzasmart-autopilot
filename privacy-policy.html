@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="referrer" content="strict-origin-when-cross-origin" />
+  <title>Política de Privacidad y Protección de Datos (RGPD) — PureAI Studio</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body style="background:#0b0f19;color:#e2e8f0;font-family:system-ui,-apple-system,sans-serif;line-height:1.7;padding:40px 20px;">
+  <main style="max-width:840px;margin:0 auto;background:#111827;border:1px solid #1e293b;border-radius:16px;padding:32px;">
+    <div style="margin-bottom:16px;">
+      <a href="clean-ai-studio.html" style="color:#6ee7b7;text-decoration:none;font-size:0.85rem;font-weight:700;">← Volver a PureAI Studio</a>
+    </div>
+    <h1 style="color:#6ee7b7;margin-top:0;">🔒 Política de Privacidad y Protección de Datos (RGPD / LOPDGDD)</h1>
+    <p><strong>Última actualización:</strong> 31 de octubre de 2026</p>
+
+    <h2>1. Responsable del Tratamiento (Art. 13 RGPD y Art. 10 LSSI-CE)</h2>
+    <ul>
+      <li><strong>Denominación / Proyecto Digital:</strong> PureAI Studio — Operaciones Digitales SaaS</li>
+      <li><strong>Ámbito Territorial y Jurisdicción:</strong> España / Unión Europea</li>
+      <li><strong>Correo electrónico de Privacidad y Ejercicio de Derechos RGPD:</strong> <a href="mailto:privacy@pureaistudios.com" style="color:#38bdf8;">privacy@pureaistudios.com</a></li>
+      <li><strong>Atención al Cliente y Soporte Técnico:</strong> <a href="mailto:support@pureaistudios.com" style="color:#38bdf8;">support@pureaistudios.com</a></li>
+      <li><strong>Sitio Web Oficial:</strong> <a href="https://pureaistudios.com/" style="color:#38bdf8;">https://pureaistudios.com/</a></li>
+    </ul>
+
+    <h2>2. Procesamiento 100% Local de Archivos Multimedia y Textos (Privacidad por Diseño)</h2>
+    <p>El motor principal de <strong>PureAI Studio</strong> (inspección y limpieza de metadatos contenedores C2PA/JUMBF/EXIF/GPS en imágenes y vídeos cortos, así como la limpieza de caracteres Unicode invisibles en textos) se ejecuta <strong>100% en la memoria local de su navegador web (Client-Side)</strong> mediante APIs estándar (`HTML5 Canvas`, `ArrayBuffer` y `WebAssembly/JS`). Sus fotografías, vídeos y documentos <strong>no se suben ni almacenan en nuestros servidores</strong>.</p>
+
+    <h2>3. Datos que Tratamos, Minimización Técnica, Finalidades y Bases Jurídicas</h2>
+    <p>A diferencia del procesamiento local de archivos, existen flujos específicos en los que se tratan datos técnicos o personales bajo el Reglamento (UE) 2016/679 (RGPD):</p>
+    <ul>
+      <li><strong>a) Gestión de suscripciones Pro y facturación (Base jurídica: Ejecución de un contrato, Art. 6.1.b RGPD y Obligación legal fiscal, Art. 6.1.c RGPD):</strong> Cuando adquiere un plan de pago (`4,99 €/mes` o `39 €/año`), el pago es procesado por <strong>Stripe</strong>. Nuestro Worker de verificación recibe los eventos firmados de Stripe (`session_id`, `customer_id`, intervalo del plan, estado de la suscripción e importe) y los conserva en almacenamiento clave-valor cifrado (Cloudflare KV) para verificar su licencia Pro en servidor y cumplir con las obligaciones tributarias aplicables. Nunca almacenamos los dígitos completos de su tarjeta bancaria.</li>
+      <li><strong>b) Almacenamiento local técnico y caché en el navegador (Art. 22.2 LSSI-CE y Art. 6.1.f RGPD):</strong> La aplicación utiliza almacenamiento local (`localStorage`, `sessionStorage`, `CacheStorage` vía Service Worker) para recordar el idioma de la interfaz, almacenar en caché local el estado de su licencia Pro y contabilizar el límite de usos gratuitos de demostración. Puede borrar estos datos en cualquier momento desde la configuración de su navegador.</li>
+      <li><strong>c) Telemetría analítica desactivada por defecto (Opt-In estricto y Minimización de Datos, Art. 5.1.c y Art. 6.1.a RGPD):</strong> Por defecto, PureAI Studio <strong>no envía eventos automáticos de navegación, agente de usuario (`User-Agent`), zona horaria ni huellas de dispositivo (`deviceFp`) a servidores externos</strong>; las métricas de sesión se registran únicamente en `sessionStorage` local de su navegador. Solo si usted otorga su consentimiento explícito (`pureai_telemetry_consent = granted`), se envían eventos agregados anónimos (nombre del evento, idioma de 2 letras y canal de origen) sin identificadores personales ni `User-Agent`.</li>
+      <li><strong>d) Canal de soporte técnico y solicitud voluntaria de promociones (Base jurídica: Consentimiento expreso, Art. 6.1.a RGPD):</strong> Cuando usted envía voluntariamente un mensaje desde el widget de soporte o solicita un cupón promocional marcando la casilla de consentimiento, el mensaje se transmite mediante HTTPS a través de nuestra cola de notificaciones operativas (`ntfy.sh`) aplicando previamente un filtro automático de enmascaramiento (`maskSensitiveSupportText`) que oculta correos electrónicos, claves Pro y tokens de pago. No se adjunta su `User-Agent`, zona horaria ni huella de dispositivo.</li>
+      <li><strong>e) Programa de Afiliados / Partners (Base jurídica: Ejecución precontractual/contractual, Art. 6.1.b RGPD):</strong> Si genera un enlace de afiliado, tratamos su alias de creador para atribuir las ventas referidas mediante `client_reference_id` en Stripe y liquidar las comisiones netas tras el periodo de verificación antifraude de 30 días.</li>
+      <li><strong>f) Registros técnicos de infraestructura (Base jurídica: Interés legítimo en la seguridad de la red, Art. 6.1.f RGPD):</strong> El alojamiento estático y CDN (GitHub Pages / Cloudflare) procesa de forma automatizada la dirección IP y cabeceras HTTP estrictamente para mitigar ataques DDoS y servir el sitio web de forma segura.</li>
+    </ul>
+
+    <h2>4. Destinatarios, Encargados del Tratamiento y Retención por Canal</h2>
+    <p>No vendemos ni cedemos sus datos a terceros con fines publicitarios. Operamos con los siguientes proveedores bajo garantías de protección de datos (Marco de Privacidad de Datos UE-EE. UU. / Cláusulas Contractuales Tipo):</p>
+    <ul>
+      <li><strong>Stripe Payments Europe, Ltd. / Stripe, Inc.:</strong> Pasarela de procesamiento de pagos, prevención del fraude y portal de gestión de suscripciones. Conservación fiscal: 4 a 10 años según normativa tributaria aplicable.</li>
+      <li><strong>Cloudflare, Inc. (Cloudflare Workers &amp; KV):</strong> Verificación criptográfica en servidor de webhooks de Stripe y estado de licencias Pro (`sub:`, `sess:`, `evt:`). Conservación: durante la vigencia de la suscripción y 12 meses adicionales para prevención de contracargos.</li>
+      <li><strong>GitHub, Inc. (Microsoft Corp.):</strong> Infraestructura de alojamiento web estático (GitHub Pages).</li>
+      <li><strong>ntfy.sh (Relay de notificaciones de soporte bajo consentimiento):</strong> Cola efímera de mensajes de soporte enviados voluntariamente por el usuario, con retención máxima en caché de servidor inferior a 48 horas y enmascaramiento previo de PII en cliente.</li>
+    </ul>
+
+    <h2>5. Derechos de los Usuarios (ARSOPOL) y Revocación del Consentimiento</h2>
+    <p>Usted tiene derecho a solicitar el <strong>acceso, rectificación, supresión, oposición, limitación del tratamiento y portabilidad</strong> de sus datos personales, así como a retirar su consentimiento en cualquier momento, escribiendo a <a href="mailto:privacy@pureaistudios.com" style="color:#38bdf8;">privacy@pureaistudios.com</a>. Asimismo, puede presentar una reclamación ante la <strong>Agencia Española de Protección de Datos (AEPD — <a href="https://www.aepd.es" target="_blank" rel="noopener" style="color:#38bdf8;">www.aepd.es</a>)</strong> o ante la autoridad de protección de datos de su país de residencia.</p>
+
+    <div style="margin-top:24px;padding-top:16px;border-top:1px solid #1e293b;font-size:0.82rem;color:#94a3b8;">
+      Consulte también nuestros <a href="terms.html" style="color:#6ee7b7;">Términos de Servicio, Condiciones de Contratación y Reglas del Programa de Afiliados</a>.
+    </div>
+  </main>
+</body>
+</html>

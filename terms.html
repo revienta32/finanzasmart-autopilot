@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="referrer" content="strict-origin-when-cross-origin" />
+  <title>Términos de Servicio, Condiciones de Contratación y Aviso Legal — PureAI Studio</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body style="background:#0b0f19;color:#e2e8f0;font-family:system-ui,-apple-system,sans-serif;line-height:1.7;padding:40px 20px;">
+  <main style="max-width:840px;margin:0 auto;background:#111827;border:1px solid #1e293b;border-radius:16px;padding:32px;">
+    <div style="margin-bottom:16px;">
+      <a href="clean-ai-studio.html" style="color:#6ee7b7;text-decoration:none;font-size:0.85rem;font-weight:700;">← Volver a PureAI Studio</a>
+    </div>
+    <h1 style="color:#6ee7b7;margin-top:0;">⚖️ Términos de Servicio, Condiciones de Contratación SaaS y Aviso Legal</h1>
+    <p><strong>Última actualización:</strong> 31 de octubre de 2026</p>
+
+    <h2>1. Identificación del Prestador (Art. 10 LSSI-CE)</h2>
+    <ul>
+      <li><strong>Denominación del Servicio:</strong> PureAI Studio — Operaciones Digitales SaaS</li>
+      <li><strong>Ámbito de Operación:</strong> España / Unión Europea</li>
+      <li><strong>Contacto de Atención al Cliente y Reclamaciones:</strong> <a href="mailto:support@pureaistudios.com" style="color:#38bdf8;">support@pureaistudios.com</a></li>
+      <li><strong>Contacto Legal y Privacidad:</strong> <a href="mailto:privacy@pureaistudios.com" style="color:#38bdf8;">privacy@pureaistudios.com</a></li>
+      <li><strong>Dominio Oficial:</strong> <a href="https://pureaistudios.com/" style="color:#38bdf8;">https://pureaistudios.com/</a></li>
+    </ul>
+
+    <h2>2. Objeto del Servicio, Alcance Técnico Real y Uso Legítimo (C2PA, Propiedad Intelectual y AI Act)</h2>
+    <p><strong>PureAI Studio</strong> es una utilidad técnica ejecutada localmente en el navegador web que realiza operaciones deterministas sobre contenedores multimedia y cadenas de texto:</p>
+    <ul>
+      <li><strong>En imágenes (JPEG, PNG, WebP):</strong> Re-codifica el mapa de píxeles en un nuevo contenedor limpio mediante `HTML5 Canvas`, eliminando segmentos binarios adjuntos (`C2PA/JUMBF`, `EXIF`, `GPS`, `XMP`, chunks `tEXt`/`iTXt` de PNG) y permitiendo, de forma opcional en archivos JPEG, escribir una cabecera técnica `APP1` (`0xFFE1`) estándar para pruebas de flujo de trabajo y compatibilidad de formato.</li>
+      <li><strong>En vídeos cortos (MP4):</strong> Neutraliza cadenas de metadatos en átomos contenedores sin alterar el flujo de vídeo/audio (`mdat`).</li>
+      <li><strong>En textos:</strong> Detecta y sustituye caracteres Unicode invisibles de formato (`U+202F`, `U+200B`, `U+00A0`, `U+FEFF`), guiones largos y expresiones repetitivas frecuentes.</li>
+    </ul>
+    <p><strong>Limitación Técnica Expresa y Ausencia de Garantía frente a Clasificadores de Terceros:</strong> PureAI Studio verifica exclusivamente la ausencia de los segmentos binarios y puntos de código Unicode descritos en el archivo exportado. <strong>No garantiza ni promete resultados específicos ("0% IA") ante detectores estadísticos externos, plataformas de redes sociales ni sistemas de evaluación académica</strong>, cuyos algoritmos son probabilísticos y ajenos a este software.</p>
+    <p><strong>Obligaciones y Prohibiciones Expresas del Usuario:</strong></p>
+    <ul>
+      <li><strong>Titularidad de los Archivos:</strong> El usuario declara y garantiza que únicamente procesará fotografías, vídeos o documentos de su propia titularidad o sobre los cuales disponga de autorización expresa.</li>
+      <li><strong>Prohibición de Eliminación Ilícita de CMI (DMCA 17 U.S.C. § 1202 y LPI):</strong> Queda estrictamente prohibido utilizar PureAI Studio para suprimir o alterar información para la gestión de derechos de autor (*Copyright Management Information* / CMI) de obras pertenecientes a terceros con el fin de infringir derechos de propiedad intelectual.</li>
+      <li><strong>Cumplimiento Normativo y Académico (Reglamento UE 2024/1689 — AI Act):</strong> El usuario es el único responsable de cumplir con las obligaciones de transparencia sobre contenidos sintéticos o de IA aplicables en su jurisdicción (incluyendo el Art. 50 del Reglamento Europeo de IA cuando actúe como desplegador profesional sujeto a dicha norma) y con los reglamentos de integridad académica o términos de servicio de plataformas de terceros.</li>
+    </ul>
+
+    <h2>3. Modalidades, Precios, Impuestos, Verificación de Licencias y Renovación</h2>
+    <ul>
+      <li><strong>Modalidad Gratuita:</strong> Permite probar la funcionalidad básica con un límite de 3 imágenes de demostración.</li>
+      <li><strong>Plan Pro Mensual (`4,99 €/mes`) y Plan Pro Anual (`39,00 €/año`):</strong> Los precios vigentes se muestran en euros (€) antes del pago. Durante el proceso de pago en <strong>Stripe Checkout</strong> se desglosarán, cuando resulten aplicables según el país de residencia del comprador, los impuestos indirectos correspondientes (IVA / VAT).</li>
+      <li><strong>Verificación de Licencia Pro:</strong> El estado autoritativo de la suscripción depende de la confirmación de pago de Stripe y su verificación en servidor (`/verify-license`); el almacenamiento local en el navegador (`localStorage`) actúa únicamente como caché en el dispositivo del usuario.</li>
+      <li><strong>Renovación Automática y Cancelación en 1 Clic:</strong> Las suscripciones mensuales y anuales se renuevan automáticamente al final de cada periodo salvo cancelación previa. El usuario puede cancelar la renovación automática en cualquier momento y en un solo clic a través del <strong>Portal de Cliente de Stripe</strong> accesible desde la propia página principal ("Gestionar o cancelar suscripción"). Tras cancelar, el usuario conservará el acceso Pro completo hasta que finalice el periodo ya abonado (`CANCELED_AT_PERIOD_END`).</li>
+    </ul>
+
+    <h2>4. Derecho de Desistimiento en Contenidos y Servicios Digitales (Art. 103.m TRLGDCU)</h2>
+    <p>De conformidad con el <strong>artículo 103.m) del Real Decreto Legislativo 1/2007 (TRLGDCU)</strong> y el artículo 16.m) de la Directiva 2011/83/UE sobre los derechos de los consumidores, al contratar un plan Pro cuyo acceso y ejecución del software se activan de forma inmediata tras el pago, el usuario <strong>consiente expresamente el inicio inmediato de la ejecución del servicio digital y reconoce que, en consecuencia, pierde su derecho de desistimiento de 14 días</strong> una vez activada la licencia o consumidas las funciones Pro.</p>
+    <p><strong>Política frente a cobros duplicados o errores técnicos:</strong> Sin perjuicio de lo anterior, se reembolsará íntegramente cualquier cargo duplicado accidental o aquellos casos en los que una incidencia técnica verificable impida el funcionamiento del software y sea notificada dentro de las primeras 48 horas sin haberse realizado un uso masivo por lotes.</p>
+
+    <h2>5. Condiciones del Programa de Afiliados (Partners)</h2>
+    <ul>
+      <li><strong>Base de Cálculo (Ingreso Neto):</strong> La comisión del 40% se calcula exclusivamente sobre el <strong>importe neto efectivamente cobrado</strong> por PureAI Studio, una vez deducidos los impuestos indirectos (IVA/VAT), cupones promocionales aplicados y las comisiones de procesamiento de Stripe.</li>
+      <li><strong>Periodo de Retención Anti-Fraude (30 Días):</strong> Las comisiones devengadas permanecerán en estado de verificación durante <strong>30 días naturales</strong> desde la fecha del cobro. Si la compra es objeto de reembolso, devolución o disputa/contracargo (*chargeback*), la comisión asociada quedará automáticamente anulada (`0,00 €`).</li>
+      <li><strong>Prohibición de Auto-Referido y Spam:</strong> Queda prohibido utilizar el propio enlace de afiliado para compras propias (*self-referral*), pujar por la marca "PureAI Studio" en buscadores (SEM) o utilizar sistemas de correo no solicitado (spam). El incumplimiento conlleva la cancelación inmediata de la cuenta de afiliado.</li>
+    </ul>
+
+    <h2>6. Independencia de Marcas de Terceros (Uso Nominativo)</h2>
+    <p>Todas las marcas, nombres de productos y logotipos de terceros citados a efectos meramente descriptivos de compatibilidad técnica (incluyendo, sin limitación, <em>ChatGPT®, OpenAI®, Instagram®, TikTok®, Midjourney®, Sora®, Turnitin®, GPTZero®, Apple®, iPhone®, Sony® y Canon®</em>) pertenecen a sus respectivos propietarios. PureAI Studio es un desarrollo independiente y no está afiliado, patrocinado ni respaldado por ninguna de dichas entidades.</p>
+
+    <h2>7. Legislación Aplicable y Resolución de Litigios</h2>
+    <p>Estas condiciones se rigen por la legislación española y de la Unión Europea. En caso de contratación por parte de consumidores, serán competentes los juzgados y tribunales del domicilio del consumidor o aquellos que determine la normativa imperativa de protección de consumidores.</p>
+
+    <div style="margin-top:24px;padding-top:16px;border-top:1px solid #1e293b;font-size:0.82rem;color:#94a3b8;">
+      Consulte también nuestra <a href="privacy-policy.html" style="color:#6ee7b7;">Política de Privacidad y Protección de Datos (RGPD)</a>.
+    </div>
+  </main>
+</body>
+</html>

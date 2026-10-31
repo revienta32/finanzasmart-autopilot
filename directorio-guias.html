@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="referrer" content="strict-origin-when-cross-origin" />
+  <title>PureAI Studio — Directory of C2PA Metadata Scrubber, EXIF Spoofer & AI Watermark Tools | PureAI Studio</title>
+  <meta name="description" content="Access all 100% Client-Side AI utilities: C2PA/JUMBF 'Made with AI' label removal, iPhone 16 Pro & Sony A7IV EXIF injection, and ChatGPT Unicode watermark scrubbing." />
+  <link rel="canonical" href="https://pureaistudios.com/directorio-guias.html" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="container topbar-inner">
+      <a href="clean-ai-studio.html" class="brand" style="text-decoration:none;color:inherit;">
+        <span class="brand-icon">🧬</span>
+        <div>
+          <strong>PureAI Studio</strong>
+          <span class="brand-tag">C2PA Scrubber · EXIF Profile · Unicode Hygiene</span>
+        </div>
+      </a>
+      <nav class="tabs">
+        <a href="clean-ai-studio.html" class="tab-btn active" style="text-decoration:none;">🖼️ PureAI Studio</a>
+        <a href="https://chromewebstore.google.com/detail/pureai-studio-%E2%80%94-c2pa-meta/pdebjlkmjdhpgiigepojdcpfbfimcgmo" target="_blank" rel="noopener" class="tab-btn" style="text-decoration:none;">🧩 Extensión Chrome</a>
+        <a href="directorio-guias.html" class="tab-btn" style="text-decoration:none;">🗂️ Directorio IA</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container main-grid">
+    <article class="calc-card" style="line-height: 1.75;">
+      <h1>PureAI Studio — Complete AI Privacy, C2PA & Watermark Directory (2026)</h1>
+      <p class="subtitle">Access all 100% Client-Side AI utilities: C2PA/JUMBF 'Made with AI' label removal, iPhone 16 Pro & Sony A7IV EXIF injection, and ChatGPT Unicode watermark scrubbing.</p>
+      
+      <div style="margin: 1.25rem 0 1.6rem; padding: 1.35rem; background: linear-gradient(145deg, rgba(16,185,129,0.16), rgba(15,23,42,0.98)); border: 2px solid #10b981; border-radius: 14px; box-shadow: 0 10px 30px rgba(0,0,0,0.45);">
+        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:10px;">
+          <strong style="color:#6ee7b7;font-size:1.02rem;">⚡ Instant C2PA &amp; EXIF Photo Scrubber (100% Local Browser Tool)</strong>
+          <a href="https://chromewebstore.google.com/detail/pureai-studio-%E2%80%94-c2pa-meta/pdebjlkmjdhpgiigepojdcpfbfimcgmo" target="_blank" rel="noopener" style="background:#1e293b;color:#93c5fd;border:1px solid #3b82f6;padding:4px 10px;border-radius:999px;font-size:0.75rem;font-weight:800;text-decoration:none;">🧩 Add to Chrome (Free Extension)</a>
+        </div>
+        <input type="file" id="quick-img-inp" accept="image/jpeg,image/png,image/webp" style="display:none" onchange="if(this.files[0])quickCleanImg(this.files[0])" />
+        <div onclick="document.getElementById('quick-img-inp').click()" style="border:2px dashed #10b981;border-radius:12px;padding:18px;text-align:center;cursor:pointer;background:rgba(11,15,25,0.75);transition:all 0.2s;">
+          <div style="font-size:1.7rem;margin-bottom:4px;">🖼️</div>
+          <strong style="color:#f8fafc;font-size:0.95rem;">Click or Drop Photo Here to Strip C2PA / 'Made with AI' Metadata Instantly</strong>
+          <div style="color:#94a3b8;font-size:0.78rem;margin-top:4px;">Zero server upload · Rebuilds clean pixel buffer locally in 1 second</div>
+        </div>
+        <div id="quick-img-status" style="margin-top:10px;font-family:monospace;font-size:0.8rem;color:#a7f3d0;"></div>
+        <canvas id="quick-canvas" style="display:none;"></canvas>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;">
+          <a href="clean-ai-studio.html" class="cta-button" style="flex:1;text-align:center;padding:0.75rem 1rem;font-weight:800;">🧬 Open Full Studio (Camera EXIF Profile · Batch .ZIP) →</a>
+          <a href="https://buy.stripe.com/aFaaEY0fgcHbd1SeTE0000c" target="_blank" rel="noopener" style="background:#00e5a3;color:#042f1e;text-decoration:none;padding:0.75rem 1rem;border-radius:10px;font-weight:900;font-size:0.85rem;">🔥 Pro Monthly -50% (4,99 €)</a>
+        </div>
+      </div>
+      <script>
+      function escapeSeoHtml(s) {
+        return String(s || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+      }
+      function quickCleanImg(file) {
+        if (!file || !file.size) return;
+        var st = document.getElementById("quick-img-status");
+        st.textContent = "⏳ Scanning & stripping C2PA / EXIF binary containers...";
+        var img = new Image();
+        img.onload = function () {
+          var c = document.getElementById("quick-canvas");
+          c.width = img.naturalWidth || 512;
+          c.height = img.naturalHeight || 512;
+          var ctx = c.getContext("2d");
+          ctx.drawImage(img, 0, 0);
+          var d = ctx.getImageData(0, 0, c.width, c.height);
+          for (var i = 0; i < d.data.length; i += 16) {
+            d.data[i] = d.data[i] > 250 ? d.data[i] - 1 : d.data[i] + 1;
+          }
+          ctx.putImageData(d, 0, 0);
+          c.toBlob(function (blob) {
+            var a = document.createElement("a");
+            var cleanName = file.name.replace(/\.[^.]+$/, "") + "-clean.jpg";
+            a.href = URL.createObjectURL(blob);
+            a.download = cleanName;
+            a.click();
+            st.innerHTML = "✅ <strong>" + escapeSeoHtml(cleanName) + " downloaded (0% C2PA / 0% EXIF)!</strong> Want to clean 50+ photos in a .ZIP or apply optical EXIF headers? <a href='clean-ai-studio.html' style='color:#fcd34d;font-weight:800;'>Unlock in PureAI Studio Pro (from 4,99 €) →</a>";
+          }, "image/jpeg", 0.95);
+        };
+        img.src = URL.createObjectURL(file);
+      }
+      </script>
+      <ul style="margin: 1rem 0 1.5rem 1.25rem;">
+<li style="margin-bottom:0.55rem;"><a href="adobe-stock-shutterstock-c2pa-ai-rejection-fix.html" style="color:#10b981;font-weight:600;">ADOBE STOCK SHUTTERSTOCK C2PA AI REJECTION FIX</a></li>
+<li style="margin-bottom:0.55rem;"><a href="ai-influencer-agency-anti-shadowban-instagram-fanvue-c2pa.html" style="color:#10b981;font-weight:600;">AI INFLUENCER AGENCY ANTI SHADOWBAN INSTAGRAM FANVUE C2PA</a></li>
+<li style="margin-bottom:0.55rem;"><a href="c2pa-metadata-remover-ai-scrubber.html" style="color:#10b981;font-weight:600;">C2PA METADATA REMOVER AI SCRUBBER</a></li>
+<li style="margin-bottom:0.55rem;"><a href="clean-ai-studio.html" style="color:#10b981;font-weight:600;">CLEAN AI STUDIO</a></li>
+<li style="margin-bottom:0.55rem;"><a href="detectar-y-eliminar-espacios-invisibles-chatgpt-u202f.html" style="color:#10b981;font-weight:600;">DETECTAR Y ELIMINAR ESPACIOS INVISIBLES CHATGPT U202F</a></li>
+<li style="margin-bottom:0.55rem;"><a href="exif-camera-injector-iphone-sony-ai-photos.html" style="color:#10b981;font-weight:600;">EXIF CAMERA INJECTOR IPHONE SONY AI PHOTOS</a></li>
+<li style="margin-bottom:0.55rem;"><a href="how-to-remove-c2pa-midjourney-v6-sora-video.html" style="color:#10b981;font-weight:600;">HOW TO REMOVE C2PA MIDJOURNEY V6 SORA VIDEO</a></li>
+<li style="margin-bottom:0.55rem;"><a href="humaniser-texte-ia-chatgpt-indetectable-gratuit.html" style="color:#10b981;font-weight:600;">HUMANISER TEXTE IA CHATGPT INDETECTABLE GRATUIT</a></li>
+<li style="margin-bottom:0.55rem;"><a href="humanizar-texto-chatgpt-remover-marcas-ia-gratis.html" style="color:#10b981;font-weight:600;">HUMANIZAR TEXTO CHATGPT REMOVER MARCAS IA GRATIS</a></li>
+<li style="margin-bottom:0.55rem;"><a href="humanizar-texto-ia-indetectable-turnitin-gratis.html" style="color:#10b981;font-weight:600;">HUMANIZAR TEXTO IA INDETECTABLE TURNITIN GRATIS</a></li>
+<li style="margin-bottom:0.55rem;"><a href="humanize-ai-text-bypass-turnitin-gptzero-free.html" style="color:#10b981;font-weight:600;">HUMANIZE AI TEXT BYPASS TURNITIN GPTZERO FREE</a></li>
+<li style="margin-bottom:0.55rem;"><a href="ki-metadaten-c2pa-entfernen-kostenlos.html" style="color:#10b981;font-weight:600;">KI METADATEN C2PA ENTFERNEN KOSTENLOS</a></li>
+<li style="margin-bottom:0.55rem;"><a href="ki-text-vermenschlichen-chatgpt-wasserzeichen-entfernen.html" style="color:#10b981;font-weight:600;">KI TEXT VERMENSCHLICHEN CHATGPT WASSERZEICHEN ENTFERNEN</a></li>
+<li style="margin-bottom:0.55rem;"><a href="midjourney-v6-flux-c2pa-metadata-remover.html" style="color:#10b981;font-weight:600;">MIDJOURNEY V6 FLUX C2PA METADATA REMOVER</a></li>
+<li style="margin-bottom:0.55rem;"><a href="privacy-policy.html" style="color:#10b981;font-weight:600;">PRIVACY POLICY</a></li>
+<li style="margin-bottom:0.55rem;"><a href="quillbot-ai-detector-bypass-humanizer.html" style="color:#10b981;font-weight:600;">QUILLBOT AI DETECTOR BYPASS HUMANIZER</a></li>
+<li style="margin-bottom:0.55rem;"><a href="quitar-etiqueta-hecho-con-ia-instagram-tiktok-fotos.html" style="color:#10b981;font-weight:600;">QUITAR ETIQUETA HECHO CON IA INSTAGRAM TIKTOK FOTOS</a></li>
+<li style="margin-bottom:0.55rem;"><a href="quitar-metadatos-ia-c2pa-exif-fotos-texto.html" style="color:#10b981;font-weight:600;">QUITAR METADATOS IA C2PA EXIF FOTOS TEXTO</a></li>
+<li style="margin-bottom:0.55rem;"><a href="remove-chatgpt-watermarks-invisible-characters-u202f.html" style="color:#10b981;font-weight:600;">REMOVE CHATGPT WATERMARKS INVISIBLE CHARACTERS U202F</a></li>
+<li style="margin-bottom:0.55rem;"><a href="remove-google-synthid-ai-pixel-watermark.html" style="color:#10b981;font-weight:600;">REMOVE GOOGLE SYNTHID AI PIXEL WATERMARK</a></li>
+<li style="margin-bottom:0.55rem;"><a href="remove-made-with-ai-label-instagram-tiktok-c2pa.html" style="color:#10b981;font-weight:600;">REMOVE MADE WITH AI LABEL INSTAGRAM TIKTOK C2PA</a></li>
+<li style="margin-bottom:0.55rem;"><a href="stealthwriter-vs-pureai-studio.html" style="color:#10b981;font-weight:600;">STEALTHWRITER VS PUREAI STUDIO</a></li>
+<li style="margin-bottom:0.55rem;"><a href="strip-comfyui-midjourney-dalle-metadata-png-jpeg.html" style="color:#10b981;font-weight:600;">STRIP COMFYUI MIDJOURNEY DALLE METADATA PNG JPEG</a></li>
+<li style="margin-bottom:0.55rem;"><a href="terms.html" style="color:#10b981;font-weight:600;">TERMS</a></li>
+<li style="margin-bottom:0.55rem;"><a href="undetectable-ai-alternative-free.html" style="color:#10b981;font-weight:600;">UNDETECTABLE AI ALTERNATIVE FREE</a></li>
+</ul>
+      <div style="margin-top: 2rem; padding: 1.25rem; background: #0f172a; border: 1px solid #10b981; border-radius: 0.75rem;">
+        <h3 style="margin-bottom: 0.5rem;">⚡ Abrir Suite Completa en 1 Clic</h3>
+        <p style="color: #94a3b8; font-size: 0.9rem; margin-bottom: 1rem;">Accede a la herramienta interactiva completa sin registro y 100% en tu navegador:</p>
+        <a href="clean-ai-studio.html" class="cta-button" style="display:inline-block; padding: 0.7rem 1.4rem;">Abrir Herramienta Interactiva →</a>
+      </div>
+    </article>
+
+    <aside class="affiliate-sidebar">
+      <div class="offer-card" style="border-color:#10b981;background:linear-gradient(160deg,#0f172a 0%,#064e3b 100%);">
+        <span class="offer-badge">🧬 PureAI Studio Pro (4,99 € 1er mes)</span>
+        <h2>Limpia Metadatos C2PA / JUMBF + Lotes .ZIP + EXIF Cámara</h2>
+        <p>Procesa fotos y vídeos cortos MP4 por lotes (.ZIP), aplica perfiles técnicos EXIF JPEG y limpia caracteres invisibles Unicode. <strong>50% DTO 1er mes (4,99 €) con código FRIEND50</strong>.</p>
+        <a href="clean-ai-studio.html" class="cta-button">Abrir PureAI Studio Gratis →</a>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:8px;">
+          <a href="https://buy.stripe.com/aFaaEY0fgcHbd1SeTE0000c" target="_blank" rel="noopener" style="background:#00e5a3;color:#042f1e;text-decoration:none;padding:6px;border-radius:7px;font-size:0.75rem;font-weight:900;text-align:center;">🔥 Pro Mensual: 4,99 €</a>
+          <a href="https://buy.stripe.com/5kQ28sfaa0Yt5zqfXI0000d" target="_blank" rel="noopener" style="background:#1e293b;color:#93c5fd;border:1px solid #3b82f6;text-decoration:none;padding:6px;border-radius:7px;font-size:0.75rem;font-weight:800;text-align:center;">💎 Pro Anual: 39 €</a>
+        </div>
+      </div>
+    </aside>
+  </main>
+
+  <footer class="footer container">
+    <p>© 2026 PureAI Studio — <a href="clean-ai-studio.html" style="color:#10b981;">C2PA &amp; EXIF Metadata Suite</a> | <a href="directorio-guias.html" style="color:#10b981;">AI Guides Directory</a> | <a href="terms.html" style="color:#94a3b8;">Terms</a> | <a href="privacy-policy.html" style="color:#94a3b8;">Privacy</a></p>
+  </footer>
+  <script src="telemetria-soporte.js"></script>
+</body>
+</html>
