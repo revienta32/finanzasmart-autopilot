@@ -5,8 +5,8 @@ compatibility_flags = ["nodejs_compat"]
 
 [[kv_namespaces]]
 binding = "PUREAI_LICENSES_KV"
-id = "pureai_licenses_kv_prod"
-preview_id = "pureai_licenses_kv_preview"
+id = "7ae4b6127c314f449df7cdb002bec2b4"
+preview_id = "7ae4b6127c314f449df7cdb002bec2b4"
 
 # Despliegue en Cloudflare Workers (Free Tier: 100.000 peticiones/día)
 # Para configurar secretos en producción sin exponerlos en el código:
