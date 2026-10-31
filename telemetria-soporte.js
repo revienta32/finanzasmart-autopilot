@@ -6,7 +6,7 @@
  *    de soporte marcando la casilla de privacidad, se transmite el evento minimizado con enmascaramiento PII (maskSensitiveSupportText).
  */
 (function () {
-  const BUS_URL = (typeof window !== "undefined" && window.PUREAI_TELEMETRY_ENDPOINT) || "/telemetry";
+  const BUS_URL = (typeof window !== "undefined" && window.PUREAI_TELEMETRY_ENDPOINT) || "https://pureai-stripe-webhook.pureaistudio-app.workers.dev/telemetry";
   const pageName = (window.location.pathname.split("/").pop() || "index.html") + (window.location.hash || "");
 
   function maskSensitiveSupportText(raw) {

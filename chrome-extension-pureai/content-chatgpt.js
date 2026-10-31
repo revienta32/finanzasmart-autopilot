@@ -101,7 +101,7 @@
       const k = prompt("Introduce tu Clave Multi-Dispositivo verificada (PRO-XXXX-YYYY) o ID de Sesión de Stripe (cs_live_...):");
       if (isValidProLicenseCode(k)) {
         try {
-          const resp = await fetch("https://pureaistudios.com/verify-license?code=" + encodeURIComponent(k.trim()), {
+          const resp = await fetch("https://pureai-stripe-webhook.pureaistudio-app.workers.dev/verify-license?code=" + encodeURIComponent(k.trim()), {
             method: "GET",
             headers: { Accept: "application/json" }
           });

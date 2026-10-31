@@ -829,7 +829,7 @@
       if (!code || typeof fetch !== "function") {
         return { checked: false, reason: "offline_or_no_fetch" };
       }
-      var baseEndpoint = customEndpoint || (typeof window !== "undefined" && window.PUREAI_LICENSE_VERIFY_URL) || "/verify-license";
+      var baseEndpoint = customEndpoint || (typeof window !== "undefined" && window.PUREAI_LICENSE_VERIFY_URL) || "https://pureai-stripe-webhook.pureaistudio-app.workers.dev/verify-license";
       var sep = baseEndpoint.indexOf("?") === -1 ? "?" : "&";
       try {
         var res = await fetch(baseEndpoint + sep + "code=" + encodeURIComponent(code), {
