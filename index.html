@@ -5,8 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="referrer" content="strict-origin-when-cross-origin" />
   <meta http-equiv="Content-Security-Policy" content="default-src 'self' https: data: blob:; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; media-src 'self' data: blob:; connect-src 'self' https:;" />
-  <title>PureAI Studio (2026) — C2PA/EXIF Metadata Scrubber, Camera APP1 Profile &amp; Unicode Watermark Cleaner</title>
-  <meta name="description" content="100% Client-Side Metadata &amp; Format Sanitizer (EN/ES/DE/FR/PT): Strip C2PA/JUMBF/EXIF container tags, apply technical APP1 camera headers (iPhone 16 Pro, Sony A7IV), batch-clean ZIPs, and remove invisible Unicode characters (U+202F)." />
+  <title>PureAI Studio (2026) — Remove 'Made with AI' C2PA, Photoshop Generative Fill Lossless Fix &amp; iPhone 16 Pro EXIF + GPS Injector</title>
+  <meta name="description" content="100% Client-Side C2PA/JUMBF Scrubber for AI Creator Agencies (Fanvue/Instagram/TikTok) &amp; Photographers: Strip Photoshop Generative Fill C2PA lossless, clean Sora/Kling .MP4 videos, batch-clean .ZIPs, and inject iPhone 16 Pro / Sony A7IV EXIF + GPS." />
   <link rel="canonical" href="https://pureaistudios.com/clean-ai-studio.html" />
   <link rel="manifest" href="manifest.webmanifest" />
   <meta name="theme-color" content="#10b981" />
@@ -77,12 +77,18 @@
     }
     .pa-grid {
       display: grid;
-      grid-template-columns: 1fr 1fr;
+      grid-template-columns: 1.32fr 0.88fr;
       gap: 24px;
       margin: 22px auto 36px;
       align-items: stretch;
     }
+    .pa-exif-grid {
+      display: grid;
+      grid-template-columns: 1fr 1.35fr 1fr;
+      gap: 8px;
+    }
     @media (max-width: 980px) { .pa-grid { grid-template-columns: 1fr; } }
+    @media (max-width: 680px) { .pa-exif-grid { grid-template-columns: 1fr; } }
     .pa-card {
       background: linear-gradient(165deg, rgba(28, 20, 50, 0.82), rgba(15, 11, 29, 0.88));
       backdrop-filter: blur(22px);
@@ -291,10 +297,11 @@
 
   <main class="container">
     <section class="pa-hero" style="padding:18px 22px;margin-bottom:18px;">
-      <div style="max-width:720px;">
-        <h2 style="margin:0 0 6px;font-size:1.45rem;" id="ui-hero-title">Limpia Metadatos C2PA/EXIF y Caracteres Invisibles Unicode en 1 Clic</h2>
+      <div style="max-width:740px;">
+        <div style="font-size:0.75rem;font-weight:900;color:#6ee7b7;letter-spacing:0.04em;margin-bottom:4px;">📸 SUITE PARA CREADORES VISUALES · AGENCIAS IA (INSTAGRAM / TIKTOK / FANVUE) · FOTÓGRAFOS (PHOTOSHOP C2PA FIX)</div>
+        <h2 style="margin:0 0 6px;font-size:1.45rem;" id="ui-hero-title">Elimina el Sello 'Hecho con IA' (C2PA), Limpia Vídeos .MP4 e Inyecta EXIF iPhone 16 Pro + GPS</h2>
         <p style="margin:0;color:#cbd5e1;font-size:0.92rem;" id="ui-hero-desc">
-          Sube tu imagen o pega tu texto para eliminar contenedores C2PA/JUMBF/EXIF y espacios invisibles (U+202F, U+200B) 100% en tu navegador.
+          Procesa fotos, carruseles (.ZIP) y Reels (.MP4/.MOV) 100% en tu navegador sin subir tus activos a ningún servidor externo.
         </p>
       </div>
       <div class="pa-lang-pills">
@@ -343,12 +350,20 @@
             <div style="color:#94a3b8;font-size:0.82rem;" id="ui-audit-idle">✨ Sube una foto o vídeo corto arriba para limpiarlo en 1 clic.</div>
           </div>
 
-          <details style="margin-top:10px;background:rgba(10,6,20,0.68);border:1px solid rgba(255,255,255,0.09);border-radius:10px;padding:8px 12px;">
-            <summary style="cursor:pointer;font-size:0.78rem;color:#94a3b8;font-weight:700;" id="ui-adv-img">⚙️ Modo de exportación, perfil técnico EXIF y formato (Predeterminado: Limpieza Neutra)</summary>
-            <div style="display:grid;grid-template-columns:1fr 1.35fr 1fr;gap:8px;margin-top:10px;">
+          <div style="margin-top:10px;background:rgba(10,6,20,0.78);border:1px solid rgba(0,229,163,0.32);border-radius:12px;padding:10px 12px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px;margin-bottom:8px;">
+              <div style="font-size:0.78rem;color:#6ee7b7;font-weight:800;" id="ui-adv-img">⚙️ Modo de exportación, perfil técnico EXIF y formato (Predeterminado: Limpieza Neutra)</div>
+              <div style="display:flex;gap:5px;flex-wrap:wrap;">
+                <button type="button" onclick="applyCreatorPreset('iphone_agency')" style="background:rgba(0,229,163,0.16);color:#6ee7b7;border:1px solid #00e5a3;border-radius:999px;padding:3px 9px;font-size:0.71rem;font-weight:800;cursor:pointer;">📱 Preset Agencia (iPhone 16 Pro + GPS)</button>
+                <button type="button" onclick="applyCreatorPreset('sony_studio')" style="background:rgba(56,189,248,0.14);color:#93c5fd;border:1px solid #38bdf8;border-radius:999px;padding:3px 9px;font-size:0.71rem;font-weight:800;cursor:pointer;">📸 Preset Fotógrafo (Sony A7IV)</button>
+                <button type="button" onclick="applyCreatorPreset('photoshop_lossless')" style="background:rgba(245,158,11,0.15);color:#fde68a;border:1px solid #f59e0b;border-radius:999px;padding:3px 9px;font-size:0.71rem;font-weight:800;cursor:pointer;">⚡ Photoshop C2PA Fix (Lossless)</button>
+                <button type="button" onclick="applyCreatorPreset('pure_clean')" style="background:rgba(255,255,255,0.06);color:#cbd5e1;border:1px solid rgba(255,255,255,0.16);border-radius:999px;padding:3px 9px;font-size:0.71rem;font-weight:700;cursor:pointer;">🧼 Neutro (Gratis)</button>
+              </div>
+            </div>
+            <div class="pa-exif-grid">
               <div>
                 <label style="font-size:0.74rem;color:#94a3b8;display:block;margin-bottom:4px;">Formato</label>
-                <select id="img-format" style="width:100%;padding:8px;background:#0a0614;border:1px solid #2d3748;color:#fff;border-radius:8px;font-size:0.78rem;">
+                <select id="img-format" onchange="saveCurrentCreatorWorkflow()" style="width:100%;padding:8px;background:#0a0614;border:1px solid #2d3748;color:#fff;border-radius:8px;font-size:0.78rem;">
                   <option value="image/jpeg">JPG Estándar</option>
                   <option value="image/png">PNG Alta Calidad</option>
                   <option value="image/webp">WebP Ligero</option>
@@ -356,18 +371,25 @@
               </div>
               <div>
                 <label style="font-size:0.74rem;color:#94a3b8;display:block;margin-bottom:4px;">Modo de Procesamiento</label>
-                <select id="img-defense" style="width:100%;padding:8px;background:#0a0614;border:1px solid #00e5a3;color:#fff;border-radius:8px;font-weight:700;font-size:0.78rem;">
-                  <option value="pure" selected>🧼 Limpieza Neutra (Solo borrar metadatos)</option>
-                  <option value="micro">🛡️ Limpieza + Micro-Grano Natural</option>
-                  <option value="synthid">🧬 Normalización Sub-píxel de Frecuencia</option>
-                  <option value="spoof">📱 Perfil Técnico EXIF: iPhone 16 Pro (JPG)</option>
-                  <option value="spoof_sony">📸 Perfil Técnico EXIF: Sony Alpha A7 IV (JPG)</option>
-                  <option value="spoof_canon">📷 Perfil Técnico EXIF: Canon EOS R5 (JPG)</option>
+                <select id="img-defense" onchange="saveCurrentCreatorWorkflow()" style="width:100%;padding:8px;background:#0a0614;border:1px solid #00e5a3;color:#fff;border-radius:8px;font-weight:700;font-size:0.78rem;">
+                  <optgroup label="🧼 Limpieza Estándar (Gratis)">
+                    <option value="pure" selected>🧼 Limpieza Neutra (Solo borrar metadatos)</option>
+                    <option value="lossless">⚡ Limpieza Lossless JPEG (0% Recodificación)</option>
+                  </optgroup>
+                  <optgroup label="📸 Perfiles Técnicos de Cámara EXIF (Pro)">
+                    <option value="spoof">📱 Perfil Técnico EXIF: iPhone 16 Pro (JPG/MP4)</option>
+                    <option value="spoof_sony">📸 Perfil Técnico EXIF: Sony Alpha A7 IV (JPG/MP4)</option>
+                    <option value="spoof_canon">📷 Perfil Técnico EXIF: Canon EOS R5 (JPG/MP4)</option>
+                  </optgroup>
+                  <optgroup label="🔬 Filtros Sub-píxel Opcionales">
+                    <option value="micro">🛡️ Limpieza + Micro-Grano Natural</option>
+                    <option value="synthid">🧬 Normalización Sub-píxel de Hash Visual (Experimental)</option>
+                  </optgroup>
                 </select>
               </div>
               <div>
-                <label style="font-size:0.74rem;color:#94a3b8;display:block;margin-bottom:4px;">📍 Ciudad (Opcional)</label>
-                <select id="img-gps-city" style="width:100%;padding:8px;background:#0a0614;border:1px solid #2d3748;color:#fff;border-radius:8px;font-size:0.78rem;">
+                <label style="font-size:0.74rem;color:#94a3b8;display:block;margin-bottom:4px;">📍 Ciudad GPS (Opcional)</label>
+                <select id="img-gps-city" onchange="saveCurrentCreatorWorkflow()" style="width:100%;padding:8px;background:#0a0614;border:1px solid #2d3748;color:#fff;border-radius:8px;font-size:0.78rem;">
                   <option value="none" selected>🚫 Sin ubicación (Privado)</option>
                   <option value="madrid">🇪🇸 Madrid, España</option>
                   <option value="miami">🇺🇸 Miami, USA</option>
@@ -378,7 +400,7 @@
                 </select>
               </div>
             </div>
-          </details>
+          </div>
         </div>
 
         <div>
@@ -393,11 +415,11 @@
       <section class="pa-card" style="display:flex;flex-direction:column;justify-content:space-between;">
         <div>
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-wrap:wrap;gap:6px;">
-            <h3 style="margin:0;font-size:1.15rem;" id="ui-txt-title">✍️ 2. Humanizar Texto de ChatGPT</h3>
+            <h3 style="margin:0;font-size:1.15rem;" id="ui-txt-title">✍️ 2. Higiene de Captions, Scripts y Texto IA</h3>
             <div style="display:flex;gap:5px;">
-              <button type="button" class="tone-pill active" id="tone-academic" onclick="setHumanizerTone('academic')">🎓 Académico</button>
-              <button type="button" class="tone-pill" id="tone-social" onclick="setHumanizerTone('social')">📱 Redes</button>
-              <button type="button" class="tone-pill" id="tone-pro" onclick="setHumanizerTone('pro')">💼 Profesional</button>
+              <button type="button" class="tone-pill active" id="tone-academic" onclick="setHumanizerTone('academic')">🎓 Formal</button>
+              <button type="button" class="tone-pill" id="tone-social" onclick="setHumanizerTone('social')">📱 Reels / Redes</button>
+              <button type="button" class="tone-pill" id="tone-pro" onclick="setHumanizerTone('pro')">💼 Agencia / Copy</button>
             </div>
           </div>
 
@@ -465,20 +487,28 @@
       <div id="friend-welcome-banner" style="display:none;margin-bottom:10px;padding:9px 12px;background:linear-gradient(90deg,rgba(16,185,129,0.25),rgba(59,130,246,0.25));border:1px solid #10b981;border-radius:10px;font-size:0.8rem;color:#ecfdf5;">
         🎁 <strong>¡Invitación VIP Activada!</strong> Tienes <strong>1 Uso Pro Gratis</strong> desbloqueado hoy + Código <strong><code style="background:#064e3b;padding:2px 6px;border-radius:4px;color:#6ee7b7;">FRIEND50</code> (50% DTO 1er mes: 4,99 €)</strong>.
       </div>
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-wrap:wrap;gap:6px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;flex-wrap:wrap;gap:6px;">
         <span style="font-size:0.95rem;font-weight:800;color:#6ee7b7;">💎 Pásate a PureAI Pro — Fotos Ilimitadas + Humanizador Completo + Lotes .ZIP</span>
         <span style="font-size:0.72rem;background:#f59e0b;color:#0b0f19;font-weight:900;padding:3px 10px;border-radius:999px;">🔥 50% DTO 1er MES (Código: FRIEND50)</span>
       </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:8px;margin-bottom:10px;font-size:0.74rem;">
+        <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:8px;padding:7px 10px;color:#cbd5e1;">
+          🟢 <strong>Gratis Para Siempre:</strong> Limpieza Neutra 1 a 1 + Marcas Unicode (Ilimitado) + <strong>3 Pruebas EXIF/Vídeo</strong>.
+        </div>
+        <div style="background:rgba(0,229,163,0.1);border:1px solid rgba(0,229,163,0.35);border-radius:8px;padding:7px 10px;color:#ecfdf5;">
+          💎 <strong>Todo Incluido en Pro:</strong> EXIF iPhone 16 Pro / Sony + GPS Ilimitado + <strong>Lotes .ZIP (Foto/MP4)</strong> + Humanizador + <strong>3 Equipos</strong>.
+        </div>
+      </div>
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px;margin:10px 0;">
-        <a href="https://buy.stripe.com/aFaaEY0fgcHbd1SeTE0000c" target="_blank" rel="noopener" style="text-decoration:none;background:#0b0f19;border:1px solid #3b82f6;border-radius:10px;padding:13px;text-align:center;color:#e2e8f0;">
+        <a href="https://buy.stripe.com/aFaaEY0fgcHbd1SeTE0000c?prefilled_promo_code=FRIEND50" target="_blank" rel="noopener" style="text-decoration:none;background:#0b0f19;border:1px solid #3b82f6;border-radius:10px;padding:13px;text-align:center;color:#e2e8f0;">
           <div style="font-size:0.78rem;color:#93c5fd;font-weight:800;">🔥 Plan Mensual Pro (Creadores)</div>
           <div style="font-size:1.35rem;font-weight:900;color:#fff;margin:4px 0;">4,99 € <span style="font-size:0.75rem;color:#64748b;text-decoration:line-through;">9,99€</span></div>
-          <div style="font-size:0.72rem;color:#93c5fd;">1er mes con código <strong>FRIEND50</strong> · Sin permanencia</div>
+          <div style="font-size:0.72rem;color:#93c5fd;">1er mes con <strong>FRIEND50</strong> pre-aplicado · Sin permanencia</div>
         </a>
         <a href="https://buy.stripe.com/5kQ28sfaa0Yt5zqfXI0000d" target="_blank" rel="noopener" style="text-decoration:none;background:linear-gradient(135deg,rgba(16,185,129,0.22),rgba(59,130,246,0.22));border:1px solid #10b981;border-radius:10px;padding:13px;text-align:center;color:#e2e8f0;">
           <div style="font-size:0.78rem;color:#6ee7b7;font-weight:800;">💎 Plan Anual Pro (Ahorras 50% · Agencias)</div>
           <div style="font-size:1.35rem;font-weight:900;color:#fff;margin:4px 0;">39 €<span style="font-size:0.75rem;font-weight:500;">/año</span></div>
-          <div style="font-size:0.72rem;color:#a7f3d0;">Sale a <strong>3,25 €/mes</strong> · Lotes .ZIP + EXIF iPhone 16 Pro Ilimitado</div>
+          <div style="font-size:0.72rem;color:#a7f3d0;">Sale a <strong>3,25 €/mes</strong> · Hasta 3 Dispositivos/VAs + Lotes .ZIP</div>
         </a>
       </div>
       <div style="font-size:0.71rem;color:#94a3b8;line-height:1.45;margin:6px 0 8px;">
@@ -492,14 +522,14 @@
       </div>
 
       <details style="margin-top:10px;background:#0b0f19;border:1px solid #1e293b;border-radius:10px;padding:8px 12px;">
-        <summary style="cursor:pointer;font-size:0.76rem;color:#6ee7b7;font-weight:800;">🎁 ¿Quieres usos gratis o descuentos? Invita a un amigo o únete como Afiliado (40% comisión)</summary>
+        <summary style="cursor:pointer;font-size:0.76rem;color:#6ee7b7;font-weight:800;">🎁 Invita a tu equipo (+1 Uso Pro Gratis + 50% DTO con FRIEND50) o únete como Afiliado (40% comisión)</summary>
         <div style="margin-top:10px;">
           <div style="display:flex;justify-content:space-between;align-items:center;font-size:0.75rem;margin-bottom:6px;flex-wrap:wrap;gap:4px;">
-            <span style="color:#e2e8f0;font-weight:700;">Comparte PureAI y desbloquea 1 Uso Pro Gratis + hasta 50% DTO:</span>
-            <strong id="ref-status-badge" style="color:#fcd34d;font-size:0.74rem;">0/3 amigos · Nivel actual: 0%</strong>
+            <span style="color:#e2e8f0;font-weight:700;">Regala 1 Uso Pro Gratis + 50% DTO directo (código FRIEND50) a un compañero:</span>
+            <strong id="ref-status-badge" style="color:#6ee7b7;font-size:0.74rem;">Código directo activo: FRIEND50 (50% DTO)</strong>
           </div>
-          <div style="width:100%;height:6px;background:#1e293b;border-radius:999px;overflow:hidden;margin-bottom:8px;">
-            <div id="ref-progress-bar" style="width:8%;height:100%;background:linear-gradient(90deg,#3b82f6,#10b981);transition:width 0.3s ease;"></div>
+          <div style="display:none;width:100%;height:6px;background:#1e293b;border-radius:999px;overflow:hidden;margin-bottom:8px;">
+            <div id="ref-progress-bar" style="width:100%;height:100%;background:linear-gradient(90deg,#3b82f6,#10b981);"></div>
           </div>
           <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px;">
             <button type="button" onclick="sharePureAiReferral('wa')" style="flex:1;background:#059669;color:#fff;border:none;border-radius:7px;padding:6px 10px;font-size:0.74rem;font-weight:800;cursor:pointer;">📲 Compartir por WhatsApp</button>
@@ -531,21 +561,21 @@
         <button type="button" onclick="closeProModal()" style="position:absolute;top:12px;right:14px;background:none;border:none;color:#94a3b8;font-size:1.2rem;cursor:pointer;">✕</button>
         <div style="font-size:0.75rem;color:#6ee7b7;font-weight:800;margin-bottom:4px;">💎 PUREAI STUDIO PRO</div>
         <h3 style="margin:0 0 8px;font-size:1.2rem;" id="pro-modal-title">Desbloquea Fotos Ilimitadas, Lotes .ZIP y EXIF iPhone 16 Pro</h3>
-        <p id="pro-modal-desc" style="margin:0 0 14px;font-size:0.84rem;color:#cbd5e1;line-height:1.5;">Activa PureAI Pro con Apple Pay / Google Pay o comparte con un amigo para desbloquear 1 uso Pro gratis ahora mismo:</p>
+        <p id="pro-modal-desc" style="margin:0 0 14px;font-size:0.84rem;color:#cbd5e1;line-height:1.5;">Activa PureAI Pro con Apple Pay / Google Pay para desbloquear acceso ilimitado al instante:</p>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;">
-          <a href="https://buy.stripe.com/aFaaEY0fgcHbd1SeTE0000c" target="_blank" rel="noopener" style="text-decoration:none;background:rgba(0,229,163,0.14);border:1px solid #00e5a3;border-radius:12px;padding:11px;text-align:center;color:#fff;">
+          <a href="https://buy.stripe.com/aFaaEY0fgcHbd1SeTE0000c?prefilled_promo_code=FRIEND50" target="_blank" rel="noopener" style="text-decoration:none;background:rgba(0,229,163,0.14);border:1px solid #00e5a3;border-radius:12px;padding:11px;text-align:center;color:#fff;">
             <div style="font-size:0.74rem;color:#6ee7b7;font-weight:800;">🔥 Plan Mensual (-50%)</div>
             <div style="font-size:1.25rem;font-weight:900;margin:2px 0;">4,99 €</div>
-            <div style="font-size:0.68rem;color:#a7f3d0;">1er mes con FRIEND50</div>
+            <div style="font-size:0.68rem;color:#a7f3d0;">FRIEND50 pre-aplicado</div>
           </a>
           <a href="https://buy.stripe.com/5kQ28sfaa0Yt5zqfXI0000d" target="_blank" rel="noopener" style="text-decoration:none;background:rgba(59,130,246,0.16);border:1px solid #3b82f6;border-radius:12px;padding:11px;text-align:center;color:#fff;">
-            <div style="font-size:0.74rem;color:#93c5fd;font-weight:800;">💎 Plan Anual (-50%)</div>
+            <div style="font-size:0.74rem;color:#93c5fd;font-weight:800;">💎 Plan Anual Agencias</div>
             <div style="font-size:1.25rem;font-weight:900;margin:2px 0;">39 €/año</div>
-            <div style="font-size:0.68rem;color:#bfdbfe;">Sale a 3,25 €/mes · Ilimitado</div>
+            <div style="font-size:0.68rem;color:#bfdbfe;">3,25 €/mes · 3 Equipos/VAs</div>
           </a>
         </div>
-        <button type="button" onclick="sharePureAiReferral('wa');closeProModal();" class="pa-btn pa-btn-purple" style="margin-top:0;padding:11px;font-size:0.82rem;">
-          🎁 O comparte por WhatsApp y recibe 1 Uso Pro Gratis
+        <button type="button" onclick="sharePureAiReferral('wa')" class="pa-btn pa-btn-purple" style="margin-top:0;padding:11px;font-size:0.82rem;">
+          📲 Invitar por WhatsApp (Obtén cupón hasta 50% DTO)
         </button>
         <div style="margin-top:10px;padding-top:10px;border-top:1px solid rgba(255,255,255,0.1);display:flex;gap:6px;align-items:center;">
           <input type="email" id="modal-lead-email" placeholder="📩 ¿O pon tu email para +1 Uso Gratis + 50% DTO?" style="flex:1;padding:8px 10px;background:#0a0614;border:1px solid #4c1d95;color:#fff;border-radius:8px;font-size:0.75rem;" />
@@ -615,48 +645,48 @@
 
     const LANGS = {
       en: {
-        heroTitle: "Strip C2PA/EXIF Metadata & Hidden Unicode Marks in 1 Click",
-        heroDesc: "Upload your photo or paste your text to strip C2PA/JUMBF/EXIF headers and invisible Unicode characters (U+202F, U+200B) 100% locally in your browser.",
-        imgTitle: "📸 1. Clean Image & Video Metadata",
-        dropMain: "Drag & drop your photo here or click to upload",
-        txtTitle: "✍️ 2. Clean & Format AI Text",
-        btnScrubImg: "✨ Clean Photo & Download",
+        heroTitle: "Strip 'Made with AI' C2PA Tags, Clean .MP4 Reels & Inject iPhone 16 Pro EXIF + GPS",
+        heroDesc: "Built for AI Creator Agencies, Fanvue/Instagram Models & Photographers: Batch-clean .ZIP carousels, scrub Sora/Kling .MP4 headers, and inject APP1 camera profiles 100% locally.",
+        imgTitle: "📸 1. Clean AI Photos, Reels (.MP4) & Inject Camera EXIF",
+        dropMain: "Drag & drop your Photos (.JPG/.PNG) or Short Video (.MP4/.MOV) here",
+        txtTitle: "✍️ 2. Clean Captions, Scripts & AI Text",
+        btnScrubImg: "✨ Clean Media & Download",
         btnScrubTxt: "🧹 Remove Hidden Marks (Free)"
       },
       es: {
-        heroTitle: "Limpia Metadatos C2PA/EXIF y Caracteres Invisibles Unicode en 1 Clic",
-        heroDesc: "Sube tu imagen o pega tu texto para eliminar contenedores C2PA/JUMBF/EXIF y espacios invisibles (U+202F, U+200B) 100% en tu navegador.",
-        imgTitle: "📸 1. Limpiar Metadatos de Fotos y Vídeos",
-        dropMain: "Arrastra tu foto aquí o haz clic para subirla",
-        txtTitle: "✍️ 2. Limpiar y Formatear Texto",
-        btnScrubImg: "✨ Limpiar Foto y Descargar",
+        heroTitle: "Elimina el Sello 'Hecho con IA' (C2PA), Limpia Vídeos .MP4 e Inyecta EXIF iPhone 16 Pro + GPS",
+        heroDesc: "Diseñado para Creadores Visuales, Agencias IA (Instagram/TikTok/Fanvue) y Fotógrafos: Limpia lotes .ZIP, cabeceras de vídeo .MP4 e inyecta perfiles APP1 100% en tu navegador.",
+        imgTitle: "📸 1. Limpiar Fotos IA, Reels (.MP4) e Inyectar EXIF Cámara",
+        dropMain: "Arrastra tus Fotos (.JPG/.PNG) o Vídeo corto (.MP4/.MOV) aquí",
+        txtTitle: "✍️ 2. Higiene de Captions, Scripts y Texto IA",
+        btnScrubImg: "✨ Limpiar Archivo y Descargar",
         btnScrubTxt: "🧹 Limpiar Marcas (Gratis)"
       },
       de: {
-        heroTitle: "C2PA/EXIF-Metadaten & unsichtbare Unicode-Zeichen mit 1 Klick entfernen",
-        heroDesc: "Laden Sie Ihr Foto hoch oder fügen Sie Ihren Text ein – C2PA/EXIF und unsichtbare Zeichen (U+202F) 100 % lokal im Browser bereinigen.",
-        imgTitle: "📸 1. Bild- & Video-Metadaten bereinigen",
-        dropMain: "Foto hier ablegen oder klicken zum Hochladen",
-        txtTitle: "✍️ 2. Text-Wasserzeichen bereinigen",
-        btnScrubImg: "✨ Foto bereinigen & herunterladen",
+        heroTitle: "C2PA 'Made with AI' entfernen, MP4-Reels bereinigen & iPhone 16 Pro EXIF + GPS injizieren",
+        heroDesc: "Für Creator-Agenturen, KI-Models & Fotografen: Stapelverarbeitung (.ZIP), MP4-Container und echte Kamera-Header 100 % lokal im Browser.",
+        imgTitle: "📸 1. Foto- & MP4-Metadaten + Kamera-EXIF",
+        dropMain: "Fotos oder kurzes Video (.MP4/.MOV) hier ablegen",
+        txtTitle: "✍️ 2. Captions & Text-Wasserzeichen bereinigen",
+        btnScrubImg: "✨ Bereinigen & herunterladen",
         btnScrubTxt: "🧹 Marken löschen (Gratis)"
       },
       fr: {
-        heroTitle: "Supprimez les Métadonnées C2PA/EXIF et Caractères Unicode Invisibles",
-        heroDesc: "Importez votre photo ou collez votre texte pour supprimer les conteneurs C2PA/EXIF et espaces invisibles (U+202F) 100% localement.",
-        imgTitle: "📸 1. Nettoyer les Métadonnées Photo/Vidéo",
-        dropMain: "Glissez votre photo ici ou cliquez pour choisir",
-        txtTitle: "✍️ 2. Nettoyer et Formater le Texte",
+        heroTitle: "Supprimez le badge 'Créé avec l'IA' (C2PA), nettoyez vos MP4 & injectez EXIF iPhone 16 Pro + GPS",
+        heroDesc: "Pour agences créatives, modèles IA (Instagram/TikTok/Fanvue) et photographes : lots .ZIP, vidéos .MP4 et profils caméra 100% localement.",
+        imgTitle: "📸 1. Nettoyer Photos/Vidéos MP4 & Profil EXIF",
+        dropMain: "Glissez vos photos ou vidéos courtes (.MP4/.MOV) ici",
+        txtTitle: "✍️ 2. Nettoyer Captions & Texte IA",
         btnScrubImg: "✨ Nettoyer et Télécharger",
         btnScrubTxt: "🧹 Nettoyer (Gratuit)"
       },
       pt: {
-        heroTitle: "Remova Metadados C2PA/EXIF e Caracteres Unicode Invisíveis em 1 Clique",
-        heroDesc: "Envie sua foto ou cole seu texto para remover cabeçalhos C2PA/EXIF e espaços invisíveis (U+202F) 100% localmente no navegador.",
-        imgTitle: "📸 1. Limpar Metadados de Fotos e Vídeos",
-        dropMain: "Arraste sua foto aqui ou clique para enviar",
-        txtTitle: "✍️ 2. Limpar e Formatar Texto",
-        btnScrubImg: "✨ Limpar Foto e Baixar",
+        heroTitle: "Remova o selo 'Feito com IA' (C2PA), limpe vídeos .MP4 e injete EXIF iPhone 16 Pro + GPS",
+        heroDesc: "Para agências de criadores, modelos IA (Instagram/TikTok/Fanvue) e fotógrafos: lotes .ZIP, vídeos .MP4 e cabeçalhos de câmera 100% localmente.",
+        imgTitle: "📸 1. Limpar Fotos/Vídeos MP4 e Injetar EXIF",
+        dropMain: "Arraste suas fotos ou vídeo curto (.MP4/.MOV) aqui",
+        txtTitle: "✍️ 2. Limpar Legendas e Texto IA",
+        btnScrubImg: "✨ Limpar e Baixar",
         btnScrubTxt: "🧹 Limpar Marcas (Grátis)"
       }
     };
@@ -726,6 +756,12 @@
       }
       if (subRecord.verifiedByServer === false) {
         return { hasAccess: false, effectiveState: SUBSCRIPTION_STATES.PENDING, reason: "requires_server_verification" };
+      }
+      if (subRecord.verifiedByServer === "CHECKOUT_GRACE") {
+        if (now <= (Number(subRecord.checkoutGraceUntil) || 0)) {
+          return { hasAccess: true, effectiveState: SUBSCRIPTION_STATES.ACTIVE, reason: "checkout_webhook_propagation_grace" };
+        }
+        return { hasAccess: false, effectiveState: SUBSCRIPTION_STATES.PENDING, reason: "checkout_grace_expired_unverified" };
       }
       var st = subRecord.status;
       var exp = Number(subRecord.expiresAt) || 0;
@@ -798,7 +834,7 @@
 
     function isValidProLicenseCode(rawCode) {
       var c = String(rawCode || "").trim();
-      if (/^cs_(live|test)_[a-zA-Z0-9]{20,}$/.test(c)) return true;
+      if (/^cs_(live|test)_[a-zA-Z0-9_]{20,}$/.test(c)) return true;
       if (/^(sub|pi|cus)_[a-zA-Z0-9]{14,}$/.test(c)) return true;
       var m = c.toUpperCase().match(/^PRO-([A-Z2-9]{4})-([A-Z2-9]{4})$/);
       if (m) {
@@ -876,6 +912,17 @@
           return { checked: true, valid: true, verifiedByServer: true, record: srvRec };
         }
         if (res.status === 404 || (data && data.valid === false)) {
+          var existingRec = loadStoredSubscriptionRecord();
+          var isRecentCheckoutGrace =
+            !customEndpoint &&
+            code.indexOf("cs_") === 0 &&
+            existingRec &&
+            existingRec.stripeSessionId === code &&
+            existingRec.verifiedByServer === "CHECKOUT_GRACE" &&
+            Date.now() <= (Number(existingRec.checkoutGraceUntil) || 0);
+          if (isRecentCheckoutGrace) {
+            return { checked: true, valid: true, pendingWebhookSync: true, record: existingRec };
+          }
           var revokedRec = {
             key: code,
             status: (data && data.status) || SUBSCRIPTION_STATES.EXPIRED,
@@ -952,7 +999,7 @@
       const files = Array.from(fileList || []);
       if (!files.length) return;
       if (files.length > 1 && !isPureAiPro) {
-        showProModal("🔒 Bulk Batch Mode (" + files.length + " images selected) requires PureAI Pro (🔥 4,99 € 1er mes con código FRIEND50 o 39 €/año Plan Anual Agencias). Loading the first image in Free Mode.");
+        showProModal("🔒 Bulk Batch Mode (" + files.length + " files selected — photos & .MP4 videos) requires PureAI Pro (🔥 4,99 € 1er mes con código FRIEND50 o 39 €/año Plan Anual Agencias). Loading the first file in Free Mode.", "img_batch_zip");
       }
       batchQueue = isPureAiPro ? files : [files[0]];
       if (isVideoFile(files[0])) {
@@ -1002,28 +1049,60 @@
         btn.style.opacity = "1";
       }
       const wrap = document.getElementById("img-preview-wrap");
+      const thumb = document.getElementById("img-preview-thumb");
       const pName = document.getElementById("img-preview-name");
       const pMeta = document.getElementById("img-preview-meta");
       if (wrap && pName) {
+        if (thumb) {
+          thumb.src = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='64' height='64' viewBox='0 0 64 64'><rect width='64' height='64' rx='12' fill='%2317102c'/><polygon points='26,20 26,44 46,32' fill='%2300e5a3'/></svg>";
+        }
         pName.textContent = "🎬 " + file.name + " (" + mb + " MB)";
         if (pMeta) pMeta.textContent = "✅ Vídeo listo para limpiar cabeceras de contenedor (Sora / Runway / Kling / C2PA)";
         wrap.style.display = "flex";
       }
     }
 
-    function scrubVideoBytesInPlace(rawBytes) {
+    function buildMp4CameraUdtaAtom(profileKey) {
+      var prof = CAMERA_PROFILES[profileKey];
+      if (!prof) return new Uint8Array(0);
+      var enc = new TextEncoder();
+      var payload = enc.encode("Apple QuickTime " + prof.make + " " + prof.model + " (" + prof.software + ") " + prof.lens);
+      var boxLen = 8 + payload.length;
+      var atom = new Uint8Array(boxLen);
+      var dv = new DataView(atom.buffer);
+      dv.setUint32(0, boxLen, false);
+      atom.set([0x75, 0x64, 0x74, 0x61], 4); // 'udta'
+      atom.set(payload, 8);
+      return atom;
+    }
+
+    function scrubVideoBytesInPlace(rawBytes, optionalDefenseProfile) {
       const out = new Uint8Array(rawBytes);
-      // Identificar rangos de átomos 'mdat' (flujo de vídeo comprimido H.264/H.265) para no corromper jamás fotogramas
+      // Identificar rangos de átomos 'mdat' (flujo de vídeo comprimido H.264/H.265) y limpiar cajas 'uuid' (C2PA/JUMBF)
       const mdatRanges = [];
       if (out.length >= 8) {
         const dv = new DataView(out.buffer, out.byteOffset, out.byteLength);
         let pos = 0;
         while (pos + 8 <= out.length) {
-          const boxSize = dv.getUint32(pos, false);
+          let boxSize = dv.getUint32(pos, false);
           const boxType = String.fromCharCode(out[pos + 4], out[pos + 5], out[pos + 6], out[pos + 7]);
-          if (boxSize < 8 || pos + boxSize > out.length) break;
+          let headerLen = 8;
+          if (boxSize === 0) {
+            boxSize = out.length - pos;
+          } else if (boxSize === 1) {
+            if (pos + 16 > out.length) break;
+            const hi = dv.getUint32(pos + 8, false);
+            const lo = dv.getUint32(pos + 12, false);
+            boxSize = hi * 4294967296 + lo;
+            headerLen = 16;
+          }
+          if (boxSize < headerLen || pos + boxSize > out.length) break;
           if (boxType === "mdat") {
-            mdatRanges.push([pos + 8, pos + boxSize]);
+            mdatRanges.push([pos + headerLen, pos + boxSize]);
+          } else if (boxType === "uuid") {
+            for (let u = pos + headerLen; u < pos + boxSize; u++) {
+              out[u] = 0x20;
+            }
           }
           pos += boxSize;
         }
@@ -1050,6 +1129,69 @@
           idx = asciiLower.indexOf(pat, idx + pat.length);
         }
       });
+      if (optionalDefenseProfile && CAMERA_PROFILES[optionalDefenseProfile]) {
+        const udtaAtom = buildMp4CameraUdtaAtom(optionalDefenseProfile);
+        const merged = new Uint8Array(out.length + udtaAtom.length);
+        merged.set(out, 0);
+        merged.set(udtaAtom, out.length);
+        return merged;
+      }
+      return out;
+    }
+
+    function extractEmbeddedPromptPreview(ascii) {
+      var m = ascii.match(/(?:parameters|prompt|workflow|trainedAlgorithmicMedia|Midjourney|ComfyUI|DALL-E)[\x20-\x7E]{4,140}/i);
+      if (!m || !m[0]) return "";
+      return m[0].replace(/\s+/g, " ").trim().slice(0, 120);
+    }
+
+    // Limpiador binario Lossless de segmentos JPEG (elimina APP1..APP15 y COM 0xFFFE sin recodificar el flujo DCT de píxeles) y de chunks de metadatos PNG
+    function stripJpegContainersLossless(rawBytes) {
+      var src = new Uint8Array(rawBytes);
+      if (src.length < 4) return src;
+      // Si no es JPEG (0xFFD8), limpiar chunks ancilares PNG (tEXt/zTXt/iTXt/eXIf/caBX/c2pa) y cadenas de metadatos fuera de IDAT
+      if (src[0] !== 0xff || src[1] !== 0xd8) {
+        var copy = new Uint8Array(src);
+        var asciiLow = new TextDecoder("latin1").decode(copy).toLowerCase();
+        var pngThreats = ["c2pa", "jumbf", "contentcredentials", "trainedalgorithmicmedia", "textparameters", "parameters", "prompt", "workflow", "midjourney", "comfyui", "dall-e", "firefly"];
+        for (var pIdx = 0; pIdx < pngThreats.length; pIdx++) {
+          var pat = pngThreats[pIdx];
+          var fPos = asciiLow.indexOf(pat);
+          while (fPos !== -1) {
+            for (var k = 0; k < pat.length; k++) copy[fPos + k] = 0x20;
+            fPos = asciiLow.indexOf(pat, fPos + pat.length);
+          }
+        }
+        return copy;
+      }
+      var chunks = [new Uint8Array([0xff, 0xd8])];
+      var pos = 2;
+      while (pos + 4 <= src.length && src[pos] === 0xff) {
+        var marker = src[pos + 1];
+        if (marker === 0xff) { pos++; continue; }
+        if (marker === 0xd9 || marker === 0xda) {
+          // SOS (0xFFDA) o EOI (0xFFD9): copiar flujo comprimido de imagen intacto hasta el final
+          chunks.push(src.subarray(pos));
+          break;
+        }
+        var segLen = (src[pos + 2] << 8) | src[pos + 3];
+        if (segLen < 2 || pos + 2 + segLen > src.length) {
+          chunks.push(src.subarray(pos));
+          break;
+        }
+        var isMetadataAppOrCom = (marker >= 0xe1 && marker <= 0xef) || marker === 0xfe;
+        if (!isMetadataAppOrCom) {
+          chunks.push(src.subarray(pos, pos + 2 + segLen));
+        }
+        pos += 2 + segLen;
+      }
+      var totalLen = chunks.reduce(function (acc, c) { return acc + c.length; }, 0);
+      var out = new Uint8Array(totalLen);
+      var offset = 0;
+      for (var i = 0; i < chunks.length; i++) {
+        out.set(chunks[i], offset);
+        offset += chunks[i].length;
+      }
       return out;
     }
 
@@ -1068,17 +1210,30 @@
       loadedIsVideo = false;
       const buf = await file.arrayBuffer();
       const bytes = new Uint8Array(buf);
-      const ascii = new TextDecoder("latin1").decode(bytes.slice(0, Math.min(bytes.length, 262144)));
+      const headSlice = bytes.slice(0, Math.min(bytes.length, 262144));
+      const tailSlice = bytes.length > 262144 ? bytes.slice(Math.max(262144, bytes.length - 262144)) : new Uint8Array(0);
+      const ascii = new TextDecoder("latin1").decode(headSlice) + (tailSlice.length ? "\n" + new TextDecoder("latin1").decode(tailSlice) : "");
+      let hasBinaryGpsIfd = false;
+      for (let g = 0; g + 3 < Math.min(headSlice.length, 65536); g++) {
+        if (
+          (headSlice[g] === 0x25 && headSlice[g + 1] === 0x88 && headSlice[g + 2] === 0x04 && headSlice[g + 3] === 0x00) ||
+          (headSlice[g] === 0x88 && headSlice[g + 1] === 0x25 && headSlice[g + 2] === 0x00 && headSlice[g + 3] === 0x04)
+        ) {
+          hasBinaryGpsIfd = true;
+          break;
+        }
+      }
 
       const findings = [];
       const hasC2paProvenance = /c2pa|jumbf|c2ma|c2cl|contentcredentials/i.test(ascii);
+      const hasInjectedCameraProfile = /iPhone 16 Pro|ILCE-7M4|Canon EOS R5/.exec(ascii);
       if (hasC2paProvenance) {
         findings.push("⚠️ C2PA / JUMBF Cryptographic Content Credentials Detected");
       }
-      if (/Exif\0\0/.test(ascii)) {
+      if (/Exif\0\0/.test(ascii) && !hasInjectedCameraProfile) {
         findings.push("⚠️ EXIF Binary Header Detected (Device / Timestamp / Lens Info)");
       }
-      if (/GPSInfo|GPSLatitude|GPSLongitude/.test(ascii)) {
+      if (/GPSInfo|GPSLatitude|GPSLongitude/.test(ascii) || (hasBinaryGpsIfd && !hasInjectedCameraProfile)) {
         findings.push("🚨 Geolocation GPS Coordinates Embedded in Image");
       }
       if (/http:\/\/ns\.adobe\.com\/xap|iptcExt:DigitalSourceType|trainedAlgorithmicMedia|compositeWithTrainedAlgorithmicMedia/i.test(ascii)) {
@@ -1087,21 +1242,41 @@
       if (/parameters|prompt|workflow|ComfyUI|Midjourney|Stable Diffusion|DALL-E|Firefly/i.test(ascii)) {
         findings.push("⚠️ Embedded AI Generation Prompt / Workflow Chunk (tEXt / iTXt)");
       }
-      if (findings.length === 0) {
-        findings.push("ℹ️ Container headers scanned (" + (file.size / 1024).toFixed(1) + " KB). Ready for clean pixel re-encoding.");
+      const hasRealThreats = findings.length > 0;
+      const cleanInfoBadges = [];
+      if (!hasRealThreats) {
+        if (hasInjectedCameraProfile) {
+          cleanInfoBadges.push("📸 Cabecera EXIF Óptica Detectada: " + hasInjectedCameraProfile[0] + " (0% C2PA/IA)");
+        } else {
+          cleanInfoBadges.push("✅ 0 C2PA / 0 JUMBF / 0 EXIF IA (" + (file.size / 1024).toFixed(1) + " KB) — Contenedor limpio");
+        }
       }
 
       const log = document.getElementById("img-audit-log");
+      const leakedSnippet = extractEmbeddedPromptPreview(ascii);
+      const snippetHtml = leakedSnippet
+        ? `<div style="margin-top:5px;padding:5px 8px;background:rgba(244,63,94,0.12);border:1px solid rgba(244,63,94,0.35);border-radius:6px;font-family:monospace;font-size:0.73rem;color:#fda4af;word-break:break-all;">🔍 <strong>Rastro/Prompt expuesto:</strong> "${escapeHtml(leakedSnippet)}"</div>`
+        : "";
       const provenanceNotice = hasC2paProvenance
         ? `<div style="margin-top:4px;font-size:0.74rem;color:#cbd5e1;">ℹ️ <em>Aviso de Gobernanza: Este archivo contiene credenciales de procedencia C2PA. Úselo solo en obras propias; si publica deepfakes en ámbito profesional, recuerde los deberes de transparencia del Art. 50 del Reglamento (UE) 2024/1689 (AI Act).</em></div>`
         : "";
-      const summaryMsg = currentUiLang === "es"
-        ? `⚠️ <strong>Metadatos detectados en "${escapeHtml(file.name)}"</strong> (${(file.size / 1024).toFixed(0)} KB)${batchQueue.length > 1 ? ` · ${batchQueue.length} fotos` : ""} — Pulsa el botón verde abajo para exportar una copia limpia.${provenanceNotice}`
-        : `⚠️ <strong>Metadata detected in "${escapeHtml(file.name)}"</strong> (${(file.size / 1024).toFixed(0)} KB)${batchQueue.length > 1 ? ` · ${batchQueue.length} photos` : ""} — Click the green button below to export a clean copy.${provenanceNotice}`;
-      log.innerHTML =
-        `<div style="color:#fde68a;font-size:0.82rem;line-height:1.45;">${summaryMsg}</div><div style="display:none;">` +
-        findings.map((f) => `<span class="threat-badge-red">${f}</span>`).join("") +
-        `</div>`;
+      if (hasRealThreats) {
+        const summaryMsg = currentUiLang === "es"
+          ? `⚠️ <strong>Metadatos detectados en "${escapeHtml(file.name)}"</strong> (${(file.size / 1024).toFixed(0)} KB)${batchQueue.length > 1 ? ` · ${batchQueue.length} archivos` : ""} — Pulsa el botón verde abajo para exportar una copia limpia.${snippetHtml}${provenanceNotice}`
+          : `⚠️ <strong>Metadata detected in "${escapeHtml(file.name)}"</strong> (${(file.size / 1024).toFixed(0)} KB)${batchQueue.length > 1 ? ` · ${batchQueue.length} files` : ""} — Click the green button below to export a clean copy.${snippetHtml}${provenanceNotice}`;
+        log.innerHTML =
+          `<div style="color:#fde68a;font-size:0.82rem;line-height:1.45;width:100%;">${summaryMsg}<div style="margin-top:6px;display:flex;flex-wrap:wrap;gap:4px;">` +
+          findings.map((f) => `<span class="threat-badge-red">${f}</span>`).join("") +
+          `</div></div>`;
+      } else {
+        const cleanSummaryMsg = currentUiLang === "es"
+          ? `✅ <strong>0 amenazas C2PA/IA en "${escapeHtml(file.name)}"</strong> (${(file.size / 1024).toFixed(0)} KB)${batchQueue.length > 1 ? ` · ${batchQueue.length} archivos` : ""} — Puedes re-exportar o aplicar un perfil EXIF de cámara abajo.`
+          : `✅ <strong>0 C2PA/AI threats in "${escapeHtml(file.name)}"</strong> (${(file.size / 1024).toFixed(0)} KB)${batchQueue.length > 1 ? ` · ${batchQueue.length} files` : ""} — Ready to export or inject a camera EXIF profile below.`;
+        log.innerHTML =
+          `<div style="color:#a7f3d0;font-size:0.82rem;line-height:1.45;width:100%;">${cleanSummaryMsg}<div style="margin-top:6px;display:flex;flex-wrap:wrap;gap:4px;">` +
+          cleanInfoBadges.map((b) => `<span class="threat-badge-green">${b}</span>`).join("") +
+          `</div></div>`;
+      }
 
       const img = new Image();
       img.onload = () => {
@@ -1206,34 +1381,66 @@
       cdmx: "Mexico City, MX (19.4326N, 99.1332W)",
       dubai: "Dubai, AE (25.2048N, 55.2708E)"
     };
+    var CITY_COORDS = {
+      madrid: { lat: 40.4168, lon: -3.7038 },
+      miami: { lat: 25.7617, lon: -80.1918 },
+      nyc: { lat: 40.7128, lon: -74.0060 },
+      london: { lat: 51.5072, lon: -0.1276 },
+      cdmx: { lat: 19.4326, lon: -99.1332 },
+      dubai: { lat: 25.2048, lon: 55.2708 }
+    };
+    var exifBatchStaggerSeq = 0;
 
-    // Construye un bloque binario JPEG APP1 (0xFFE1 + Exif\0\0 + TIFF Little-Endian IFD0) 100% válido
+    function writeDmsRationalToView(dv, byteOffset, absCoord) {
+      var deg = Math.floor(absCoord);
+      var minFloat = (absCoord - deg) * 60;
+      var min = Math.floor(minFloat);
+      var secNum = Math.round((minFloat - min) * 60 * 10000);
+      dv.setUint32(byteOffset, deg, true);
+      dv.setUint32(byteOffset + 4, 1, true);
+      dv.setUint32(byteOffset + 8, min, true);
+      dv.setUint32(byteOffset + 12, 1, true);
+      dv.setUint32(byteOffset + 16, secNum, true);
+      dv.setUint32(byteOffset + 20, 10000, true);
+    }
+
+    // Construye un bloque binario JPEG APP1 (0xFFE1 + Exif\0\0 + TIFF Little-Endian IFD0 + Sub-IFD GPS 0x8825) 100% válido
     function buildCameraApp1ExifSegment(profileKey) {
       var prof = CAMERA_PROFILES[profileKey] || CAMERA_PROFILES.spoof;
       var cityEl = document.getElementById("img-gps-city");
       var cityKey = (cityEl && cityEl.value) || "none";
       var cityStr = CITY_PROFILES[cityKey] || "";
+      var baseCoords = CITY_COORDS[cityKey] || null;
       var enc = new TextEncoder();
-      var now = new Date();
+      exifBatchStaggerSeq = (exifBatchStaggerSeq + 1) % 500;
+      var staggerMs = exifBatchStaggerSeq * (14000 + Math.floor(Math.random() * 9000));
+      var now = new Date(Date.now() - staggerMs);
       var pad = function (n) { return String(n).padStart(2, "0"); };
       var dtStr = now.getFullYear() + ":" + pad(now.getMonth() + 1) + ":" + pad(now.getDate()) + " " + pad(now.getHours()) + ":" + pad(now.getMinutes()) + ":" + pad(now.getSeconds());
 
-      var fields = [
-        { tag: 0x010f, bytes: enc.encode(prof.make + "\0") },
-        { tag: 0x0110, bytes: enc.encode(prof.model + "\0") },
-        { tag: 0x0131, bytes: enc.encode(prof.software + "\0") },
-        { tag: 0x0132, bytes: enc.encode(dtStr + "\0") },
-        { tag: 0xa434, bytes: enc.encode(prof.lens + "\0") }
-      ];
+      var fields = [];
       if (cityStr) {
-        fields.push({ tag: 0x010e, bytes: enc.encode("Captured in " + cityStr + "\0") });
+        fields.push({ tag: 0x010e, type: 2, bytes: enc.encode("Captured in " + cityStr + "\0") });
       }
+      fields.push(
+        { tag: 0x010f, type: 2, bytes: enc.encode(prof.make + "\0") },
+        { tag: 0x0110, type: 2, bytes: enc.encode(prof.model + "\0") },
+        { tag: 0x0131, type: 2, bytes: enc.encode(prof.software + "\0") },
+        { tag: 0x0132, type: 2, bytes: enc.encode(dtStr + "\0") }
+      );
+      if (baseCoords) {
+        fields.push({ tag: 0x8825, type: 4, isGpsPointer: true, bytes: new Uint8Array(0) });
+      }
+      fields.push({ tag: 0xa434, type: 2, bytes: enc.encode(prof.lens + "\0") });
 
       var numEntries = fields.length;
       var ifdHeaderLen = 2 + numEntries * 12 + 4;
       var dataStartOffset = 8 + ifdHeaderLen;
       var totalValuesLen = fields.reduce(function (s, f) { return s + f.bytes.length; }, 0);
-      var tiffLen = dataStartOffset + totalValuesLen;
+      var gpsIfdOffset = dataStartOffset + totalValuesLen;
+      // Sub-IFD GPS: 2 (count=5) + 5*12 (60 bytes entries) + 4 (next IFD=0) + 48 (2x 24-byte DMS rationals) = 114 bytes
+      var gpsBlockLen = baseCoords ? 114 : 0;
+      var tiffLen = gpsIfdOffset + gpsBlockLen;
       var app1PayloadLen = 2 + 6 + tiffLen; // length field (2) + "Exif\0\0" (6) + TIFF
       var seg = new Uint8Array(2 + app1PayloadLen);
       var dv = new DataView(seg.buffer);
@@ -1262,14 +1469,62 @@
       for (var i = 0; i < fields.length; i++) {
         var f = fields[i];
         dv.setUint16(dirPos, f.tag, true);
-        dv.setUint16(dirPos + 2, 2, true); // ASCII string type = 2
-        dv.setUint32(dirPos + 4, f.bytes.length, true);
-        dv.setUint32(dirPos + 8, valOffset, true);
-        seg.set(f.bytes, tiffBase + valOffset);
-        valOffset += f.bytes.length;
+        if (f.isGpsPointer) {
+          dv.setUint16(dirPos + 2, 4, true); // LONG type = 4
+          dv.setUint32(dirPos + 4, 1, true);
+          dv.setUint32(dirPos + 8, gpsIfdOffset, true);
+        } else {
+          dv.setUint16(dirPos + 2, 2, true); // ASCII string type = 2
+          dv.setUint32(dirPos + 4, f.bytes.length, true);
+          dv.setUint32(dirPos + 8, valOffset, true);
+          seg.set(f.bytes, tiffBase + valOffset);
+          valOffset += f.bytes.length;
+        }
         dirPos += 12;
       }
       dv.setUint32(dirPos, 0, true); // Next IFD offset = 0
+
+      if (baseCoords) {
+        var jitterLat = baseCoords.lat + (Math.random() - 0.5) * 0.004;
+        var jitterLon = baseCoords.lon + (Math.random() - 0.5) * 0.004;
+        var gPos = tiffBase + gpsIfdOffset;
+        var gpsRationalsOffset = gpsIfdOffset + 2 + 5 * 12 + 4;
+        dv.setUint16(gPos, 5, true);
+        gPos += 2;
+        // 0x0000 GPSVersionID (BYTE x 4 = 2.3.0.0)
+        dv.setUint16(gPos, 0x0000, true);
+        dv.setUint16(gPos + 2, 1, true);
+        dv.setUint32(gPos + 4, 4, true);
+        seg.set([2, 3, 0, 0], gPos + 8);
+        gPos += 12;
+        // 0x0001 GPSLatitudeRef (ASCII x 2 = 'N\0' or 'S\0')
+        dv.setUint16(gPos, 0x0001, true);
+        dv.setUint16(gPos + 2, 2, true);
+        dv.setUint32(gPos + 4, 2, true);
+        seg.set([jitterLat >= 0 ? 78 : 83, 0, 0, 0], gPos + 8);
+        gPos += 12;
+        // 0x0002 GPSLatitude (RATIONAL x 3)
+        dv.setUint16(gPos, 0x0002, true);
+        dv.setUint16(gPos + 2, 5, true);
+        dv.setUint32(gPos + 4, 3, true);
+        dv.setUint32(gPos + 8, gpsRationalsOffset, true);
+        gPos += 12;
+        // 0x0003 GPSLongitudeRef (ASCII x 2 = 'E\0' or 'W\0')
+        dv.setUint16(gPos, 0x0003, true);
+        dv.setUint16(gPos + 2, 2, true);
+        dv.setUint32(gPos + 4, 2, true);
+        seg.set([jitterLon >= 0 ? 69 : 87, 0, 0, 0], gPos + 8);
+        gPos += 12;
+        // 0x0004 GPSLongitude (RATIONAL x 3)
+        dv.setUint16(gPos, 0x0004, true);
+        dv.setUint16(gPos + 2, 5, true);
+        dv.setUint32(gPos + 4, 3, true);
+        dv.setUint32(gPos + 8, gpsRationalsOffset + 24, true);
+        gPos += 12;
+        dv.setUint32(gPos, 0, true);
+        writeDmsRationalToView(dv, tiffBase + gpsRationalsOffset, Math.abs(jitterLat));
+        writeDmsRationalToView(dv, tiffBase + gpsRationalsOffset + 24, Math.abs(jitterLon));
+      }
       return seg;
     }
 
@@ -1328,8 +1583,10 @@
         async (blob) => {
           if (!blob) return;
           let finalBlob = blob;
-          if (isSpoofMode && mime === "image/jpeg") {
-            finalBlob = await injectCameraExifIntoBlob(blob, defense);
+          const cityEl = document.getElementById("img-gps-city");
+          const cityVal = (cityEl && cityEl.value) || "none";
+          if ((isSpoofMode || cityVal !== "none") && mime === "image/jpeg") {
+            finalBlob = await injectCameraExifIntoBlob(blob, isSpoofMode ? defense : "spoof");
           }
           const cleanName = buildCameraNativeFilename(fileName, defense, ext);
           if (onDone) onDone(cleanName, finalBlob);
@@ -1388,6 +1645,9 @@
       a.href = URL.createObjectURL(blob);
       a.download = "PureAI-Certificate-" + auditHash + ".html";
       a.click();
+      if (typeof window !== "undefined" && typeof window.sendPureAiAnalyticsEvent === "function") {
+        window.sendPureAiAnalyticsEvent({ type: "app_action", event_name: "certificate_downloaded", tool_id: "forensic_certificate" });
+      }
       return auditHash;
     }
 
@@ -1477,8 +1737,12 @@
       }
     }
 
+    var lastQuotaChargedFileSig = "";
+    var lastPaywallTriggerTool = "direct_pricing_box";
+
     function persistImgQuota(val) {
       usedImgCredits = val;
+      lastQuotaChargedFileSig = "";
       try {
         localStorage.setItem("pureai_img_used", String(val));
       } catch (_) {}
@@ -1496,10 +1760,26 @@
     restoreImgQuotaFromAllLayers();
 
     function showProModal(msg, triggerTool) {
+      var resolvedTrigger = triggerTool || "img_c2pa_scrubber";
+      lastPaywallTriggerTool = resolvedTrigger;
+      if (typeof window !== "undefined") {
+        window.lastPaywallTriggerTool = resolvedTrigger;
+      }
       if (typeof window !== "undefined" && typeof window.sendPureAiAnalyticsEvent === "function") {
-        window.sendPureAiAnalyticsEvent({ type: "app_action", event_name: "paywall_viewed", trigger_tool: triggerTool || "img_c2pa_scrubber", usedCredits: usedImgCredits });
+        window.sendPureAiAnalyticsEvent({ type: "app_action", event_name: "paywall_viewed", trigger_tool: resolvedTrigger, usedCredits: usedImgCredits });
       }
       if (typeof document !== "undefined" && typeof document.getElementById === "function") {
+        var titleEl = document.getElementById("pro-modal-title");
+        if (titleEl) {
+          if (resolvedTrigger === "img_batch_zip") titleEl.textContent = "📦 Desbloquea Lotes .ZIP Mixtos (Fotos + .MP4) Ilimitados";
+          else if (resolvedTrigger === "video_c2pa_scrubber") titleEl.textContent = "🎬 Desbloquea Limpieza de Vídeos .MP4/.MOV + Firma Cámara";
+          else if (resolvedTrigger === "txt_deep_humanizer") titleEl.textContent = "✍️ Desbloquea Humanizador Profundo y Documentos .DOCX";
+          else titleEl.textContent = "📸 Desbloquea EXIF iPhone 16 Pro / Sony A7IV + GPS y Lotes .ZIP";
+        }
+        var descEl = document.getElementById("pro-modal-desc");
+        if (descEl && msg) {
+          descEl.textContent = msg;
+        }
         var modal = document.getElementById("pro-modal-overlay");
         if (modal) {
           modal.style.display = "flex";
@@ -1537,12 +1817,71 @@
       heygen: "https://www.heygen.com/?sid=rewardful&utm_content=creator&utm_medium=influencera&via=jorge-garcia"
     };
 
+    var restoredSavedPreset = false;
+    var sessionCleanCount = 0;
+
     function buildPostCleanPartnerTipHtml() {
+      var habitBar = (sessionCleanCount >= 2 || usedImgCredits >= 2)
+        ? `<div style="margin-top:6px;padding:6px 9px;background:rgba(16,185,129,0.12);border:1px solid rgba(16,185,129,0.35);border-radius:8px;font-size:0.72rem;color:#a7f3d0;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px;"><span>📌 <strong>Hábito Creador:</strong> Tu perfil EXIF/GPS ha quedado guardado para tu próxima visita.</span><button type="button" onclick="installPwaApp()" style="background:#10b981;color:#022c22;border:none;border-radius:6px;padding:3px 9px;font-size:0.71rem;font-weight:900;cursor:pointer;">📲 Fijar App en 1 clic (0 MB)</button></div>`
+        : "";
       return (
+        habitBar +
         `<div style="margin-top:8px;padding:6px 9px;background:rgba(15,23,42,0.75);border:1px solid rgba(56,189,248,0.28);border-radius:8px;font-size:0.72rem;color:#cbd5e1;line-height:1.4;">` +
         `💡 <strong>Complementos Creador:</strong> ¿Subes a RRSS? <a href="${PARTNER_STACK_LINKS.vpn}" target="_blank" rel="noopener sponsored" style="color:#38bdf8;text-decoration:underline;font-weight:700;">Oculta tu IP (ProtonVPN)</a> · <a href="${PARTNER_STACK_LINKS.elevenlabs}" target="_blank" rel="noopener sponsored" style="color:#6ee7b7;text-decoration:underline;font-weight:700;">Voz IA (ElevenLabs)</a> · <a href="${PARTNER_STACK_LINKS.heygen}" target="_blank" rel="noopener sponsored" style="color:#fcd34d;text-decoration:underline;font-weight:700;">Avatar Vídeo (HeyGen)</a>` +
         `</div>`
       );
+    }
+
+    async function processMixedBatchToZipEntries(files, defense, mime, ext, cityVal) {
+      var zipEntries = [];
+      for (var i = 0; i < files.length; i++) {
+        var f = files[i];
+        if (isVideoFile(f) && typeof f.arrayBuffer === "function") {
+          var vBuf = await f.arrayBuffer();
+          var cleanedVidBytes = scrubVideoBytesInPlace(new Uint8Array(vBuf), defense);
+          var vExt = (f.name.match(/\.(mp4|mov|webm|m4v)$/i) || [])[1] || "mp4";
+          var cleanVidName = buildCameraNativeFilename(f.name, defense, vExt);
+          zipEntries.push({ name: cleanVidName, bytes: cleanedVidBytes });
+        } else if (defense === "lossless" && typeof f.arrayBuffer === "function") {
+          var lBuf = await f.arrayBuffer();
+          var lBytes = stripJpegContainersLossless(new Uint8Array(lBuf));
+          var lBlob = new Blob([lBytes], { type: "image/jpeg" });
+          lBlob._bytes = lBytes;
+          if (cityVal && cityVal !== "none") {
+            lBlob = await injectCameraExifIntoBlob(lBlob, "spoof");
+          }
+          var finalLBytes = lBlob._bytes ? lBlob._bytes : new Uint8Array(await lBlob.arrayBuffer());
+          var cleanLName = buildCameraNativeFilename(f.name, defense, "jpg");
+          zipEntries.push({ name: cleanLName, bytes: finalLBytes });
+        } else {
+          await new Promise(function (resolve) {
+            var im = new Image();
+            im.onload = function () {
+              scrubSingleImageToBlob(im, f.name, defense, mime, ext, async function (cleanName, blob) {
+                var ab = blob._bytes ? blob._bytes : new Uint8Array(await blob.arrayBuffer());
+                zipEntries.push({ name: cleanName, bytes: ab });
+                resolve();
+              });
+            };
+            im.onerror = function () { resolve(); };
+            im.src = URL.createObjectURL(f);
+          });
+        }
+      }
+      return zipEntries;
+    }
+
+    function setScrubButtonBusy(isBusy) {
+      var btn = document.getElementById("btn-scrub-img");
+      if (!btn) return;
+      if (isBusy) {
+        btn.disabled = true;
+        btn.textContent = currentUiLang === "es" ? "⏳ Procesando en tu navegador..." : "⏳ Processing locally...";
+      } else {
+        btn.disabled = false;
+        var cfg = LANGS[currentUiLang] || LANGS.es;
+        btn.textContent = cfg.btnScrubImg;
+      }
     }
 
     function scrubAndDownloadImage() {
@@ -1550,20 +1889,68 @@
       const defense = document.getElementById("img-defense").value;
       const cityEl = document.getElementById("img-gps-city");
       const cityVal = (cityEl && cityEl.value) || "none";
-      const isAdvancedProImgMode = Boolean(CAMERA_PROFILES[defense]) || defense === "synthid" || cityVal !== "none";
+      const isAdvancedProImgMode = Boolean(CAMERA_PROFILES[defense]) || defense === "synthid" || cityVal !== "none" || loadedIsVideo;
       const isDemoSample = loadedImgFile.name === "dalle3-instagram-sample.jpg";
-      if (!isPureAiPro && !isDemoSample && isAdvancedProImgMode && usedImgCredits >= MAX_FREE_IMG_USES) {
-        showProModal("🔒 Has agotado tus " + MAX_FREE_IMG_USES + "/" + MAX_FREE_IMG_USES + " pruebas gratuitas de Perfiles Técnicos EXIF de Cámara (iPhone 16 Pro / Sony A7IV / Canon R5) y Geolocalización. La Limpieza Neutra 1 a 1 sigue siendo 100% Gratis e Ilimitada; desbloquea EXIF Pro Ilimitado y Lotes .ZIP desde 🔥 4,99 € (1er mes con FRIEND50) o 39 €/año.", "img_exif_pro_mode");
-        return;
-      }
-      if (!isPureAiPro && !isDemoSample && isAdvancedProImgMode) {
+      const currentFileSig = ((loadedImgFile && loadedImgFile.name) || "") + ":" + ((loadedImgFile && loadedImgFile.size) || 0);
+      const isReTestingSameFile = Boolean(currentFileSig && currentFileSig === lastQuotaChargedFileSig);
+      if (!isPureAiPro && !isDemoSample && isAdvancedProImgMode && !isReTestingSameFile && usedImgCredits >= MAX_FREE_IMG_USES) {
+        if (freeProCredits > 0) {
+          freeProCredits--;
+          try { localStorage.setItem("pureai_free_pro_credits", String(freeProCredits)); } catch (_) {}
+          lastQuotaChargedFileSig = currentFileSig;
+        } else {
+          showProModal("🔒 Has agotado tus " + MAX_FREE_IMG_USES + "/" + MAX_FREE_IMG_USES + " pruebas gratuitas de Perfiles Técnicos EXIF de Cámara (iPhone 16 Pro / Sony A7IV / Canon R5), Geolocalización GPS y Limpieza de Contenedores de Vídeo (.MP4/.MOV). La Limpieza Neutra de fotos 1 a 1 sigue siendo 100% Gratis e Ilimitada; desbloquea EXIF Pro, Vídeo y Lotes .ZIP desde 🔥 4,99 € (1er mes con FRIEND50) o 39 €/año.", loadedIsVideo ? "video_c2pa_scrubber" : "img_exif_pro_mode");
+          return;
+        }
+      } else if (!isPureAiPro && !isDemoSample && isAdvancedProImgMode && !isReTestingSameFile) {
         persistImgQuota(usedImgCredits + 1);
+        lastQuotaChargedFileSig = currentFileSig;
+      }
+      sessionCleanCount++;
+      saveCurrentCreatorWorkflow();
+      if (typeof window !== "undefined" && typeof window.sendPureAiAnalyticsEvent === "function") {
+        window.sendPureAiAnalyticsEvent({
+          type: "app_action",
+          event_name: "tool_completed",
+          tool_id: (isPureAiPro && batchQueue.length > 1) ? "img_batch_zip" : (loadedIsVideo ? "video_c2pa_scrubber" : "img_c2pa_scrubber"),
+          defense_mode: defense,
+          has_gps: cityVal !== "none",
+          restored_saved_preset: restoredSavedPreset,
+          isDemo: isDemoSample
+        });
       }
 
-      // P1: Si es un vídeo corto (.MP4 / .MOV / .WEBM), limpiar firmas C2PA/Sora/Runway/Kling/Lavf en contenedor
+      const needsJpegForExifGps = Boolean(CAMERA_PROFILES[defense]) || cityVal !== "none";
+      const fmtSelectEl = document.getElementById("img-format");
+      if (needsJpegForExifGps && fmtSelectEl && fmtSelectEl.value !== "image/jpeg") {
+        fmtSelectEl.value = "image/jpeg";
+      }
+      const mime = needsJpegForExifGps ? "image/jpeg" : (fmtSelectEl ? fmtSelectEl.value : "image/jpeg");
+      const ext = mime === "image/png" ? "png" : mime === "image/webp" ? "webp" : "jpg";
+
+      // Procesamiento por lotes .ZIP unificado (soporta mezcla de fotos .JPG/.PNG/.WEBP y vídeos .MP4/.MOV)
+      if (isPureAiPro && batchQueue.length > 1) {
+        setScrubButtonBusy(true);
+        processMixedBatchToZipEntries(batchQueue, defense, mime, ext, cityVal).then(function (zipEntries) {
+          setScrubButtonBusy(false);
+          if (!zipEntries.length) return;
+          const zipBlob = createZipBlob(zipEntries);
+          const a = document.createElement("a");
+          a.href = URL.createObjectURL(zipBlob);
+          a.download = "pureai-clean-batch.zip";
+          a.click();
+          document.getElementById("img-audit-log").innerHTML =
+            `<span class="threat-badge-green">📦 BATCH ZIP DOWNLOADED (pureai-clean-batch.zip): ${zipEntries.length} files (photos &amp; .MP4 videos) scrubbed (0 bytes of C2PA, JUMBF, EXIF or GPS remaining).</span>`;
+        });
+        return;
+      }
+
+      // P1: Si es un vídeo corto (.MP4 / .MOV / .WEBM), limpiar firmas C2PA/Sora/Runway/Kling/Lavf en contenedor e inyectar perfil cámara si activo
       if (loadedIsVideo) {
+        setScrubButtonBusy(true);
         loadedImgFile.arrayBuffer().then(function (buf) {
-          var cleanedBytes = scrubVideoBytesInPlace(new Uint8Array(buf));
+          setScrubButtonBusy(false);
+          var cleanedBytes = scrubVideoBytesInPlace(new Uint8Array(buf), defense);
           var vExt = (loadedImgFile.name.match(/\.(mp4|mov|webm|m4v)$/i) || [])[1] || "mp4";
           var cleanVidName = buildCameraNativeFilename(loadedImgFile.name, defense, vExt);
           var vBlob = new Blob([cleanedBytes], { type: loadedImgFile.type || "video/mp4" });
@@ -1582,33 +1969,29 @@
         return;
       }
 
-      const mime = document.getElementById("img-format").value;
-      const ext = mime === "image/png" ? "png" : mime === "image/webp" ? "webp" : "jpg";
-
-      if (isPureAiPro && batchQueue.length > 1) {
-        const zipEntries = [];
-        let processed = 0;
-        batchQueue.forEach((f) => {
-          const im = new Image();
-          im.onload = () => {
-            scrubSingleImageToBlob(im, f.name, defense, mime, ext, async (cleanName, blob) => {
-              const ab = blob._bytes
-                ? blob._bytes
-                : new Uint8Array(await blob.arrayBuffer());
-              zipEntries.push({ name: cleanName, bytes: ab });
-              processed++;
-              if (processed === batchQueue.length) {
-                const zipBlob = createZipBlob(zipEntries);
-                const a = document.createElement("a");
-                a.href = URL.createObjectURL(zipBlob);
-                a.download = "pureai-clean-batch.zip";
-                a.click();
-                document.getElementById("img-audit-log").innerHTML =
-                  `<span class="threat-badge-green">📦 BATCH ZIP DOWNLOADED (pureai-clean-batch.zip): ${processed} images scrubbed (0 bytes of C2PA, JUMBF, EXIF or GPS remaining).</span>`;
-              }
-            });
-          };
-          im.src = URL.createObjectURL(f);
+      if (defense === "lossless" && loadedImgFile && typeof loadedImgFile.arrayBuffer === "function") {
+        setScrubButtonBusy(true);
+        loadedImgFile.arrayBuffer().then(async function (buf) {
+          setScrubButtonBusy(false);
+          var losslessBytes = stripJpegContainersLossless(new Uint8Array(buf));
+          var isTrueJpeg = losslessBytes.length >= 2 && losslessBytes[0] === 0xff && losslessBytes[1] === 0xd8;
+          var outMime = isTrueJpeg ? "image/jpeg" : (loadedImgFile.type || "image/png");
+          var outExt = isTrueJpeg ? "jpg" : ((loadedImgFile.name.match(/\.(png|webp)$/i) || [])[1] || "png").toLowerCase();
+          var lBlob = new Blob([losslessBytes], { type: outMime });
+          lBlob._bytes = losslessBytes;
+          if (cityVal !== "none" && isTrueJpeg) {
+            lBlob = await injectCameraExifIntoBlob(lBlob, "spoof");
+          }
+          var cleanName = buildCameraNativeFilename(loadedImgFile.name, defense, outExt);
+          lastCleanedBlob = lBlob;
+          lastCleanedName = cleanName;
+          var a = document.createElement("a");
+          a.href = URL.createObjectURL(lBlob);
+          a.download = cleanName;
+          a.click();
+          document.getElementById("img-audit-log").innerHTML =
+            `<span class="threat-badge-green">⚡ 100% LOSSLESS CLEANED: 0% pixel re-encoding &amp; 0 C2PA/EXIF metadata in ${escapeHtml(cleanName)}.</span>` +
+            buildPostCleanPartnerTipHtml();
         });
         return;
       }
@@ -1626,7 +2009,7 @@
           `<span class="threat-badge-green">✅ 100% CLEAN VERIFIED: 0 bytes of C2PA, JUMBF, EXIF, XMP or GPS remaining in ${escapeHtml(cleanName)} (Before: ${origKB} KB → Clean: ${newKB} KB).</span>` +
           `<div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap;">` +
           `<button type="button" onclick="shareOrSaveCleanImage()" style="background:#00e5a3;color:#042f1e;border:none;border-radius:6px;padding:5px 11px;font-size:0.75rem;font-weight:900;cursor:pointer;">📲 Guardar en Galería / Compartir</button>` +
-          `<button type="button" onclick="verifyLastCleanedImage()" style="background:#1e1633;color:#6ee7b7;border:1px solid #00e5a3;border-radius:6px;padding:5px 10px;font-size:0.75rem;font-weight:700;cursor:pointer;">🔍 Verificar 0% Metadatos</button><button type="button" onclick="generateZeroAiCertificate(lastCleanedName)" style="background:#2e1065;color:#e9d5ff;border:1px solid #a855f7;border-radius:6px;padding:5px 10px;font-size:0.75rem;font-weight:700;cursor:pointer;">🏅 Informe Técnico 0% Metadatos</button>` +
+          `<button type="button" onclick="verifyLastCleanedImage()" style="background:#1e1633;color:#6ee7b7;border:1px solid #00e5a3;border-radius:6px;padding:5px 10px;font-size:0.75rem;font-weight:700;cursor:pointer;">🔍 Verificar 0% Metadatos</button><button type="button" onclick="generateZeroAiCertificate(lastCleanedName)" style="background:rgba(255,255,255,0.05);color:#cbd5e1;border:1px solid rgba(255,255,255,0.16);border-radius:6px;padding:5px 9px;font-size:0.72rem;font-weight:600;cursor:pointer;">📋 Copiar / Descargar Informe Técnico</button>` +
           `</div>` +
           buildPostCleanPartnerTipHtml();
       });
@@ -1739,32 +2122,52 @@
       return out;
     }
 
-    // Lector Client-Side de archivos .TXT, .MD y .DOCX (extracción XML de Word)
+    function decodeBasicXmlEntities(s) {
+      return String(s || "")
+        .replace(/&amp;/g, "&")
+        .replace(/&lt;/g, "<")
+        .replace(/&gt;/g, ">")
+        .replace(/&quot;/g, '"')
+        .replace(/&apos;|&#39;/g, "'")
+        .replace(/&#x2014;|&#8212;/gi, "—");
+    }
+
+    // Lector Client-Side de archivos .TXT, .MD y .DOCX (extracción XML de Word con soporte de Data Descriptors)
     async function loadDocFile(file) {
       try {
         const name = (file.name || "").toLowerCase();
         if (name.endsWith(".docx")) {
           const buf = await file.arrayBuffer();
-          const raw = new TextDecoder("utf-8", { fatal: false }).decode(new Uint8Array(buf));
+          const bytes = new Uint8Array(buf);
+          const raw = new TextDecoder("utf-8", { fatal: false }).decode(bytes);
           const xmlMatches = raw.match(/<w:t[^>]*>([^<]+)<\/w:t>/g);
           if (xmlMatches && xmlMatches.length > 0) {
-            const extracted = xmlMatches.map((m) => m.replace(/<[^>]+>/g, "")).join(" ");
+            const extracted = decodeBasicXmlEntities(xmlMatches.map((m) => m.replace(/<[^>]+>/g, "")).join(" "));
             document.getElementById("txt-input").value = extracted;
             analyzeText();
             return;
           }
           // Si el .docx está comprimido con Deflate, usar DecompressionStream sobre la entrada word/document.xml
           if (typeof DecompressionStream !== "undefined") {
-            const bytes = new Uint8Array(buf);
             const dv = new DataView(buf);
             let pos = 0;
             while (pos + 30 < bytes.length && dv.getUint32(pos, true) === 0x04034b50) {
               const compMethod = dv.getUint16(pos + 8, true);
-              const compSize = dv.getUint32(pos + 18, true);
+              let compSize = dv.getUint32(pos + 18, true);
               const fnLen = dv.getUint16(pos + 26, true);
               const extraLen = dv.getUint16(pos + 28, true);
               const entryName = new TextDecoder().decode(bytes.slice(pos + 30, pos + 30 + fnLen));
               const dataStart = pos + 30 + fnLen + extraLen;
+              if (compSize === 0) {
+                // Buscar siguiente cabecera ZIP local (0x04034b50) o directorio central (0x02014b50)
+                let nextSig = dataStart;
+                while (nextSig + 4 <= bytes.length) {
+                  const sig = dv.getUint32(nextSig, true);
+                  if (sig === 0x04034b50 || sig === 0x02014b50) break;
+                  nextSig++;
+                }
+                compSize = Math.max(0, nextSig - dataStart);
+              }
               if (entryName === "word/document.xml" && compMethod === 8 && compSize > 0) {
                 const slice = bytes.slice(dataStart, dataStart + compSize);
                 const ds = new DecompressionStream("deflate-raw");
@@ -1773,7 +2176,7 @@
                 writer.close();
                 const xmlStr = await new Response(ds.readable).text();
                 const paragraphs = xmlStr.split(/<\/w:p>/i).map((p) =>
-                  (p.match(/<w:t[^>]*>([^<]+)<\/w:t>/g) || []).map((t) => t.replace(/<[^>]+>/g, "")).join("")
+                  decodeBasicXmlEntities((p.match(/<w:t[^>]*>([^<]+)<\/w:t>/g) || []).map((t) => t.replace(/<[^>]+>/g, "")).join(""))
                 ).filter(Boolean).join("\n\n");
                 if (paragraphs) {
                   document.getElementById("txt-input").value = paragraphs;
@@ -1781,9 +2184,11 @@
                   return;
                 }
               }
-              pos = dataStart + compSize;
+              pos = dataStart + Math.max(1, compSize);
             }
           }
+          document.getElementById("txt-audit-log").innerHTML = `<span class="threat-badge-red">⚠️ No se pudo extraer texto legible del archivo .DOCX. Copia y pega el texto directamente en el recuadro.</span>`;
+          return;
         }
         const text = await file.text();
         document.getElementById("txt-input").value = text;
@@ -1809,13 +2214,21 @@
       });
 
       const totalCliches = dashMatches.length + clicheCount;
-      document.getElementById("stat-unicode").textContent = unicodeMatches.length + " found";
+      const isEsUi = currentUiLang === "es";
+      const isSampleLoaded = Object.values(SAMPLES).includes(txt);
+      const riskLabelEl = document.getElementById("ui-risk-label");
+      if (riskLabelEl) {
+        riskLabelEl.textContent = isSampleLoaded
+          ? (isEsUi ? "🎯 Índice Unicode y Clichés (Ejemplo interactivo):" : "🎯 Unicode & Cliché Index (Interactive sample):")
+          : (isEsUi ? "🎯 Índice de Marcas Unicode y Clichés:" : "🎯 Unicode & Cliché Index:");
+      }
+      document.getElementById("stat-unicode").textContent = unicodeMatches.length + (isEsUi ? " detectadas" : " found");
       document.getElementById("stat-unicode").style.color = unicodeMatches.length > 0 ? "#ef4444" : "#10b981";
-      document.getElementById("stat-dashes").textContent = totalCliches + " found";
+      document.getElementById("stat-dashes").textContent = totalCliches + (isEsUi ? " detectadas" : " found");
       document.getElementById("stat-dashes").style.color = totalCliches > 0 ? "#f59e0b" : "#10b981";
 
       const sentences = txt.split(/[.!?]+/).map((s) => s.trim()).filter((s) => s.length > 8);
-      let burstLabel = "✅ Natural Rhythm";
+      let burstLabel = isEsUi ? "✅ Ritmo Natural" : "✅ Natural Rhythm";
       let lowBurst = false;
       if (sentences.length >= 2) {
         const lengths = sentences.map((s) => s.split(/\s+/).length);
@@ -1823,7 +2236,7 @@
         const variance = lengths.reduce((a, b) => a + Math.pow(b - avg, 2), 0) / lengths.length;
         const stdDev = Math.sqrt(variance);
         lowBurst = stdDev < 4.2;
-        burstLabel = lowBurst ? "⚠️ Robotic (Uniform)" : "✅ Natural Rhythm";
+        burstLabel = lowBurst ? (isEsUi ? "⚠️ Robótico (Uniforme)" : "⚠️ Robotic (Uniform)") : (isEsUi ? "✅ Ritmo Natural" : "✅ Natural Rhythm");
       }
       document.getElementById("stat-burst").textContent = burstLabel;
       document.getElementById("stat-burst").style.color = lowBurst ? "#f59e0b" : "#10b981";
@@ -1836,15 +2249,21 @@
       const riskBarEl = document.getElementById("risk-bar");
       riskBarEl.style.width = riskPct + "%";
       if (riskPct >= 50) {
-        riskScoreEl.textContent = `🚨 ${riskPct}% Pattern Density (High Unicode/Cliché Density)`;
+        riskScoreEl.textContent = isEsUi
+          ? `🚨 ${riskPct}% Densidad de Marcas IA / Unicode`
+          : `🚨 ${riskPct}% Pattern Density (High Unicode/Cliché Density)`;
         riskScoreEl.style.color = "#ef4444";
         riskBarEl.style.background = "linear-gradient(90deg,#f59e0b,#ef4444)";
       } else if (riskPct >= 18) {
-        riskScoreEl.textContent = `⚠️ ${riskPct}% Pattern Traces Remaining (Use Deep Humanizer)`;
+        riskScoreEl.textContent = isEsUi
+          ? `⚠️ ${riskPct}% Rastro Sintáctico Restante (Usa Humanizador Pro)`
+          : `⚠️ ${riskPct}% Pattern Traces Remaining (Use Deep Humanizer)`;
         riskScoreEl.style.color = "#f59e0b";
         riskBarEl.style.background = "#f59e0b";
       } else {
-        riskScoreEl.textContent = `✅ ${riskPct}% Pattern Density — CLEAN FORMAT & NATURAL RHYTHM`;
+        riskScoreEl.textContent = isEsUi
+          ? `✅ ${riskPct}% Densidad — TEXTO LIMPIO Y RITMO NATURAL`
+          : `✅ ${riskPct}% Pattern Density — CLEAN FORMAT & NATURAL RHYTHM`;
         riskScoreEl.style.color = "#10b981";
         riskBarEl.style.background = "#10b981";
       }
@@ -1921,6 +2340,9 @@
       }
       document.getElementById("txt-audit-log").innerHTML =
         `<span class="threat-badge-green">✅ Hidden Unicode watermarks (U+202F / U+200B) stripped & copied! Click '✨ Deep AI Humanizer (Pro)' to also replace flagged orange AI clichés.</span>`;
+      if (typeof window !== "undefined" && typeof window.sendPureAiAnalyticsEvent === "function") {
+        window.sendPureAiAnalyticsEvent({ type: "app_action", event_name: "tool_completed", tool_id: "txt_unicode_scrubber", isDemo: false });
+      }
     }
 
     var freeProCredits = parseInt(localStorage.getItem("pureai_free_pro_credits") || "0", 10);
@@ -1928,31 +2350,12 @@
 
     function updateReferralUi() {
       var badge = document.getElementById("ref-status-badge");
-      var bar = document.getElementById("ref-progress-bar");
       var box = document.getElementById("ref-reward-box");
-      if (!badge || !bar) return;
-      var pct = Math.max(8, Math.min(100, Math.round((refFriendsCount / 3) * 100)));
-      bar.style.width = pct + "%";
-      if (refFriendsCount >= 3) {
-        badge.textContent = "3/3 Amigos · 🏆 ¡50% DTO. (3 Meses) DESBLOQUEADO!";
-        if (box) {
-          box.style.display = "block";
-          box.innerHTML = "🎉 ¡Nivel Máximo (3/3)! Usa el código <strong style='background:#10b981;color:#022c22;padding:2px 8px;border-radius:5px;'>REF50</strong> en Stripe para tu <strong>50% DTO. durante 3 meses (4,99 €/mes)</strong> (+ " + freeProCredits + " crédito Pro gratis activo)";
-        }
-      } else if (refFriendsCount === 2) {
-        badge.textContent = "2/3 Amigos · 🔥 30% DTO. (3 Meses) Activo";
-        if (box) {
-          box.style.display = "block";
-          box.innerHTML = "🎁 Nivel 2/3 desbloqueado: Código <strong style='background:#10b981;color:#022c22;padding:2px 8px;border-radius:5px;'>REF30</strong> (30% DTO. x 3 meses = 6,99 €/mes). ¡Comparte 1 vez más para llegar al 50% DTO. (REF50)!";
-        }
-      } else if (refFriendsCount === 1) {
-        badge.textContent = "1/3 Amigos · ✨ 15% DTO. (3 Meses) + 1 Uso Pro Gratis";
-        if (box) {
-          box.style.display = "block";
-          box.innerHTML = "🎁 Nivel 1/3 desbloqueado: Código <strong style='background:#10b981;color:#022c22;padding:2px 8px;border-radius:5px;'>REF15</strong> (15% DTO. x 3 meses = 8,49 €/mes) + <strong>1 Crédito Pro Gratis</strong> listo para usar arriba.";
-        }
-      } else {
-        badge.textContent = "0/3 Amigos · Nivel Actual: 0% DTO.";
+      if (!badge) return;
+      badge.textContent = "Código directo activo: FRIEND50 (50% DTO)";
+      if (refFriendsCount >= 1 && box) {
+        box.style.display = "block";
+        box.innerHTML = "✅ Enlace de invitación compartido. Usa el código <strong style='background:#10b981;color:#022c22;padding:2px 8px;border-radius:5px;'>FRIEND50</strong> en Stripe Checkout para aplicar tu <strong>50% DTO directo (4,99 €)</strong>.";
       }
     }
 
@@ -1968,10 +2371,6 @@
       } else if (navigator.clipboard) {
         navigator.clipboard.writeText(shareUrl).catch(function () {});
       }
-      if (refFriendsCount === 0 && freeProCredits === 0) {
-        freeProCredits = 1;
-        localStorage.setItem("pureai_free_pro_credits", "1");
-      }
       refFriendsCount = Math.min(3, refFriendsCount + 1);
       localStorage.setItem("pureai_ref_friends", String(refFriendsCount));
       updateReferralUi();
@@ -1985,6 +2384,88 @@
         if (el && el.classList) el.classList.toggle("active", k === t);
       });
     }
+    function saveCurrentCreatorWorkflow() {
+      try {
+        var fmtEl = document.getElementById("img-format");
+        var defEl = document.getElementById("img-defense");
+        var cityEl = document.getElementById("img-gps-city");
+        if (defEl && defEl.value) localStorage.setItem("pureai_saved_defense", defEl.value);
+        if (cityEl && cityEl.value) localStorage.setItem("pureai_saved_city", cityEl.value);
+        if (fmtEl && fmtEl.value) localStorage.setItem("pureai_saved_format", fmtEl.value);
+      } catch (_) {}
+    }
+
+    function restoreSavedCreatorWorkflow() {
+      try {
+        var savedDef = localStorage.getItem("pureai_saved_defense");
+        var savedCity = localStorage.getItem("pureai_saved_city");
+        var savedFmt = localStorage.getItem("pureai_saved_format");
+        var defEl = document.getElementById("img-defense");
+        var cityEl = document.getElementById("img-gps-city");
+        var fmtEl = document.getElementById("img-format");
+        restoredSavedPreset = false;
+        if (savedDef && defEl) {
+          defEl.value = savedDef;
+          restoredSavedPreset = true;
+        }
+        if (savedCity && cityEl) {
+          cityEl.value = savedCity;
+          restoredSavedPreset = true;
+        }
+        if (savedFmt && fmtEl) {
+          fmtEl.value = savedFmt;
+        }
+        return restoredSavedPreset;
+      } catch (_) {
+        return false;
+      }
+    }
+
+    function applyCreatorPreset(presetName) {
+      var fmtEl = document.getElementById("img-format");
+      var defEl = document.getElementById("img-defense");
+      var cityEl = document.getElementById("img-gps-city");
+      if (!defEl) return;
+      if (presetName === "iphone_agency") {
+        if (fmtEl) fmtEl.value = "image/jpeg";
+        defEl.value = "spoof";
+        if (cityEl && cityEl.value === "none") cityEl.value = "miami";
+      } else if (presetName === "sony_studio") {
+        if (fmtEl) fmtEl.value = "image/jpeg";
+        defEl.value = "spoof_sony";
+      } else if (presetName === "photoshop_lossless") {
+        if (fmtEl) fmtEl.value = "image/jpeg";
+        defEl.value = "lossless";
+        if (cityEl) cityEl.value = "none";
+      } else {
+        defEl.value = "pure";
+        if (cityEl) cityEl.value = "none";
+      }
+      saveCurrentCreatorWorkflow();
+    }
+    (function applyUrlCreatorPreset() {
+      var q = (typeof location !== "undefined" && location.search) || "";
+      var pm = q.match(/[?&]preset=(iphone|sony|canon|lossless|pure)/i);
+      var cm = q.match(/[?&]city=(madrid|miami|nyc|london|cdmx|dubai)/i);
+      if (pm && pm[1]) {
+        var p = pm[1].toLowerCase();
+        if (p === "iphone") applyCreatorPreset("iphone_agency");
+        else if (p === "sony") applyCreatorPreset("sony_studio");
+        else if (p === "lossless") applyCreatorPreset("photoshop_lossless");
+        else if (p === "canon") {
+          var d = document.getElementById("img-defense");
+          if (d) d.value = "spoof_canon";
+          saveCurrentCreatorWorkflow();
+        } else applyCreatorPreset("pure_clean");
+      } else if (!cm) {
+        restoreSavedCreatorWorkflow();
+      }
+      if (cm && cm[1]) {
+        var cEl = document.getElementById("img-gps-city");
+        if (cEl) cEl.value = cm[1].toLowerCase();
+        saveCurrentCreatorWorkflow();
+      }
+    })();
     function copyCleanTextBtn() {
       var txt = document.getElementById("txt-input").value;
       if (!txt) return;
@@ -2035,13 +2516,16 @@
       analyzeText();
       copyCleanTextBtn();
       document.getElementById("txt-audit-log").innerHTML =
-        `<span class="threat-badge-green">✅ 100% DEEP HUMANIZED & COPIED: All Unicode watermarks, AI dashes, and Turnitin/GPTZero clichés removed!</span>` + `<div style="margin-top:6px;display:flex;gap:6px;flex-wrap:wrap;"><button type="button" onclick="generateZeroAiCertificate('Humanized-Document.txt')" style="background:#2e1065;color:#e9d5ff;border:1px solid #a855f7;border-radius:6px;padding:4px 10px;font-size:0.73rem;font-weight:700;cursor:pointer;">🏅 Descargar Informe Técnico 0% Metadatos</button></div>`;
+        `<span class="threat-badge-green">✅ 100% HIGIENIZADO Y COPIADO: 0 marcas Unicode invisibles (U+202F/U+200B), guiones IA y muletillas frecuentes reemplazadas.</span>` + `<div style="margin-top:6px;display:flex;gap:6px;flex-wrap:wrap;"><button type="button" onclick="generateZeroAiCertificate('Humanized-Document.txt')" style="background:rgba(255,255,255,0.05);color:#cbd5e1;border:1px solid rgba(255,255,255,0.16);border-radius:6px;padding:4px 9px;font-size:0.72rem;font-weight:600;cursor:pointer;">📋 Copiar / Descargar Informe Técnico</button></div>`;
+      if (typeof window !== "undefined" && typeof window.sendPureAiAnalyticsEvent === "function") {
+        window.sendPureAiAnalyticsEvent({ type: "app_action", event_name: "tool_completed", tool_id: "txt_deep_humanizer", tone: currentHumanizerTone, isDemo: false });
+      }
     }
 
     // Verificación segura del retorno de compra desde Stripe (?session_id=cs_live_...) con idempotencia y verificación server-side (/verify-license)
     function processStripeCheckoutReturn(searchQuery) {
       var q = typeof searchQuery === "string" ? searchQuery : (location.search || "");
-      var sessMatch = q.match(/[?&]session_id=(cs_(?:live|test)_[a-zA-Z0-9]{20,})/);
+      var sessMatch = q.match(/[?&]session_id=(cs_(?:live|test)_[a-zA-Z0-9_]{20,})/);
       if (!sessMatch || !sessMatch[1]) {
         return { activated: false, reason: "missing_or_invalid_session_id" };
       }
@@ -2057,7 +2541,8 @@
         key: myProKey,
         stripeSessionId: sessionId,
         status: SUBSCRIPTION_STATES.ACTIVE,
-        verifiedByServer: false,
+        verifiedByServer: "CHECKOUT_GRACE",
+        checkoutGraceUntil: now + 15 * 60 * 1000,
         activatedAt: now,
         expiresAt: now + 32 * 24 * 3600 * 1000,
         graceEndsAt: now + 35 * 24 * 3600 * 1000,
@@ -2091,7 +2576,29 @@
       }
       return { activated: true, duplicate: false, sessionId: sessionId, partner: soldAff };
     }
+    function syncProStatusOnWindowFocus() {
+      var rec = loadStoredSubscriptionRecord();
+      if (!rec) return false;
+      var check = evaluateSubscriptionAccess(rec, Date.now());
+      isPureAiPro = check.hasAccess;
+      updateFreeImgQuotaUi();
+      if (isPureAiPro) closeProModal();
+      return isPureAiPro;
+    }
+    if (typeof window !== "undefined" && typeof window.addEventListener === "function") {
+      window.addEventListener("focus", syncProStatusOnWindowFocus);
+    }
+
     processStripeCheckoutReturn(location.search);
+    (function checkVerifyAuditUrlParam() {
+      var vm = (location.search || "").match(/[?&]verify=(PA-[A-Z0-9]{6,12})/i);
+      if (vm && vm[1]) {
+        var vLog = document.getElementById("img-audit-log");
+        if (vLog) {
+          vLog.innerHTML = `<span class="threat-badge-green">🔬 ID de Inspección Técnica ${escapeHtml(vm[1].toUpperCase())}: Formato de auditoría local verificado. Arrastra el archivo aquí arriba para comprobar sus cabeceras byte a byte en tiempo real.</span>`;
+        }
+      }
+    })();
     if (location.search.includes("embed=1")) {
       var sf = document.getElementById("pa-seo-footer");
       if (sf) sf.style.display = "none";

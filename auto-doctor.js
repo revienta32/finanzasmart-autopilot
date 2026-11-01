@@ -150,18 +150,20 @@ function classifySupportInquiry(rawText) {
   };
 }
 
-function generateAutomatedFinancialDigest(rawEvents) {
+function generateAutomatedFinancialDigest(rawEvents, options = {}) {
   const seenEventIds = new Set();
   const digest = {
     generatedAt: new Date().toISOString(),
     accountingDisclaimer: "AVISO: Este informe operativo interno es orientativo para control de gestión y NO sustituye los libros contables ni las declaraciones fiscales obligatorias.",
     verifiedSalesCount: 0,
     grossCollectionsCents: 0,
+    totalVatCents: 0,
     refundsCount: 0,
     refundsCents: 0,
     disputesCount: 0,
     estimatedStripeFeesCents: 0,
     estimatedAffiliateHoldCents: 0,
+    variableProcessingCostPerOpCents: 0,
     activeSubscriptionsCount: 0,
     canceledSubscriptionsCount: 0,
     normalizedMrrCents: 0,
@@ -184,6 +186,7 @@ function generateAutomatedFinancialDigest(rawEvents) {
     if (ev.type === "SALE_MONTHLY" || ev.type === "SALE_ANNUAL") {
       digest.verifiedSalesCount++;
       digest.grossCollectionsCents += amount;
+      digest.totalVatCents += tax;
       digest.estimatedStripeFeesCents += fee;
       digest.activeSubscriptionsCount++;
       digest.normalizedMrrCents += (ev.type === "SALE_ANNUAL" ? Math.round(baseNet / 12) : baseNet);
@@ -193,18 +196,147 @@ function generateAutomatedFinancialDigest(rawEvents) {
     } else if (ev.type === "REFUND") {
       digest.refundsCount++;
       digest.refundsCents += amount;
+      digest.totalVatCents = Math.max(0, digest.totalVatCents - tax);
       digest.activeSubscriptionsCount = Math.max(0, digest.activeSubscriptionsCount - 1);
       digest.normalizedMrrCents = Math.max(0, digest.normalizedMrrCents - (ev.wasAnnual ? Math.round(baseNet / 12) : baseNet));
     } else if (ev.type === "DISPUTE") {
       digest.disputesCount++;
       digest.refundsCents += amount + 1500; // +15€ penalización Stripe
+      digest.totalVatCents = Math.max(0, digest.totalVatCents - tax);
       digest.activeSubscriptionsCount = Math.max(0, digest.activeSubscriptionsCount - 1);
     } else if (ev.type === "SUBSCRIPTION_CANCELED") {
       digest.canceledSubscriptionsCount++;
     }
   }
 
+  digest.netRevenueExVatCents = Math.max(0, digest.grossCollectionsCents - digest.totalVatCents - digest.refundsCents);
+  digest.contributionMarginCents = digest.netRevenueExVatCents - digest.estimatedStripeFeesCents - digest.estimatedAffiliateHoldCents;
+  digest.contributionMarginPct = digest.netRevenueExVatCents > 0
+    ? Number(((digest.contributionMarginCents / digest.netRevenueExVatCents) * 100).toFixed(2))
+    : 0;
+  digest.fixedCostsCents = options.fixedCostsCents !== undefined ? Number(options.fixedCostsCents) : 100; // 1,00 €/mes dominio amortizado + 0 € hosting
+  digest.adSpendCents = Number(options.adSpendCents) || 0;
+  digest.preTaxProfitBaiCents = digest.contributionMarginCents - digest.fixedCostsCents - digest.adSpendCents;
+  const taxRatePct = options.taxRatePct !== undefined ? Number(options.taxRatePct) : 20;
+  digest.estimatedTaxReserveCents = digest.preTaxProfitBaiCents > 0
+    ? Math.round(digest.preTaxProfitBaiCents * (taxRatePct / 100))
+    : 0;
+  digest.ownerFreeCashFlowCents = digest.preTaxProfitBaiCents - digest.estimatedTaxReserveCents;
+  const founderHours = options.founderHours !== undefined ? Number(options.founderHours) : 6;
+  digest.ownerEffectiveHourlyEur = founderHours > 0
+    ? Number(((digest.ownerFreeCashFlowCents / 100) / founderHours).toFixed(2))
+    : 0;
+  digest.breakEvenClientsNeeded = Math.max(1, Math.ceil((digest.fixedCostsCents + digest.adSpendCents) / 437));
+  const minMonthlyNetForCompanyCents = options.minMonthlyNetForCompanyCents !== undefined ? Number(options.minMonthlyNetForCompanyCents) : 35000; // 350,00 €/mes mínimo para justificar crear empresa/estructura fiscal trabajando por cuenta ajena
+  digest.incorporationReadiness = {
+    founderStatus: "EMPLOYEE_PRE_INCORPORATION",
+    minMonthlyNetRequiredEur: Number((minMonthlyNetForCompanyCents / 100).toFixed(2)),
+    currentNetContributionEur: Number((digest.contributionMarginCents / 100).toFixed(2)),
+    readyToCreateCompany: digest.contributionMarginCents >= minMonthlyNetForCompanyCents && digest.activeSubscriptionsCount >= 15,
+    recommendation:
+      digest.contributionMarginCents >= minMonthlyNetForCompanyCents && digest.activeSubscriptionsCount >= 15
+        ? "READY_TO_INCORPORATE: El margen recurrente (>= 350 €/mes y >= 15 clientes activos) cubre costes de gestoría/estructura y justifica constituir entidad legal."
+        : "DO_NOT_INCORPORATE_YET: Mantener validación ligera (< 50 €/mes y <= 1,5 h/semana). No asumir costes fijos societarios ni de gestoría hasta superar 350 €/mes netos."
+  };
+  digest.weeklyKpiChecklist = {
+    netCashPostStripeAndAffiliatesEur: Number((digest.contributionMarginCents / 100).toFixed(2)),
+    normalizedMrrEur: Number((digest.normalizedMrrCents / 100).toFixed(2)),
+    activeVsCanceledRatio: `${digest.activeSubscriptionsCount}:${digest.canceledSubscriptionsCount}`,
+    ownerHourlyReturnEur: digest.ownerEffectiveHourlyEur,
+    totalMonthlyOutflowEur: Number(((digest.fixedCostsCents + digest.adSpendCents) / 100).toFixed(2)),
+    under100EurBudgetCompliant: (digest.fixedCostsCents + digest.adSpendCents) < 10000
+  };
+
   return digest;
+}
+
+function simulateFinancialViabilityScenarios(customParams = {}) {
+  function evaluateScenario(cfg) {
+    const n499 = Number(cfg.monthlyPromo499Sales) || 0;
+    const n999 = Number(cfg.monthlyStd999Sales) || 0;
+    const n3900 = Number(cfg.annual3900Sales) || 0;
+    const totalClients = n499 + n999 + n3900;
+    const vatRatePct = Number(cfg.vatRatePct) || 0;
+    const affShare = Math.min(1, Math.max(0, (Number(cfg.affiliateSharePct) || 0) / 100));
+
+    const grossCents = n499 * 499 + n999 * 999 + n3900 * 3900;
+    const netExVatCents = vatRatePct > 0 ? Math.round(grossCents / (1 + vatRatePct / 100)) : grossCents;
+    const stripeFeesCents =
+      n499 * Math.round(499 * 0.025 + 25) +
+      n999 * Math.round(999 * 0.025 + 25) +
+      n3900 * Math.round(3900 * 0.025 + 25);
+    const netAfterStripeCents = Math.max(0, netExVatCents - stripeFeesCents);
+    const affiliateHoldCents = Math.round(netAfterStripeCents * affShare * 0.40);
+    const contributionMarginCents = netAfterStripeCents - affiliateHoldCents;
+    const fixedCents = Math.round((cfg.fixedCostsEur !== undefined ? Number(cfg.fixedCostsEur) : 1.0) * 100);
+    const adSpendCents = Math.round((Number(cfg.adSpendEur) || 0) * 100);
+    const totalFixedAndAcqCents = fixedCents + adSpendCents;
+    const preTaxBaiCents = contributionMarginCents - totalFixedAndAcqCents;
+    const taxRatePct = cfg.taxRatePct !== undefined ? Number(cfg.taxRatePct) : 20;
+    const taxReserveCents = preTaxBaiCents > 0 ? Math.round(preTaxBaiCents * (taxRatePct / 100)) : 0;
+    const ownerCashCents = preTaxBaiCents - taxReserveCents;
+    const founderHours = cfg.founderHours !== undefined ? Number(cfg.founderHours) : 8;
+    const churnPct = Math.max(1, Number(cfg.monthlyChurnPct) || 12);
+
+    return {
+      label: cfg.label || "CUSTOM_SCENARIO",
+      totalNewAndActiveClients: totalClients,
+      variableApiAndServerCostEur: 0,
+      grossBillingEur: Number((grossCents / 100).toFixed(2)),
+      netRevenueExVatEur: Number((netExVatCents / 100).toFixed(2)),
+      stripeFeesEur: Number((stripeFeesCents / 100).toFixed(2)),
+      affiliatePayoutsEur: Number((affiliateHoldCents / 100).toFixed(2)),
+      contributionMarginEur: Number((contributionMarginCents / 100).toFixed(2)),
+      contributionMarginPct: netExVatCents > 0 ? Number(((contributionMarginCents / netExVatCents) * 100).toFixed(2)) : 0,
+      fixedAndAcquisitionCostsEur: Number((totalFixedAndAcqCents / 100).toFixed(2)),
+      under100EurBudgetCompliant: totalFixedAndAcqCents < 10000,
+      preTaxProfitBaiEur: Number((preTaxBaiCents / 100).toFixed(2)),
+      taxReserveEur: Number((taxReserveCents / 100).toFixed(2)),
+      ownerTakeHomeCashEur: Number((ownerCashCents / 100).toFixed(2)),
+      ownerEffectiveHourlyEur: founderHours > 0 ? Number(((ownerCashCents / 100) / founderHours).toFixed(2)) : 0,
+      expectedSubscriberLifetimeMonths: Number((1 / (churnPct / 100)).toFixed(2))
+    };
+  }
+
+  return {
+    conservative: evaluateScenario({
+      label: "HYPOTHETICAL_CONSERVATIVE",
+      monthlyPromo499Sales: 2,
+      monthlyStd999Sales: 1,
+      annual3900Sales: 1,
+      affiliateSharePct: 0,
+      fixedCostsEur: 1.0,
+      adSpendEur: 0,
+      founderHours: 6,
+      taxRatePct: 20,
+      monthlyChurnPct: 18
+    }),
+    intermediate: evaluateScenario({
+      label: "HYPOTHETICAL_INTERMEDIATE",
+      monthlyPromo499Sales: 8,
+      monthlyStd999Sales: 7,
+      annual3900Sales: 5,
+      affiliateSharePct: 25,
+      fixedCostsEur: 1.0,
+      adSpendEur: 25.0,
+      founderHours: 8,
+      taxRatePct: 20,
+      monthlyChurnPct: 12
+    }),
+    optimistic: evaluateScenario({
+      label: "HYPOTHETICAL_OPTIMISTIC",
+      monthlyPromo499Sales: 20,
+      monthlyStd999Sales: 25,
+      annual3900Sales: 15,
+      affiliateSharePct: 30,
+      fixedCostsEur: 6.0,
+      adSpendEur: 50.0,
+      founderHours: 10,
+      taxRatePct: 20,
+      monthlyChurnPct: 8
+    }),
+    custom: evaluateScenario({ label: "CUSTOM_INPUT", ...customParams })
+  };
 }
 
 const PUREAI_TOOL_IDS = Object.freeze([
@@ -242,22 +374,57 @@ function computeProductAnalyticsFunnel(rawEvents = [], options = {}) {
   });
 
   const byChannel = {};
+  const byChannelFunnel = {};
+  function ensureChannelBucket(chName) {
+    const key = chName || "direct";
+    if (!byChannelFunnel[key]) {
+      byChannelFunnel[key] = {
+        channel: key,
+        visitors: 0,
+        activatedUsers: 0,
+        paywallViewed: 0,
+        checkoutClicked: 0,
+        purchasesVerified: 0,
+        conversionToPaywallPct: 0,
+        conversionToPurchasePct: 0
+      };
+    }
+    return byChannelFunnel[key];
+  }
   const byLang = {};
   const byPlan = { PRO_MONTHLY_499: 0, PRO_MONTHLY_999: 0, PRO_ANNUAL_3900: 0 };
   const cohorts = {};
+  const retentionBreakdown = {
+    D1_48h: 0,
+    W1_d2_7: 0,
+    M1_d8_30: 0,
+    D30_plus: 0,
+    genuineReturningUsers: 0,
+    promoReturningUsers: 0
+  };
 
   for (const ev of rawEvents) {
     if (!ev || ev.isBot) continue;
     const evName = ev.event_name || ev.type || "";
     const ch = ev.channel || "direct";
+    const chBucket = ensureChannelBucket(ch);
     const lg = (ev.lang || "en").slice(0, 2).toLowerCase();
 
     if (evName === "session_start" || ev.type === "pageview") {
       stages.visitors++;
       byChannel[ch] = (byChannel[ch] || 0) + 1;
+      chBucket.visitors++;
       byLang[lg] = (byLang[lg] || 0) + 1;
       if (ev.isReturning) {
         stages.returningUsers++;
+        if (ev.retentionBucket && retentionBreakdown[ev.retentionBucket] !== undefined) {
+          retentionBreakdown[ev.retentionBucket]++;
+        }
+        if (ev.genuineReturn === false || ev.promoTriggered === true) {
+          retentionBreakdown.promoReturningUsers++;
+        } else {
+          retentionBreakdown.genuineReturningUsers++;
+        }
       }
       if (ev.cohortWeek) {
         if (!cohorts[ev.cohortWeek]) cohorts[ev.cohortWeek] = { totalSessions: 0, returningSessions: 0 };
@@ -268,19 +435,26 @@ function computeProductAnalyticsFunnel(rawEvents = [], options = {}) {
 
     if (evName === "user_returned") {
       stages.returningUsers++;
+      if (ev.retentionBucket && retentionBreakdown[ev.retentionBucket] !== undefined) {
+        retentionBreakdown[ev.retentionBucket]++;
+      }
     }
 
     if (evName === "tool_completed" || ev.target === "image_scrub_download" || ev.target === "text_watermark_scrub" || ev.target === "pro_humanizer_click") {
       const tid = ev.tool_id || (ev.target === "text_watermark_scrub" ? "txt_unicode_scrubber" : ev.target === "pro_humanizer_click" ? "txt_pro_humanizer" : "img_c2pa_scrubber");
       const isDemo = Boolean(ev.isDemo);
       if (!byTool[tid]) {
-        byTool[tid] = { toolId: tid, realCompletions: 0, demoCompletions: 0, paywallTriggers: 0, checkoutClicks: 0, variableCostEur: 0 };
+        byTool[tid] = { toolId: tid, realCompletions: 0, demoCompletions: 0, returningCompletions: 0, paywallTriggers: 0, checkoutClicks: 0, variableCostEur: 0 };
       }
       if (isDemo) {
         byTool[tid].demoCompletions++;
       } else {
         byTool[tid].realCompletions++;
+        if (ev.isReturning) {
+          byTool[tid].returningCompletions = (byTool[tid].returningCompletions || 0) + 1;
+        }
         stages.activatedUsers++;
+        chBucket.activatedUsers++;
       }
     }
 
@@ -293,12 +467,14 @@ function computeProductAnalyticsFunnel(rawEvents = [], options = {}) {
 
     if (evName === "paywall_viewed") {
       stages.paywallViewed++;
+      chBucket.paywallViewed++;
       const trig = ev.trigger_tool || "img_c2pa_scrubber";
       if (byTool[trig]) byTool[trig].paywallTriggers++;
     }
 
     if (evName === "checkout_clicked" || ev.type === "click_checkout") {
       stages.checkoutClicked++;
+      chBucket.checkoutClicked++;
       const plan = ev.plan_selected || "PRO_MONTHLY_499";
       byPlan[plan] = (byPlan[plan] || 0) + 1;
       const trig = ev.trigger_tool || "img_c2pa_scrubber";
@@ -307,6 +483,7 @@ function computeProductAnalyticsFunnel(rawEvents = [], options = {}) {
 
     if (evName === "purchase_verified" || ev.type === "sale_verified_session") {
       stages.purchasesVerified++;
+      chBucket.purchasesVerified++;
     }
 
     if (evName === "subscription_renewed") {
@@ -366,18 +543,214 @@ function computeProductAnalyticsFunnel(rawEvents = [], options = {}) {
     viabilityReason = `Fricción en Paywall (${rates.paywallToCheckoutPct}% < 2% sobre ${stages.paywallViewed} impactos). Revisar propuesta de valor Pro o límite gratuito.`;
   }
 
+  let bestConvertingChannel = null;
+  for (const chKey of Object.keys(byChannelFunnel)) {
+    const b = byChannelFunnel[chKey];
+    b.conversionToPaywallPct = pct(b.paywallViewed, b.visitors);
+    b.conversionToPurchasePct = pct(b.purchasesVerified, b.visitors);
+    if (!bestConvertingChannel || b.purchasesVerified > bestConvertingChannel.purchasesVerified || (b.purchasesVerified === bestConvertingChannel.purchasesVerified && b.paywallViewed > bestConvertingChannel.paywallViewed)) {
+      bestConvertingChannel = b;
+    }
+  }
+
+  const bottleneckDiagnosis = diagnoseConversionBottleneck(
+    { stages, rates, byTool, byChannelFunnel, bestConvertingChannel: bestConvertingChannel ? bestConvertingChannel.channel : null, retentionBreakdown },
+    options
+  );
+  const fiveCoreTests = evaluateFiveCoreValidationTests(
+    { stages, rates, byChannelFunnel, retentionBreakdown },
+    options.financialDigest || { refundsCount: 0, verifiedSalesCount: stages.purchasesVerified }
+  );
+
   return {
     stages,
     rates,
     byTool,
     byChannel,
+    byChannelFunnel,
+    bestConvertingChannel: bestConvertingChannel ? bestConvertingChannel.channel : null,
     byLang,
     byPlan,
     cohorts,
+    retentionBreakdown,
     sampleSufficiency,
     cacMetrics,
     viabilityDecision,
-    viabilityReason
+    viabilityReason,
+    bottleneckDiagnosis,
+    fiveCoreTests
+  };
+}
+
+function evaluateFiveCoreValidationTests(funnel = {}, financialDigest = {}) {
+  const st = funnel.stages || {};
+  const rt = funnel.rates || {};
+  const ret = funnel.retentionBreakdown || {};
+  const ch = funnel.byChannelFunnel || {};
+
+  const referralVisitors =
+    ((ch.user_referral && ch.user_referral.visitors) || 0) +
+    ((ch.affiliate_partner && ch.affiliate_partner.visitors) || 0);
+  const referralActivated =
+    ((ch.user_referral && ch.user_referral.activatedUsers) || 0) +
+    ((ch.affiliate_partner && ch.affiliate_partner.activatedUsers) || 0);
+  const realSales = Math.max(Number(st.purchasesVerified) || 0, Number(financialDigest.verifiedSalesCount) || 0);
+  const refunds = Number(financialDigest.refundsCount) || 0;
+
+  const tests = {
+    comprehension: {
+      passed: (st.visitors || 0) >= 20 && (rt.activationRatePct || 0) >= 25,
+      observedValue: `${rt.activationRatePct || 0}% activación (${st.activatedUsers || 0}/${st.visitors || 0} visitas)`,
+      targetThreshold: ">= 25% de visitantes usan una herramienta con archivo real (mín. 20 visitas)"
+    },
+    utility: {
+      passed: (st.activatedUsers || 0) >= 30 && refunds === 0,
+      observedValue: `${st.activatedUsers || 0} tareas reales completadas, ${refunds} reembolsos`,
+      targetThreshold: ">= 30 usuarios completan su tarea con 0 reembolsos"
+    },
+    recurrence: {
+      passed: (ret.genuineReturningUsers || 0) >= 10,
+      observedValue: `${ret.genuineReturningUsers || 0} retornos genuinos (W1=${ret.W1_d2_7 || 0}, M1=${ret.M1_d8_30 || 0})`,
+      targetThreshold: ">= 10 usuarios regresan voluntariamente sin promoción"
+    },
+    payment: {
+      passed: realSales >= 3 && (rt.paywallToCheckoutPct || 0) >= 5,
+      observedValue: `${realSales} compras reales, ${rt.paywallToCheckoutPct || 0}% conversión a checkout en paywall`,
+      targetThreshold: ">= 3 compras reales en Stripe y >= 5% paso a checkout"
+    },
+    recommendation: {
+      passed: referralVisitors >= 5 && referralActivated >= 1,
+      observedValue: `${referralVisitors} visitas por recomendación (${referralActivated} activadas)`,
+      targetThreshold: ">= 5 visitas invitadas (?ref= / ?aff=) con >= 1 activación"
+    }
+  };
+
+  const passedCount = Object.values(tests).filter((t) => t.passed).length;
+  let convergentStatus = "INSUFFICIENT_CONVERGENCE_KEEP_TESTING";
+  if (tests.utility.passed && tests.recurrence.passed && tests.payment.passed && passedCount >= 4) {
+    convergentStatus = "VALIDATED_CONVERGENT";
+  } else if (tests.comprehension.passed && tests.utility.passed && !tests.payment.passed) {
+    convergentStatus = "FREE_UTILITY_TRAP_NO_PAYMENT_YET";
+  } else if (tests.payment.passed && !tests.recurrence.passed) {
+    convergentStatus = "ONE_OFF_USAGE_CHURN_RISK";
+  }
+
+  return {
+    passedCount,
+    totalTests: 5,
+    convergentStatus,
+    tests
+  };
+}
+
+function evaluateUserInterviewResponses(interview = {}) {
+  const daysSinceLastProblem = interview.daysSinceLastProblem !== undefined ? Number(interview.daysSinceLastProblem) : 999;
+  const usedActiveWorkaround = Boolean(interview.usedActiveWorkaround);
+  const timeSpentMinutes = Number(interview.timeSpentMinutes) || 0;
+  const paidForAlternativeBefore = Boolean(interview.paidForAlternativeBefore);
+  const completedRealTaskInPureAi = Boolean(interview.completedRealTaskInPureAi);
+  const hasSpecificReturnTrigger = Boolean(interview.hasSpecificReturnTrigger);
+  const gaveGenericComplimentOnly = Boolean(interview.gaveGenericComplimentOnly);
+
+  let evidenceScore = 0;
+  if (daysSinceLastProblem <= 7) evidenceScore += 30;
+  else if (daysSinceLastProblem <= 30) evidenceScore += 15;
+  if (usedActiveWorkaround) evidenceScore += 25;
+  if (timeSpentMinutes >= 10) evidenceScore += 15;
+  if (paidForAlternativeBefore) evidenceScore += 15;
+  if (completedRealTaskInPureAi && hasSpecificReturnTrigger) evidenceScore += 15;
+  if (gaveGenericComplimentOnly && daysSinceLastProblem > 30 && !usedActiveWorkaround) {
+    evidenceScore = Math.min(evidenceScore, 15);
+  }
+
+  let profileClassification = "LOW_INTENT_OR_CURIOUS";
+  let followUpAdvice = "Si solo dio cumplidos generales ('me encanta'), repreguntar: '¿Cuándo fue la última vez que tuviste ese problema y qué hiciste para resolverlo?'";
+  if (evidenceScore >= 65) {
+    profileClassification = "HIGH_INTENT_ICP_BUYER";
+    followUpAdvice = "Dolor recurrente y workaround verificados. Priorizar sus respuestas a las preguntas 10, 12 y 15 (qué falta para sustituir su herramienta actual y qué le haría desconfiar).";
+  } else if (evidenceScore >= 40) {
+    profileClassification = "MODERATE_PAIN_OCCASIONAL_USER";
+    followUpAdvice = "Usuario con necesidad puntual. Evaluar si encaja mejor en un Pase de Proyecto sin suscripción mensual.";
+  } else if (gaveGenericComplimentOnly) {
+    profileClassification = "FALSE_POSITIVE_POLITE_COMPLIMENT";
+  }
+
+  return {
+    evidenceScore,
+    profileClassification,
+    isReliableDemandSignal: evidenceScore >= 65,
+    unnecessaryFeaturesReported: Array.isArray(interview.unnecessaryFeatures) ? interview.unnecessaryFeatures : [],
+    trustBarriersReported: Array.isArray(interview.trustBarriers) ? interview.trustBarriers : [],
+    followUpAdvice
+  };
+}
+
+function diagnoseConversionBottleneck(funnel, options = {}) {
+  const st = (funnel && funnel.stages) || {};
+  const rt = (funnel && funnel.rates) || {};
+  const ret = (funnel && funnel.retentionBreakdown) || {};
+  const stageDay = Number(options.stageDay) || 30;
+
+  if ((st.visitors || 0) < 50) {
+    return {
+      stageDay,
+      bottleneckCode: "BOTTLENECK_TRAFFIC_VOLUME",
+      primaryCause: "Muestra de tráfico aún insuficiente (< 50 visitantes humanos).",
+      doNotDo: "No modificar precios ni programar funciones nuevas a ciegas.",
+      recommendedAction: "Publicar las 6 demostraciones visuales (?preset=iphone&city=miami y ?preset=lossless) en comunidades de creadores IA/fotografía y activar 10 micro-afiliados (?aff=)."
+    };
+  }
+  if ((rt.activationRatePct || 0) < 15) {
+    return {
+      stageDay,
+      bottleneckCode: "BOTTLENECK_AUDIENCE_OR_CLARITY",
+      primaryCause: `Baja activación (${rt.activationRatePct}% < 15%): el tráfico entrante no sube archivos o es público curioso no cualificado.`,
+      doNotDo: "No bajar precios; el usuario ni siquiera llega a probar la herramienta.",
+      recommendedAction: "Cambiar de canal de captación hacia comunidades con necesidad activa (ComfyUI / Fanvue / Photoshop C2PA) y priorizar enlaces con preset preseleccionado."
+    };
+  }
+  if ((rt.paywallReachRatePct || 0) < 10) {
+    return {
+      stageDay,
+      bottleneckCode: "BOTTLENECK_FREEMIUM_PACKAGING",
+      primaryCause: `Bajo alcance de Paywall (${rt.paywallReachRatePct}% < 10% de activados): la limpieza neutra gratuita 1 a 1 resuelve todo lo que pide este segmento.`,
+      doNotDo: "No asumir que el producto no gusta (la activación es alta).",
+      recommendedAction: "Dirigir la adquisición a agencias que requieren Lotes .ZIP Mixtos (Fotos + .MP4) y Perfiles EXIF iPhone 16 Pro + GPS, o reducir las pruebas EXIF Pro gratuitas de 3 a 2."
+    };
+  }
+  if ((st.paywallViewed || 0) >= 20 && (rt.paywallToCheckoutPct || 0) < 3) {
+    return {
+      stageDay,
+      bottleneckCode: "BOTTLENECK_PAYWALL_VALUE_PROP",
+      primaryCause: `Baja intención en Paywall (${rt.paywallToCheckoutPct}% < 3% sobre ${st.paywallViewed} vistas): el beneficio Pro percibido no justifica el paso al checkout.`,
+      doNotDo: "No programar herramientas nuevas; el problema está en la oferta mostrada en el modal Pro.",
+      recommendedAction: "Destacar el ahorro de tiempo en Lotes .ZIP y la prueba visual del EXIF iPhone 16 Pro + GPS antes de tocar el precio."
+    };
+  }
+  if ((st.checkoutClicked || 0) >= 10 && (rt.checkoutToPurchasePct || 0) < 15) {
+    return {
+      stageDay,
+      bottleneckCode: "BOTTLENECK_CHECKOUT_TRUST_OR_MODEL",
+      primaryCause: `Abandono en Stripe Checkout (${rt.checkoutToPurchasePct}% < 15% sobre ${st.checkoutClicked} clics de compra): fricción con la suscripción recurrente o métodos de pago.`,
+      doNotDo: "No descartar la demanda (el usuario ya hizo clic en comprar).",
+      recommendedAction: "Verificar Apple Pay / Google Pay activos, código FRIEND50 pre-aplicado (4,99 €) y probar un Pase de Proyecto de pago único (sin renovación mensual) para usuarios puntuales."
+    };
+  }
+  if (stageDay >= 60 && (st.activatedUsers || 0) >= 30 && (ret.genuineReturningUsers || 0) === 0) {
+    return {
+      stageDay,
+      bottleneckCode: "BOTTLENECK_RETENTION_CHURN",
+      primaryCause: "Uso estrictamente puntual sin retorno genuino (0 usuarios recurrentes genuinos en D60).",
+      doNotDo: "No insistir en suscripción mensual para segmentos de uso único.",
+      recommendedAction: "Pivotar el modelo comercial hacia Pago por Proyecto / Plan Anual de Agencias y congelar módulos sin recurrencia (como el humanizador de texto)."
+    };
+  }
+  return {
+    stageDay,
+    bottleneckCode: "HEALTHY_CONVERSION_FLOW",
+    primaryCause: "Las tasas de activación, paso por paywall y conversión superan los umbrales mínimos de validación.",
+    doNotDo: "No dispersar recursos en canales con 0% de conversión.",
+    recommendedAction: `Concentrar el presupuesto (< 100 €/mes) y el tiempo en escalar el canal ganador (${funnel.bestConvertingChannel || "organic_search"} / afiliados 40%).`
   };
 }
 
@@ -559,7 +932,11 @@ module.exports = {
   validateAutomatedActionSafety,
   classifySupportInquiry,
   generateAutomatedFinancialDigest,
+  simulateFinancialViabilityScenarios,
   computeProductAnalyticsFunnel,
+  diagnoseConversionBottleneck,
+  evaluateFiveCoreValidationTests,
+  evaluateUserInterviewResponses,
   checkPlatformHealth,
   dispatchCriticalOperationalAlert,
   runAutoDoctor

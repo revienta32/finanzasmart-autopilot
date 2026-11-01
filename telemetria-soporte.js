@@ -20,10 +20,13 @@
     const q = String(searchStr || "").toLowerCase();
     const ref = String(referrerStr || "").toLowerCase();
     if (/[?&](ext_img|ext_txt)=/.test(q) || q.includes("utm_source=extension")) return "chrome_extension";
+    if (/[?&](utm_medium=(cpc|ppc|paid)|gclid=|fbclid=|ttclid=)/.test(q)) return "paid_ads";
     if (/[?&]aff=[a-z0-9_.-]+/.test(q)) return "affiliate_partner";
+    if (/[?&]ref=[a-z0-9_.-]+/.test(q)) return "user_referral";
     if (q.includes("utm_source=reddit") || ref.includes("reddit.com") || ref.includes("redd.it")) return "social_reddit";
     if (q.includes("utm_source=youtube") || ref.includes("youtube.com") || ref.includes("youtu.be")) return "social_youtube";
     if (q.includes("utm_source=tiktok") || ref.includes("tiktok.com")) return "social_tiktok";
+    if (/utm_source=(discord|telegram|twitter|x|instagram)/.test(q) || /discord\.com|t\.co|x\.com|instagram\.com/.test(ref)) return "community_social";
     if (/google\.|bing\.com|duckduckgo\.com|yahoo\.com|ecosia\.org|yandex\.|baidu\.com/.test(ref)) return "organic_search";
     if (ref && !ref.includes("pureaistudios.com") && !ref.includes("localhost")) return "referral_other";
     return "direct";
@@ -35,6 +38,23 @@
     const yearStart = new Date(Date.UTC(dt.getUTCFullYear(), 0, 1));
     const weekNo = Math.ceil((((dt - yearStart) / 86400000) + 1) / 7);
     return dt.getUTCFullYear() + "-W" + String(weekNo).padStart(2, "0");
+  }
+
+  function computeRetentionMetrics(firstDayIso, todayIso, searchQuery, claimedEmailBonus) {
+    const fStr = String(firstDayIso || "").slice(0, 10);
+    const tStr = String(todayIso || "").slice(0, 10);
+    const fMs = Date.parse(fStr + "T00:00:00Z");
+    const tMs = Date.parse(tStr + "T00:00:00Z");
+    const daysSinceFirstVisit = (!isNaN(fMs) && !isNaN(tMs) && tMs > fMs) ? Math.round((tMs - fMs) / 86400000) : 0;
+    let retentionBucket = "D0";
+    if (daysSinceFirstVisit >= 1 && daysSinceFirstVisit <= 2) retentionBucket = "D1_48h";
+    else if (daysSinceFirstVisit >= 3 && daysSinceFirstVisit <= 7) retentionBucket = "W1_d2_7";
+    else if (daysSinceFirstVisit >= 8 && daysSinceFirstVisit <= 30) retentionBucket = "M1_d8_30";
+    else if (daysSinceFirstVisit > 30) retentionBucket = "D30_plus";
+
+    const promoTriggered = /[?&]ref=/i.test(String(searchQuery || "")) || Boolean(claimedEmailBonus);
+    const genuineReturn = daysSinceFirstVisit >= 1 && !promoTriggered;
+    return { daysSinceFirstVisit, retentionBucket, promoTriggered, genuineReturn };
   }
 
   function hasTelemetryConsent() {
@@ -56,10 +76,14 @@
     const currentWeek = getIsoCohortWeek(new Date());
     let isReturning = false;
     let cohortWeek = currentWeek;
+    let effectiveFirstDay = todayStr;
+    let claimedEmailBonus = false;
     try {
       const storedFirstDay = localStorage.getItem("pureai_first_day");
       const storedCohort = localStorage.getItem("pureai_cohort_week");
+      claimedEmailBonus = localStorage.getItem("pureai_email_bonus_claimed") === "1";
       if (storedFirstDay) {
+        effectiveFirstDay = storedFirstDay;
         if (storedFirstDay !== todayStr) isReturning = true;
       } else {
         localStorage.setItem("pureai_first_day", todayStr);
@@ -72,7 +96,18 @@
     } catch (_) {}
 
     const lang = ((typeof navigator !== "undefined" && navigator.language) || "en").slice(0, 2).toLowerCase();
-    const channel = classifyTrafficChannel(typeof document !== "undefined" ? document.referrer : "", window.location.search || "");
+    const searchStr = window.location.search || "";
+    const rawChannel = classifyTrafficChannel(typeof document !== "undefined" ? document.referrer : "", searchStr);
+    let channel = rawChannel;
+    try {
+      const savedSessCh = sessionStorage.getItem("pureai_session_channel");
+      if (rawChannel !== "direct") {
+        sessionStorage.setItem("pureai_session_channel", rawChannel);
+      } else if (savedSessCh) {
+        channel = savedSessCh;
+      }
+    } catch (_) {}
+    const ret = computeRetentionMetrics(effectiveFirstDay, todayStr, searchStr, claimedEmailBonus);
     let userTier = isReturning ? "free_returning" : "free_new";
     try {
       if (localStorage.getItem("pureai_studio_pro") === "true") {
@@ -83,13 +118,23 @@
     } catch (_) {}
 
     // Minimización estricta (RGPD Art. 5.1.c): no incluye User-Agent, ni zona horaria exacta, ni huella de dispositivo
-    return { lang, channel, isReturning, cohortWeek, userTier };
+    return {
+      lang,
+      channel,
+      isReturning,
+      cohortWeek,
+      userTier,
+      daysSinceFirstVisit: ret.daysSinceFirstVisit,
+      retentionBucket: ret.retentionBucket,
+      genuineReturn: ret.genuineReturn
+    };
   }
 
   if (typeof window !== "undefined") {
     window.maskSensitiveSupportText = maskSensitiveSupportText;
     window.classifyTrafficChannel = classifyTrafficChannel;
     window.getIsoCohortWeek = getIsoCohortWeek;
+    window.computeRetentionMetrics = computeRetentionMetrics;
     window.hasPureAiTelemetryConsent = hasTelemetryConsent;
     window.setPureAiTelemetryConsent = setTelemetryConsent;
   }
@@ -145,9 +190,12 @@
     try { localStorage.setItem("pureai_aff_partner", affMatch[1]); } catch (_) {}
   }
   const activeAff = (() => { try { return localStorage.getItem("pureai_aff_partner") || ""; } catch (_) { return ""; } })();
-  if (activeAff && document.querySelectorAll) {
+  if (document.querySelectorAll) {
     document.querySelectorAll('a[href*="buy.stripe.com"]').forEach((a) => {
-      if (a.href && !a.href.includes("client_reference_id=")) {
+      if (a.href && a.href.includes("aFaaEY0fgcHbd1SeTE0000c") && !a.href.includes("prefilled_promo_code=")) {
+        a.href += (a.href.includes("?") ? "&" : "?") + "prefilled_promo_code=FRIEND50";
+      }
+      if (activeAff && a.href && !a.href.includes("client_reference_id=")) {
         a.href += (a.href.includes("?") ? "&" : "?") + "client_reference_id=aff_" + encodeURIComponent(activeAff);
       }
     });
@@ -192,11 +240,15 @@
     if (!link || !link.href) return;
     if (link.href.includes("buy.stripe.com")) {
       const planSelected = link.href.includes("5kQ28sfaa0Yt5zqfXI0000d") ? "PRO_ANNUAL_3900" : "PRO_MONTHLY_499";
+      if (planSelected === "PRO_MONTHLY_499" && typeof navigator !== "undefined" && navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText("FRIEND50").catch(() => {});
+      }
       sendTelemetry({
         type: "click_checkout",
         event_name: "checkout_clicked",
         target: "stripe_checkout",
-        plan_selected: planSelected
+        plan_selected: planSelected,
+        trigger_tool: (typeof window !== "undefined" && window.lastPaywallTriggerTool) || "direct_pricing_box"
       });
     } else if (link.href.includes("chromewebstore.google.com") || link.href.includes("chrome-extension-pureai.zip")) {
       sendTelemetry({ type: "app_action", event_name: "lead_captured", tool_id: "chrome_ext_bridge", target: "chrome_extension_download" });

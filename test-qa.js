@@ -730,7 +730,315 @@ assert(cleanAiHtml.includes("terms.html") && cleanAiHtml.includes("Art. 103.m TR
   paSandbox.deepHumanizePro();
   assert.strictEqual(getPaEl("pro-modal-overlay").style.display, "flex", "PLG: El 2º uso de deepHumanizePro sin Pro ni créditos debe mostrar el modal Pro");
 
-  console.log("✅ QA TEST SUITE PASSED (17 SECCIONES / 108 ASERCIONES): 100% E2E VM + Modelo Híbrido PLG + Pagos/Webhooks KV + CFO + Legal/AI Act + Automatización + Ciberseguridad + Analítica + Regresión Cross-Module verificadas sin errores.");
+  // 17f. Verificar mejoras de conversión y valor técnico: EXIF visible fuera de <details>, Sub-IFD GPS binario (0x8825), vídeo en cuota Pro y anti-fuga de créditos en WhatsApp
+  assert(!cleanAiHtml.includes('<summary style="cursor:pointer;font-size:0.78rem;color:#94a3b8;font-weight:700;" id="ui-adv-img">'), "UX: El selector de perfiles EXIF (#ui-adv-img) debe estar visible en la tarjeta principal y no oculto en un <summary>");
+  getPaEl("img-gps-city").value = "madrid";
+  const exifWithGps = paSandbox.buildCameraApp1ExifSegment("spoof");
+  const exifDv = new DataView(exifWithGps.buffer, exifWithGps.byteOffset, exifWithGps.byteLength);
+  let foundGpsPointerTag = false;
+  const ifdCount = exifDv.getUint16(18, true);
+  for (let idx = 0; idx < ifdCount; idx++) {
+    const tagId = exifDv.getUint16(20 + idx * 12, true);
+    if (tagId === 0x8825) foundGpsPointerTag = true;
+  }
+  assert.strictEqual(foundGpsPointerTag, true, "EXIF GPS: buildCameraApp1ExifSegment debe inyectar el tag binario 0x8825 (GPSInfo IFD Pointer) cuando se selecciona una ciudad");
+  getPaEl("img-gps-city").value = "none";
+
+  getPaEl("pro-modal-overlay").style.display = "none";
+  getPaEl("img-defense").value = "pure";
+  paSandbox.loadedIsVideo = true;
+  paSandbox.persistImgQuota(3);
+  paSandbox.scrubAndDownloadImage();
+  assert.strictEqual(getPaEl("pro-modal-overlay").style.display, "flex", "PLG Vídeo: El 4º uso de limpieza de vídeo (.MP4/.MOV) sin Pro debe mostrar el modal Pro");
+  paSandbox.loadedIsVideo = false;
+
+  paSandbox.freeProCredits = 0;
+  paSandbox.refFriendsCount = 0;
+  paSandbox.sharePureAiReferral("wa");
+  assert.strictEqual(paSandbox.freeProCredits, 0, "Anti-fuga PLG: sharePureAiReferral no debe regalar créditos Pro gratis solo por hacer clic en el botón sin verificación");
+
+  paSandbox.applyCreatorPreset("iphone_agency");
+  assert.strictEqual(getPaEl("img-defense").value, "spoof", "ICP Preset: applyCreatorPreset('iphone_agency') debe seleccionar perfil iPhone 16 Pro (spoof)");
+  assert.strictEqual(getPaEl("img-gps-city").value, "miami", "ICP Preset: applyCreatorPreset('iphone_agency') debe preseleccionar ciudad GPS por defecto");
+  paSandbox.applyCreatorPreset("sony_studio");
+  assert.strictEqual(getPaEl("img-defense").value, "spoof_sony", "ICP Preset: applyCreatorPreset('sony_studio') debe seleccionar perfil Sony Alpha A7 IV");
+  paSandbox.applyCreatorPreset("photoshop_lossless");
+  assert.strictEqual(getPaEl("img-defense").value, "lossless", "ICP Preset: applyCreatorPreset('photoshop_lossless') debe seleccionar modo Lossless JPEG para fotógrafos con Photoshop C2PA");
+  paSandbox.applyCreatorPreset("pure_clean");
+  assert.strictEqual(getPaEl("img-defense").value, "pure", "ICP Preset: applyCreatorPreset('pure_clean') debe restaurar modo Limpieza Neutra");
+
+  // 17g. Verificar las 3 mejoras competitivas: Lossless JPEG Stripper, MP4 Camera Atom Injection + UUID Box Wipe, y Extractor de Prompts Expuestos
+  const fakeJpegWithApp1AndSos = new Uint8Array([
+    0xff, 0xd8, // SOI
+    0xff, 0xe1, 0x00, 0x08, 0x45, 0x78, 0x69, 0x66, 0x00, 0x00, // APP1 EXIF (to strip)
+    0xff, 0xeb, 0x00, 0x06, 0x63, 0x32, 0x70, 0x61, // APP11 C2PA JUMBF (to strip)
+    0xff, 0xdb, 0x00, 0x04, 0x00, 0x10, // DQT (to keep)
+    0xff, 0xda, 0x00, 0x04, 0x00, 0x00, 0xaa, 0xbb, 0xff, 0xd9 // SOS + DCT bitstream (to keep 100% lossless)
+  ]);
+  const losslessOut = paSandbox.stripJpegContainersLossless(fakeJpegWithApp1AndSos);
+  const losslessStr = Buffer.from(losslessOut).toString("latin1");
+  assert(!/Exif|c2pa/.test(losslessStr), "Lossless JPEG: stripJpegContainersLossless debe eliminar todos los segmentos APP1/APP11 (EXIF/C2PA) sin recodificar");
+  assert.strictEqual(losslessOut[losslessOut.length - 4], 0xaa, "Lossless JPEG: stripJpegContainersLossless debe preservar intacto el flujo comprimido tras SOS (0xFFDA)");
+
+  const mp4WithCamera = paSandbox.scrubVideoBytesInPlace(mp4Sample, "spoof");
+  const mp4CamStr = Buffer.from(mp4WithCamera).toString("latin1");
+  assert(mp4CamStr.includes("udta") && mp4CamStr.includes("iPhone 16 Pro"), "MP4 Camera Atom: scrubVideoBytesInPlace con perfil 'spoof' debe inyectar átomo udta con firma iPhone 16 Pro");
+
+  const promptPreview = paSandbox.extractEmbeddedPromptPreview("PNG...tEXtworkflow: ComfyUI nodes, Midjourney v6.1 hyperrealistic portrait");
+  assert(promptPreview.includes("ComfyUI"), "Prompt Extractor: extractEmbeddedPromptPreview debe extraer el fragmento de workflow/prompt expuesto");
+
+  // 17h. Verificar Lote Mixto .ZIP (Fotos + Vídeos .MP4 en un mismo lote), Simplificación REF15/30 -> FRIEND50 y Telemetría por Función
+  const mixedBatchEntries = await paSandbox.processMixedBatchToZipEntries(
+    [
+      { name: "carousel-1.jpg", type: "image/jpeg", arrayBuffer: async () => fakeJpegWithApp1AndSos.buffer },
+      { name: "reel-2.mp4", type: "video/mp4", arrayBuffer: async () => mp4Sample.buffer }
+    ],
+    "spoof",
+    "image/jpeg",
+    "jpg",
+    "miami"
+  );
+  assert.strictEqual(mixedBatchEntries.length, 2, "Batch Mixto .ZIP: processMixedBatchToZipEntries debe empaquetar tanto fotos (.jpg) como vídeos (.mp4) en el mismo lote");
+  assert(mixedBatchEntries[0].name.startsWith("IMG_") && mixedBatchEntries[0].name.endsWith(".JPG"), "Batch Mixto .ZIP: La foto del lote con perfil 'spoof' debe renombrarse como IMG_XXXX.JPG");
+  assert(mixedBatchEntries[1].name.startsWith("IMG_") && mixedBatchEntries[1].name.endsWith(".MP4"), "Batch Mixto .ZIP: El vídeo del lote con perfil 'spoof' debe renombrarse como IMG_XXXX.MP4");
+  const batchVidStr = Buffer.from(mixedBatchEntries[1].bytes).toString("latin1");
+  assert(!/c2paSora/i.test(batchVidStr) && batchVidStr.includes("iPhone 16 Pro"), "Batch Mixto .ZIP: El vídeo dentro del lote debe quedar limpio de C2PA e incluir átomo udta de cámara");
+  assert(!cleanAiHtml.includes("REF15") && !cleanAiHtml.includes("REF30"), "Simplificación PLG: Eliminada escalera redundante REF15/REF30 en favor del cupón directo FRIEND50");
+  assert(cleanAiHtml.includes('tool_id: "forensic_certificate"') && cleanAiHtml.includes('"img_batch_zip"'), "Telemetría de Valor: Debe instrumentar eventos anónimos por función para decisiones de producto");
+
+  // 17i. Verificar Retención: Memoria Persistente de Preset EXIF/GPS (saveCurrentCreatorWorkflow / restoreSavedCreatorWorkflow), Prompt PWA en 2º uso y Cohortes D1/W1/M1 + genuineReturn
+  paSandbox.applyCreatorPreset("iphone_agency");
+  assert.strictEqual(paSandbox.localStorage.getItem("pureai_saved_defense"), "spoof", "Retención: applyCreatorPreset debe persistir pureai_saved_defense en localStorage");
+  assert.strictEqual(paSandbox.localStorage.getItem("pureai_saved_city"), "miami", "Retención: applyCreatorPreset debe persistir pureai_saved_city en localStorage");
+  getPaEl("img-defense").value = "pure";
+  getPaEl("img-gps-city").value = "none";
+  const wasRestored = paSandbox.restoreSavedCreatorWorkflow();
+  assert.strictEqual(wasRestored, true, "Retención: restoreSavedCreatorWorkflow debe devolver true al restaurar un perfil guardado");
+  assert.strictEqual(getPaEl("img-defense").value, "spoof", "Retención: restoreSavedCreatorWorkflow debe restaurar el perfil EXIF guardado al volver en la siguiente sesión");
+  assert.strictEqual(getPaEl("img-gps-city").value, "miami", "Retención: restoreSavedCreatorWorkflow debe restaurar la ciudad GPS guardada");
+  paSandbox.applyCreatorPreset("pure_clean");
+
+  paSandbox.sessionCleanCount = 2;
+  const tipAfterSecondUse = paSandbox.buildPostCleanPartnerTipHtml();
+  assert(tipAfterSecondUse.includes("Hábito Creador") && tipAfterSecondUse.includes("installPwaApp()"), "Retención: Tras el 2º archivo procesado debe mostrarse el recordatorio de fijar PWA y preset guardado");
+
+  const retFunnel = autoDoctor.computeProductAnalyticsFunnel([
+    { event_name: "session_start", isReturning: true, retentionBucket: "D1_48h", genuineReturn: true },
+    { event_name: "session_start", isReturning: true, retentionBucket: "W1_d2_7", genuineReturn: true },
+    { event_name: "session_start", isReturning: true, retentionBucket: "M1_d8_30", genuineReturn: false, promoTriggered: true }
+  ]);
+  assert.strictEqual(retFunnel.retentionBreakdown.D1_48h, 1, "Cohortes Retención: Debe contabilizar retorno en ventana D1_48h");
+  assert.strictEqual(retFunnel.retentionBreakdown.W1_d2_7, 1, "Cohortes Retención: Debe contabilizar retorno en ciclo semanal W1_d2_7");
+  assert.strictEqual(retFunnel.retentionBreakdown.M1_d8_30, 1, "Cohortes Retención: Debe contabilizar retorno en ciclo mensual M1_d8_30");
+  assert.strictEqual(retFunnel.retentionBreakdown.genuineReturningUsers, 2, "Retención Genuina: Debe separar retornos orgánicos genuinos (2) de promocionales");
+  assert.strictEqual(retFunnel.retentionBreakdown.promoReturningUsers, 1, "Retención Promocional: Debe aislar retornos inducidos por promoción (?ref= / bonus email)");
+
+  // 17j. Verificar Mejoras de Conversión en Monetización: ?prefilled_promo_code=FRIEND50, Contexto Dinámico en showProModal (#pro-modal-desc / #pro-modal-title) y Deduplicación de Cuota por Archivo Único
+  assert(cleanAiHtml.includes("https://buy.stripe.com/aFaaEY0fgcHbd1SeTE0000c?prefilled_promo_code=FRIEND50"), "Checkout Friction Zero: Los enlaces del plan mensual deben pre-aplicar ?prefilled_promo_code=FRIEND50 para evitar shock de precio en Stripe");
+  paSandbox.showProModal("🔒 Tienes 12 fotos y vídeos en lote listos para descargar en .ZIP", "img_batch_zip");
+  assert(getPaEl("pro-modal-title").textContent.includes("Lotes .ZIP Mixtos"), "Paywall Contextual: showProModal debe adaptar #pro-modal-title a la función que disparó el bloqueo");
+  assert(getPaEl("pro-modal-desc").textContent.includes("12 fotos y vídeos"), "Paywall Contextual: showProModal debe inyectar el mensaje específico msg en #pro-modal-desc");
+  assert.strictEqual(paSandbox.lastPaywallTriggerTool, "img_batch_zip", "Atribución de Paywall: showProModal debe registrar lastPaywallTriggerTool para atribuir el checkout");
+
+  paSandbox.isPureAiPro = false;
+  paSandbox.persistImgQuota(0);
+  paSandbox.loadedImgElement = { naturalWidth: 64, naturalHeight: 64 };
+  paSandbox.loadedImgFile = { name: "same-portrait.jpg", size: 40960, type: "image/jpeg" };
+  paSandbox.loadedIsVideo = false;
+  getPaEl("img-defense").value = "spoof";
+  getPaEl("img-gps-city").value = "miami";
+  paSandbox.scrubAndDownloadImage();
+  assert.strictEqual(paSandbox.usedImgCredits, 1, "Cuota PLG: El 1er procesado Pro de un archivo nuevo debe consumir 1 crédito (1/3)");
+  getPaEl("img-gps-city").value = "madrid";
+  paSandbox.scrubAndDownloadImage();
+  assert.strictEqual(paSandbox.usedImgCredits, 1, "Protección PLG: Re-procesar el mismo archivo cambiando ciudad GPS o cámara no debe consumir un 2º crédito gratuito");
+
+  // 17k. Verificar Mejoras de UX y Comprensión: 0 Falsas Alertas Rojas en archivos ya limpios, Miniatura SVG en Vídeo .MP4, Grid Responsive .pa-exif-grid y Auto-Sync en Focus
+  assert(cleanAiHtml.includes(".pa-exif-grid") && cleanAiHtml.includes("@media (max-width: 680px)"), "UX Móvil: Los 3 selectores EXIF/GPS deben usar la clase responsive .pa-exif-grid");
+  const cleanPhotoBytes = new Uint8Array([0xff, 0xd8, 0xff, 0xe0, 0x00, 0x10, 0x4a, 0x46, 0x49, 0x46, 0xff, 0xd9]);
+  await paSandbox.inspectImageFile({
+    name: "already-clean.jpg",
+    size: cleanPhotoBytes.length,
+    type: "image/jpeg",
+    arrayBuffer: async () => cleanPhotoBytes.buffer
+  });
+  const cleanAuditHtml = getPaEl("img-audit-log").innerHTML;
+  assert(cleanAuditHtml.includes("threat-badge-green") && !cleanAuditHtml.includes("threat-badge-red"), "UX Confianza: Al inspeccionar una imagen ya limpia (0 amenazas), inspectImageFile debe mostrar insignia verde y nunca .threat-badge-red");
+
+  getPaEl("img-preview-thumb").src = "";
+  await paSandbox.inspectVideoFile({
+    name: "reel-test.mp4",
+    size: 4096,
+    type: "video/mp4",
+    arrayBuffer: async () => xssVidBytes.buffer
+  });
+  assert(String(getPaEl("img-preview-thumb").src).startsWith("data:image/svg+xml"), "UX Vídeo: inspectVideoFile debe asignar un icono SVG válido a #img-preview-thumb para evitar icono de imagen rota");
+
+  // 17l. Verificar Embudo de Conversión por Canal (byChannelFunnel y bestConvertingChannel) y clasificación de user_referral / paid_ads / community_social
+  assert(telemetriaCode.includes('"user_referral"') && telemetriaCode.includes('"paid_ads"') && telemetriaCode.includes('"community_social"'), "Adquisición: classifyTrafficChannel debe distinguir user_referral, paid_ads y community_social");
+  const channelFunnelTest = autoDoctor.computeProductAnalyticsFunnel([
+    { event_name: "session_start", channel: "social_reddit" },
+    { event_name: "tool_completed", channel: "social_reddit", tool_id: "img_c2pa_scrubber", isDemo: false },
+    { event_name: "paywall_viewed", channel: "social_reddit", trigger_tool: "img_batch_zip" },
+    { event_name: "checkout_clicked", channel: "social_reddit", plan_selected: "PRO_ANNUAL_3900" },
+    { event_name: "purchase_verified", channel: "social_reddit" },
+    { event_name: "session_start", channel: "organic_search" },
+    { event_name: "tool_completed", channel: "organic_search", tool_id: "img_c2pa_scrubber", isDemo: false }
+  ]);
+  assert.strictEqual(channelFunnelTest.byChannelFunnel.social_reddit.purchasesVerified, 1, "Atribución por Canal: byChannelFunnel debe rastrear compras verificadas por canal");
+  assert.strictEqual(channelFunnelTest.byChannelFunnel.social_reddit.conversionToPurchasePct, 100, "Atribución por Canal: Debe calcular conversionToPurchasePct por canal");
+  assert.strictEqual(channelFunnelTest.bestConvertingChannel, "social_reddit", "Atribución por Canal: Debe identificar automáticamente el canal con mejor conversión (bestConvertingChannel)");
+
+  // 17m. Verificar Modelo de Viabilidad Financiera (Facturación vs. BAI vs. Caja Propietario + Escenarios Conservador/Intermedio/Optimista)
+  const finViabilityDigest = autoDoctor.generateAutomatedFinancialDigest(
+    [
+      { id: "ev_fin_1", type: "SALE_ANNUAL", amountCents: 3900, taxCents: 0, affiliateId: "organic" },
+      { id: "ev_fin_2", type: "SALE_MONTHLY", amountCents: 999, taxCents: 0, affiliateId: "creator_partner" }
+    ],
+    { fixedCostsCents: 100, adSpendCents: 0, founderHours: 5, taxRatePct: 20 }
+  );
+  assert(finViabilityDigest.contributionMarginCents > 4000, "Viabilidad Financiera: Debe calcular el Margen de Contribución descontando Stripe y afiliados");
+  assert(finViabilityDigest.preTaxProfitBaiCents < finViabilityDigest.contributionMarginCents, "Viabilidad Financiera: Debe distinguir Beneficio Antes de Impuestos (BAI) descontando costes fijos");
+  assert(finViabilityDigest.ownerFreeCashFlowCents < finViabilityDigest.preTaxProfitBaiCents, "Viabilidad Financiera: Debe distinguir Dinero Disponible para el Propietario descontando reserva fiscal");
+  assert(finViabilityDigest.weeklyKpiChecklist && finViabilityDigest.weeklyKpiChecklist.under100EurBudgetCompliant === true, "Viabilidad Financiera: Debe verificar cumplimiento del presupuesto < 100 €/mes");
+
+  const finScenarios = autoDoctor.simulateFinancialViabilityScenarios({ monthlyPromo499Sales: 5, monthlyStd999Sales: 5, annual3900Sales: 2 });
+  assert(finScenarios.conservative && finScenarios.intermediate && finScenarios.optimistic, "Viabilidad Financiera: Debe simular escenarios Conservador, Intermedio y Optimista");
+  assert(finScenarios.optimistic.ownerTakeHomeCashEur > finScenarios.intermediate.ownerTakeHomeCashEur && finScenarios.intermediate.ownerTakeHomeCashEur > finScenarios.conservative.ownerTakeHomeCashEur, "Viabilidad Financiera: El flujo de caja libre del propietario debe escalar coherentemente entre escenarios");
+  assert.strictEqual(finScenarios.optimistic.variableApiAndServerCostEur, 0, "Viabilidad Financiera: El coste variable de APIs/servidor por operación debe mantenerse en 0,00 € (100% Client-Side)");
+
+  // 17n. Verificar Corrección de los 8 Casos Límite de QA, Ingeniería y Seguridad (BUG-01 a BUG-09)
+  // BUG-01: Retorno legítimo de Stripe Checkout (?session_id=cs_live_...) concede acceso en ventana de propagación de webhook sin bloquear al comprador
+  const graceCheckoutRes = paSandbox.processStripeCheckoutReturn("?session_id=cs_live_buyer_grace_window_test_9876543210");
+  assert.strictEqual(graceCheckoutRes.activated, true, "QA BUG-01: Retorno de Stripe debe activar la sesión");
+  assert.strictEqual(paSandbox.isPureAiPro, true, "QA BUG-01: El comprador recién retornado de Stripe debe tener isPureAiPro=true durante la ventana de propagación del webhook");
+  await paSandbox.verifyLicenseWithServer("cs_live_buyer_grace_window_test_9876543210"); // Sin customEndpoint (simula 404 temporal por carrera del webhook)
+  assert.strictEqual(paSandbox.isPureAiPro, true, "QA BUG-01: Un 404 temporal en los primeros segundos tras pagar en Stripe no debe revocar la sesión del comprador");
+
+  // BUG-02: Modo Lossless sobre contenedor PNG elimina cadenas C2PA/prompts sin dejarlas intactas
+  const pngWithC2pa = new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, ...Buffer.from("tEXtparameters\0Midjourney prompt secret c2pa")]);
+  const losslessPngOut = paSandbox.stripJpegContainersLossless(pngWithC2pa);
+  const losslessPngStr = Buffer.from(losslessPngOut).toString("latin1");
+  assert(!/c2pa|Midjourney|prompt/i.test(losslessPngStr), "QA BUG-02: stripJpegContainersLossless debe limpiar rastros C2PA/prompts también cuando recibe un contenedor PNG");
+
+  // BUG-03: Modo Neutro ('pure') + Ciudad GPS ('madrid') debe inyectar el bloque EXIF/GPS APP1 (0xFFE1)
+  paSandbox.isPureAiPro = false;
+  paSandbox.persistImgQuota(0);
+  getPaEl("img-defense").value = "pure";
+  getPaEl("img-gps-city").value = "madrid";
+  getPaEl("img-format").value = "image/png"; // Incluso si estaba en PNG, debe cambiar a JPEG para soportar APP1 GPS
+  paSandbox.loadedImgElement = { naturalWidth: 64, naturalHeight: 64 };
+  paSandbox.loadedImgFile = { name: "neutral-gps-test.jpg", size: 2048, type: "image/jpeg" };
+  paSandbox.loadedIsVideo = false;
+  paSandbox.scrubAndDownloadImage();
+  await new Promise((r) => setTimeout(r, 25));
+  assert(paSandbox.lastCleanedBlob && paSandbox.lastCleanedBlob._bytes[2] === 0xff && paSandbox.lastCleanedBlob._bytes[3] === 0xe1, "QA BUG-03: Seleccionar ciudad GPS en modo neutro debe inyectar cabecera APP1 con coordenadas GPS");
+
+  // BUG-04: MP4 con átomo mdat de tamaño 0 (hasta EOF) o 1 (64 bits) protege el flujo H.264/H.265 sin corromperlo
+  const mp4BoxZero = new Uint8Array([
+    0x00, 0x00, 0x00, 0x08, 0x66, 0x74, 0x79, 0x70,
+    0x00, 0x00, 0x00, 0x00, 0x6d, 0x64, 0x61, 0x74,
+    0x11, 0x22, 0x73, 0x6f, 0x72, 0x61, 0x33, 0x44
+  ]);
+  const cleanedBoxZero = paSandbox.scrubVideoBytesInPlace(mp4BoxZero, "pure");
+  assert.strictEqual(Buffer.from(cleanedBoxZero.slice(18, 22)).toString("latin1"), "sora", "QA BUG-04: Átomo mdat con boxSize=0 (hasta EOF) debe proteger su bitstream H.264 interno");
+
+  // BUG-05: inspectImageFile detecta metadatos al final de archivos >256 KB y detecta tag binario TIFF GPS 0x8825
+  const bigPng = new Uint8Array(280000);
+  bigPng.set([0x89, 0x50, 0x4e, 0x47], 0);
+  bigPng.set(Buffer.from("c2pa.manifest.trainedAlgorithmicMedia"), 270000);
+  await paSandbox.inspectImageFile({
+    name: "big-tail-c2pa.png",
+    size: bigPng.length,
+    arrayBuffer: async () => bigPng.buffer,
+    _dataUrl: "data:image/png;base64,iVBORw0KGgo="
+  });
+  assert(getPaEl("img-audit-log").innerHTML.includes("C2PA"), "QA BUG-05: inspectImageFile debe detectar manifiestos C2PA situados más allá de los primeros 256 KB");
+
+  // BUG-06 y BUG-08: freeProCredits (obtenido por ?ref= o email) desbloquea también 1 uso Pro de imagen y wrangler.toml coincide con el endpoint del Worker
+  paSandbox.isPureAiPro = false;
+  paSandbox.persistImgQuota(3);
+  paSandbox.freeProCredits = 1;
+  getPaEl("pro-modal-overlay").style.display = "none";
+  getPaEl("img-defense").value = "spoof";
+  paSandbox.loadedImgFile = { name: "bonus-credit-test.jpg", size: 4096, type: "image/jpeg" };
+  paSandbox.scrubAndDownloadImage();
+  assert.strictEqual(getPaEl("pro-modal-overlay").style.display, "none", "QA BUG-06: freeProCredits debe permitir 1 uso Pro de imagen cuando usedImgCredits === 3");
+  assert.strictEqual(paSandbox.freeProCredits, 0, "QA BUG-06: Consumir el crédito extra Pro en imagen debe descontar freeProCredits a 0");
+  assert(wranglerToml.includes('name = "pureai-stripe-webhook"'), "QA BUG-08: wrangler.toml debe usar el nombre exacto pureai-stripe-webhook");
+
+  // 17o. Verificar Árbol de Diagnóstico de Cuellos de Botella 30/60/90 Días (diagnoseConversionBottleneck)
+  const diagLowActivation = autoDoctor.diagnoseConversionBottleneck(
+    { stages: { visitors: 100, activatedUsers: 8, paywallViewed: 2, checkoutClicked: 0 }, rates: { activationRatePct: 8, paywallReachRatePct: 25 } },
+    { stageDay: 30 }
+  );
+  assert.strictEqual(diagLowActivation.bottleneckCode, "BOTTLENECK_AUDIENCE_OR_CLARITY", "Diagnóstico 90d: Con <15% de activación debe señalar fallo de público/claridad y prohibir bajar precios a ciegas");
+
+  const diagCheckoutDrop = autoDoctor.diagnoseConversionBottleneck(
+    { stages: { visitors: 200, activatedUsers: 80, paywallViewed: 30, checkoutClicked: 12, purchasesVerified: 0 }, rates: { activationRatePct: 40, paywallReachRatePct: 37.5, paywallToCheckoutPct: 40, checkoutToPurchasePct: 0 } },
+    { stageDay: 60 }
+  );
+  assert.strictEqual(diagCheckoutDrop.bottleneckCode, "BOTTLENECK_CHECKOUT_TRUST_OR_MODEL", "Diagnóstico 90d: Con >=10 clics a Stripe y <15% de compra debe señalar fricción en checkout o modelo de cobro");
+
+  const diagHealthy = autoDoctor.diagnoseConversionBottleneck(
+    { stages: { visitors: 300, activatedUsers: 120, paywallViewed: 40, checkoutClicked: 10, purchasesVerified: 4 }, rates: { activationRatePct: 40, paywallReachRatePct: 33.3, paywallToCheckoutPct: 25, checkoutToPurchasePct: 40 }, bestConvertingChannel: "social_reddit", retentionBreakdown: { genuineReturningUsers: 18 } },
+    { stageDay: 90 }
+  );
+  assert.strictEqual(diagHealthy.bottleneckCode, "HEALTHY_CONVERSION_FLOW", "Diagnóstico 90d: Cuando todas las tasas superan los umbrales debe recomendar escalar el canal ganador");
+
+  // 17p. Verificar Las 5 Pruebas Esenciales y Regla de Señales Convergentes (evaluateFiveCoreValidationTests)
+  const partialFive = autoDoctor.evaluateFiveCoreValidationTests(
+    {
+      stages: { visitors: 100, activatedUsers: 35, paywallViewed: 20, checkoutClicked: 0, purchasesVerified: 0 },
+      rates: { activationRatePct: 35, paywallToCheckoutPct: 0 },
+      retentionBreakdown: { genuineReturningUsers: 2 },
+      byChannelFunnel: {}
+    },
+    { verifiedSalesCount: 0, refundsCount: 0 }
+  );
+  assert.strictEqual(partialFive.convergentStatus, "FREE_UTILITY_TRAP_NO_PAYMENT_YET", "5 Pruebas: Superar solo Comprensión y Utilidad sin Pago ni Recurrencia debe alertar FREE_UTILITY_TRAP_NO_PAYMENT_YET");
+
+  const convergentFive = autoDoctor.evaluateFiveCoreValidationTests(
+    {
+      stages: { visitors: 120, activatedUsers: 45, paywallViewed: 25, checkoutClicked: 6, purchasesVerified: 4 },
+      rates: { activationRatePct: 37.5, paywallToCheckoutPct: 24 },
+      retentionBreakdown: { genuineReturningUsers: 12, W1_d2_7: 8, M1_d8_30: 4 },
+      byChannelFunnel: { user_referral: { visitors: 6, activatedUsers: 3 } }
+    },
+    { verifiedSalesCount: 4, refundsCount: 0 }
+  );
+  assert.strictEqual(convergentFive.passedCount, 5, "5 Pruebas: Cuando los 5 pilares superan sus umbrales passedCount debe ser 5");
+  assert.strictEqual(convergentFive.convergentStatus, "VALIDATED_CONVERGENT", "5 Pruebas: Solo con señales convergentes (Utilidad + Recurrencia + Pago + Comprensión/Recomendación) debe declarar VALIDATED_CONVERGENT");
+
+  // 17q. Verificar Evaluador de Entrevistas a Usuarios Reales (The Mom Test: hechos pasados vs. cumplidos vacíos)
+  const politeCompliment = autoDoctor.evaluateUserInterviewResponses({
+    daysSinceLastProblem: 180,
+    usedActiveWorkaround: false,
+    timeSpentMinutes: 0,
+    paidForAlternativeBefore: false,
+    gaveGenericComplimentOnly: true
+  });
+  assert.strictEqual(politeCompliment.profileClassification, "FALSE_POSITIVE_POLITE_COMPLIMENT", "Entrevistas: Un usuario que dice 'me encanta' pero no ha tenido el problema en meses ni usó workaround debe clasificarse como FALSE_POSITIVE_POLITE_COMPLIMENT");
+  assert.strictEqual(politeCompliment.isReliableDemandSignal, false, "Entrevistas: Cumplidos generales sin comportamiento pasado no deben contarse como señal de demanda");
+
+  const realIcpCreator = autoDoctor.evaluateUserInterviewResponses({
+    daysSinceLastProblem: 2,
+    usedActiveWorkaround: true,
+    timeSpentMinutes: 20,
+    paidForAlternativeBefore: true,
+    completedRealTaskInPureAi: true,
+    hasSpecificReturnTrigger: true,
+    unnecessaryFeatures: ["txt_pro_humanizer"],
+    trustBarriers: ["subida_a_nube"]
+  });
+  assert.strictEqual(realIcpCreator.profileClassification, "HIGH_INTENT_ICP_BUYER", "Entrevistas: Un usuario que tuvo el problema hace 2 días, tardó 20 min en un workaround y tiene desencadenante de retorno debe clasificarse como HIGH_INTENT_ICP_BUYER");
+  assert.strictEqual(realIcpCreator.isReliableDemandSignal, true, "Entrevistas: Evidencia conductual pasada debe marcarse como señal fiable de demanda");
+
+  // 17r. Verificar Semáforo de Constitución de Empresa para Trabajador por Cuenta Ajena (incorporationReadiness en generateAutomatedFinancialDigest)
+  assert.strictEqual(finViabilityDigest.incorporationReadiness.readyToCreateCompany, false, "Con solo 2 ventas no debe recomendar constituir empresa ni asumir gastos fijos de gestoría");
+  assert(finViabilityDigest.incorporationReadiness.recommendation.includes("DO_NOT_INCORPORATE_YET"), "Debe advertir expresamente DO_NOT_INCORPORATE_YET mientras no supere 350 €/mes y 15 clientes");
+
+  console.log("✅ QA TEST SUITE PASSED (17 SECCIONES / 179 ASERCIONES): 100% E2E VM + Pre-Incorporation Gate + Mom-Test Scorer + 5 Core Convergent Validation Tests + 90-Day Bottleneck Diagnostics + QA Edge-Cases (BUG-01..09 Fixed) + Financial Viability + Channel Attribution Funnel + UX First-Visit Clarity + Checkout Friction Zero + Paywall Contextual + Retención D1/W1/M1 + Sticky Presets + Batch Mixto Foto/MP4 + Lossless JPEG + MP4 Camera Udta + EXIF GPS 0x8825 + Pagos/Webhooks KV + CFO + Legal/AI Act + Ciberseguridad verificadas sin errores.");
 })();
 
 

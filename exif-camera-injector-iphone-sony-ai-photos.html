@@ -47,7 +47,7 @@
         <div id="quick-img-status" style="margin-top:10px;font-family:monospace;font-size:0.8rem;color:#a7f3d0;"></div>
         <canvas id="quick-canvas" style="display:none;"></canvas>
         <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;">
-          <a href="clean-ai-studio.html?lang=en" class="cta-button" style="flex:1;text-align:center;padding:0.75rem 1rem;font-weight:800;">🧬 Open Full Studio (Camera EXIF Profile · Batch .ZIP) →</a>
+          <a href="clean-ai-studio.html?preset=iphone&amp;city=miami&amp;lang=en" class="cta-button" style="flex:1;text-align:center;padding:0.75rem 1rem;font-weight:800;">📱 Open Studio with iPhone 16 Pro + Binary GPS Preset →</a>
           <a href="https://buy.stripe.com/aFaaEY0fgcHbd1SeTE0000c" target="_blank" rel="noopener" style="background:#00e5a3;color:#042f1e;text-decoration:none;padding:0.75rem 1rem;border-radius:10px;font-weight:900;font-size:0.85rem;">🔥 Pro Monthly -50% (4,99 €)</a>
         </div>
       </div>
@@ -84,11 +84,11 @@
       }
       </script>
       
-      <p>Simply stripping metadata leaves an image with an empty EXIF container. <strong>PureAI Studio</strong> writes a binary <code>APP1 (0xFFE1 + Exif\0\0 + TIFF IFD0)</code> technical header directly into your cleaned JPEG:</p>
+      <p>Simply stripping metadata leaves an image with an empty EXIF container (<code>0 bytes</code>) that platforms and agency audits easily spot. <strong>PureAI Studio</strong> writes a binary <code>APP1 (0xFFE1 + Exif\0\0 + TIFF IFD0 + GPS Sub-IFD 0x8825)</code> technical header directly into your cleaned JPEG:</p>
       <ul style="margin: 1rem 0 1.5rem 1.25rem; color: #cbd5e1;">
-        <li><strong>Apple iPhone 16 Pro Profile:</strong> Injects <code>Apple / iPhone 16 Pro back triple camera 6.765mm f/1.78 (iOS 18.2)</code> binary EXIF tags.</li>
-        <li><strong>Sony Alpha A7 IV &amp; Canon EOS R5 Profiles:</strong> Professional full-frame studio camera headers (<code>FE 24-70mm F2.8 GM II</code> &amp; <code>RF24-70mm F2.8 L IS USM</code>).</li>
-        <li><strong>1-Click Technical Verification:</strong> Re-scan your output file byte-by-byte to confirm 0 C2PA/JUMBF segments and active camera EXIF headers.</li>
+        <li><strong>Apple iPhone 16 Pro Profile (OFM / Fanvue / Instagram Reels):</strong> Injects <code>Apple / iPhone 16 Pro back triple camera 6.765mm f/1.78 (iOS 18.2)</code> binary EXIF tags and renames files to <code>IMG_XXXX.JPG</code>.</li>
+        <li><strong>Binary GPS Sub-IFD (Tag 0x8825) + Street Jitter:</strong> Writes real DMS rational coordinates (Miami, NYC, Madrid, London, CDMX, Dubai) with natural <code>±0.002°</code> coordinate jitter and staggered timestamps across <code>.ZIP</code> batches.</li>
+        <li><strong>Sony Alpha A7 IV &amp; Canon EOS R5 Profiles (Photoshop Generative Fill Fix):</strong> Restore professional full-frame camera headers (<code>FE 24-70mm F2.8 GM II</code> &amp; <code>RF24-70mm F2.8 L IS USM</code>) after removing Adobe C2PA tags.</li>
       </ul>
     
       <div style="margin-top: 2rem; padding: 1.25rem; background: #0f172a; border: 1px solid #10b981; border-radius: 0.75rem;">
