@@ -312,7 +312,7 @@
         <div>
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:6px;">
             <h3 style="margin:0;font-size:1.15rem;" id="ui-img-title">📸 1. Limpiar Fotos creadas con IA</h3>
-            <span id="free-img-quota-badge" style="font-size:0.75rem;background:rgba(16,185,129,0.16);border:1px solid #10b981;color:#6ee7b7;padding:4px 10px;border-radius:999px;font-weight:800;">🎁 3/3 Fotos Gratis</span>
+            <span id="free-img-quota-badge" style="font-size:0.75rem;background:rgba(16,185,129,0.16);border:1px solid #10b981;color:#6ee7b7;padding:4px 10px;border-radius:999px;font-weight:800;">🎁 1 a 1 Gratis Ilimitado · 3/3 EXIF Pro</span>
           </div>
 
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;gap:6px;flex-wrap:wrap;">
@@ -669,8 +669,8 @@
       }
     }
 
-    let isPureAiPro = false;
-    let batchQueue = [];
+    var isPureAiPro = false;
+    var batchQueue = [];
 
     // M2: Protección de PII en telemetría pública, Máquina de Estados de Suscripción (9 estados) y Validador Criptográfico
     function maskSensitiveTelemetryValue(rawVal) {
@@ -1449,11 +1449,11 @@
       }
       var rem = Math.max(0, MAX_FREE_IMG_USES - usedImgCredits);
       if (rem > 0) {
-        badge.textContent = "🎁 " + rem + "/" + MAX_FREE_IMG_USES + " Fotos Gratis";
+        badge.textContent = "🎁 1 a 1 Gratis Ilimitado · " + rem + "/" + MAX_FREE_IMG_USES + " EXIF Pro";
         badge.style.borderColor = "#10b981";
         badge.style.color = "#6ee7b7";
       } else {
-        badge.textContent = "🔒 0/" + MAX_FREE_IMG_USES + " Gratis · Activa Pro abajo";
+        badge.textContent = "🎁 1 a 1 Gratis · 🔒 EXIF Cámara / .ZIP Pro";
         badge.style.borderColor = "#f59e0b";
         badge.style.color = "#fcd34d";
       }
@@ -1481,14 +1481,14 @@
       if (typeof window !== "undefined" && typeof window.sendPureAiAnalyticsEvent === "function") {
         window.sendPureAiAnalyticsEvent({ type: "app_action", event_name: "paywall_viewed", trigger_tool: triggerTool || "img_c2pa_scrubber", usedCredits: usedImgCredits });
       }
-      if (typeof window === "undefined") {
-        if (typeof alert === "function") alert(msg);
-        return;
+      if (typeof document !== "undefined" && typeof document.getElementById === "function") {
+        var modal = document.getElementById("pro-modal-overlay");
+        if (modal) {
+          modal.style.display = "flex";
+          return;
+        }
       }
-      var modal = document.getElementById("pro-modal-overlay");
-      if (modal) {
-        modal.style.display = "flex";
-      } else if (typeof alert === "function") {
+      if (typeof alert === "function") {
         alert(msg);
       }
     }
@@ -1516,12 +1516,15 @@
     function scrubAndDownloadImage() {
       if (!loadedImgElement || !loadedImgFile) return;
       const defense = document.getElementById("img-defense").value;
+      const cityEl = document.getElementById("img-gps-city");
+      const cityVal = (cityEl && cityEl.value) || "none";
+      const isAdvancedProImgMode = Boolean(CAMERA_PROFILES[defense]) || defense === "synthid" || cityVal !== "none";
       const isDemoSample = loadedImgFile.name === "dalle3-instagram-sample.jpg";
-      if (!isPureAiPro && !isDemoSample && usedImgCredits >= MAX_FREE_IMG_USES) {
-        showProModal("🔒 Has agotado tus " + MAX_FREE_IMG_USES + "/" + MAX_FREE_IMG_USES + " limpiezas de fotos gratuitas (Protección por Huella de Hardware activa). Desbloquea limpiezas ilimitadas, Inyector EXIF iPhone 16 Pro / Sony A7IV y Lotes .ZIP desde 🔥 4,99 € (1er mes Pro con FRIEND50) o 39 €/año en Stripe Checkout abajo.");
+      if (!isPureAiPro && !isDemoSample && isAdvancedProImgMode && usedImgCredits >= MAX_FREE_IMG_USES) {
+        showProModal("🔒 Has agotado tus " + MAX_FREE_IMG_USES + "/" + MAX_FREE_IMG_USES + " pruebas gratuitas de Perfiles Técnicos EXIF de Cámara (iPhone 16 Pro / Sony A7IV / Canon R5) y Geolocalización. La Limpieza Neutra 1 a 1 sigue siendo 100% Gratis e Ilimitada; desbloquea EXIF Pro Ilimitado y Lotes .ZIP desde 🔥 4,99 € (1er mes con FRIEND50) o 39 €/año.", "img_exif_pro_mode");
         return;
       }
-      if (!isPureAiPro && !isDemoSample) {
+      if (!isPureAiPro && !isDemoSample && isAdvancedProImgMode) {
         persistImgQuota(usedImgCredits + 1);
       }
 
@@ -1961,14 +1964,22 @@
       }
     }
 
+    var MAX_FREE_SHORT_WORDS = 180;
     function deepHumanizePro() {
       let txt = document.getElementById("txt-input").value;
       if (!txt.trim()) return;
+      const wordCount = txt.trim().split(/\s+/).filter(Boolean).length;
+      const shortTrialUsed = localStorage.getItem("pureai_plg_short_txt_tried") === "1";
       if (!isPureAiPro && freeProCredits <= 0) {
-        showProModal("🔒 Deep AI Vocabulary & Burstiness Humanizer requires PureAI Studio Pro (🔥 4,99 € 1er mes con código FRIEND50 o 39 €/año Plan Anual via Stripe Checkout below, or unlock 1 Free Credit by sharing with a friend!).");
-        return;
-      }
-      if (!isPureAiPro && freeProCredits > 0) {
+        if (wordCount <= MAX_FREE_SHORT_WORDS && !shortTrialUsed) {
+          try {
+            localStorage.setItem("pureai_plg_short_txt_tried", "1");
+          } catch (_) {}
+        } else {
+          showProModal("🔒 Vista previa gratuita completada (o texto largo de " + wordCount + " palabras > " + MAX_FREE_SHORT_WORDS + " máx. gratis). Desbloquea el Humanizador Profundo Ilimitado para ensayos completos y archivos Word (.DOCX) con PureAI Studio Pro (🔥 4,99 € 1er mes con código FRIEND50 o 39 €/año Plan Anual, o comparte con un amigo para +1 Uso Pro Gratis).", "txt_deep_humanizer");
+          return;
+        }
+      } else if (!isPureAiPro && freeProCredits > 0) {
         freeProCredits--;
         localStorage.setItem("pureai_free_pro_credits", String(freeProCredits));
         updateReferralUi();

@@ -703,7 +703,34 @@ assert(cleanAiHtml.includes("terms.html") && cleanAiHtml.includes("Art. 103.m TR
   const swCurrent = fs.readFileSync(path.join(__dirname, "sw.js"), "utf8");
   assert(swCurrent.includes("pureai-studio-v4") && swCurrent.includes('e.request.mode === "navigate"'), "sw.js debe implementar caché v4 con soporte de navegación offline y revalidación");
 
-  console.log("✅ QA TEST SUITE PASSED (17 SECCIONES / 104 ASERCIONES): 100% E2E VM + Pagos/Webhooks KV + CFO + Legal/AI Act + Automatización + Ciberseguridad + Analítica + Regresión Cross-Module verificadas sin errores.");
+  // 17e. Verificar Modelo Híbrido PLG: Limpieza Neutra 1 a 1 ilimitada gratis, 3 pruebas EXIF Cámara Pro y 1 prueba de texto corto (<=180 palabras) en deepHumanizePro
+  paSandbox.isPureAiPro = false;
+  paSandbox.freeProCredits = 0;
+  paSandbox.persistImgQuota(3); // Simular que ya gastó las 3 pruebas EXIF Pro
+  paSandbox.loadedImgElement = { naturalWidth: 64, naturalHeight: 64 };
+  paSandbox.loadedImgFile = { name: "user-photo.jpg", size: 2048, type: "image/jpeg" };
+  paSandbox.loadedIsVideo = false;
+  getPaEl("img-defense").value = "pure";
+  getPaEl("img-gps-city").value = "none";
+  getPaEl("pro-modal-overlay").style.display = "none";
+  paSandbox.scrubAndDownloadImage();
+  assert.strictEqual(getPaEl("pro-modal-overlay").style.display, "none", "PLG: Limpieza Neutra 1 a 1 debe seguir siendo 100% gratis e ilimitada aunque usedImgCredits sea 3");
+
+  getPaEl("img-defense").value = "spoof";
+  paSandbox.scrubAndDownloadImage();
+  assert.strictEqual(getPaEl("pro-modal-overlay").style.display, "flex", "PLG: El 4º uso de un perfil EXIF Pro (iPhone 16 Pro) sin suscripción debe mostrar el modal Pro");
+
+  getPaEl("pro-modal-overlay").style.display = "none";
+  paSandbox.localStorage.removeItem("pureai_plg_short_txt_tried");
+  getPaEl("txt-input").value = "En conclusión\u202F—\u202Fes importante recordar que este párrafo corto prueba el humanizador.";
+  paSandbox.deepHumanizePro();
+  assert.strictEqual(paSandbox.localStorage.getItem("pureai_plg_short_txt_tried"), "1", "PLG: El 1er uso de texto corto (<=180 palabras) en deepHumanizePro debe permitirse gratis");
+  assert.strictEqual(getPaEl("pro-modal-overlay").style.display, "none", "PLG: El 1er uso de texto corto no debe bloquearse con el modal Pro");
+
+  paSandbox.deepHumanizePro();
+  assert.strictEqual(getPaEl("pro-modal-overlay").style.display, "flex", "PLG: El 2º uso de deepHumanizePro sin Pro ni créditos debe mostrar el modal Pro");
+
+  console.log("✅ QA TEST SUITE PASSED (17 SECCIONES / 108 ASERCIONES): 100% E2E VM + Modelo Híbrido PLG + Pagos/Webhooks KV + CFO + Legal/AI Act + Automatización + Ciberseguridad + Analítica + Regresión Cross-Module verificadas sin errores.");
 })();
 
 
