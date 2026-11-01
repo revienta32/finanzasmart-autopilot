@@ -555,6 +555,23 @@
     </div>
 
     <footer id="pa-seo-footer" style="margin-top:28px;padding:18px;background:rgba(12,8,24,0.75);border:1px solid rgba(255,255,255,0.08);border-radius:16px;font-size:0.78rem;color:#94a3b8;line-height:1.8;">
+      <div style="margin-bottom:14px;padding-bottom:12px;border-bottom:1px solid rgba(255,255,255,0.08);">
+        <div style="font-weight:800;color:#e2e8f0;margin-bottom:6px;">🛠️ Recommended Creator &amp; Privacy Stack (Verified Partners):</div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:8px;">
+          <a id="aff-card-vpn" href="https://protonvpn.com/?ref=pureaistudio" target="_blank" rel="noopener sponsored" style="text-decoration:none;background:rgba(56,189,248,0.08);border:1px solid rgba(56,189,248,0.3);border-radius:10px;padding:8px 11px;color:#e2e8f0;display:block;">
+            <strong style="color:#38bdf8;font-size:0.78rem;">🛡️ ProtonVPN (Anti-Shadowban IP)</strong>
+            <div style="font-size:0.71rem;color:#94a3b8;line-height:1.35;margin-top:2px;">Evita que Instagram/TikTok rastreen tu IP tras limpiar los metadatos GPS/C2PA.</div>
+          </a>
+          <a id="aff-card-eleven" href="https://elevenlabs.io/?from=pureaistudio" target="_blank" rel="noopener sponsored" style="text-decoration:none;background:rgba(16,185,129,0.08);border:1px solid rgba(16,185,129,0.3);border-radius:10px;padding:8px 11px;color:#e2e8f0;display:block;">
+            <strong style="color:#6ee7b7;font-size:0.78rem;">🎙️ ElevenLabs (Voz IA Realista)</strong>
+            <div style="font-size:0.71rem;color:#94a3b8;line-height:1.35;margin-top:2px;">Dobla tus Reels, TikToks y vídeos de Sora/Runway con voces humanas indetectables.</div>
+          </a>
+          <a id="aff-card-heygen" href="https://www.heygen.com/?sid=rewardful&amp;via=pureaistudio" target="_blank" rel="noopener sponsored" style="text-decoration:none;background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.3);border-radius:10px;padding:8px 11px;color:#e2e8f0;display:block;">
+            <strong style="color:#fcd34d;font-size:0.78rem;">🎬 HeyGen (Avatares &amp; Vídeo IA)</strong>
+            <div style="font-size:0.71rem;color:#94a3b8;line-height:1.35;margin-top:2px;">Crea presentadores e influencers IA en vídeo HD listos para limpiar en PureAI.</div>
+          </a>
+        </div>
+      </div>
       <div style="font-weight:800;color:#e2e8f0;margin-bottom:6px;">📚 Specialized Guides &amp; Connected Tools (100% Client-Side):</div>
       <div style="display:flex;flex-wrap:wrap;gap:10px 16px;">
         <a href="remove-chatgpt-watermarks-invisible-characters-u202f.html" style="color:#6ee7b7;text-decoration:none;">Remove ChatGPT Watermarks (U+202F)</a>
@@ -1513,6 +1530,20 @@
       a.click();
     }
 
+    var PARTNER_STACK_LINKS = {
+      vpn: "https://protonvpn.com/?ref=pureaistudio",
+      elevenlabs: "https://elevenlabs.io/?from=pureaistudio",
+      heygen: "https://www.heygen.com/?sid=rewardful&via=pureaistudio"
+    };
+
+    function buildPostCleanPartnerTipHtml() {
+      return (
+        `<div style="margin-top:8px;padding:6px 9px;background:rgba(15,23,42,0.75);border:1px solid rgba(56,189,248,0.28);border-radius:8px;font-size:0.72rem;color:#cbd5e1;line-height:1.4;">` +
+        `💡 <strong>Complementos Creador:</strong> ¿Subes a RRSS? <a href="${PARTNER_STACK_LINKS.vpn}" target="_blank" rel="noopener sponsored" style="color:#38bdf8;text-decoration:underline;font-weight:700;">Oculta tu IP (ProtonVPN)</a> · <a href="${PARTNER_STACK_LINKS.elevenlabs}" target="_blank" rel="noopener sponsored" style="color:#6ee7b7;text-decoration:underline;font-weight:700;">Voz IA (ElevenLabs)</a> · <a href="${PARTNER_STACK_LINKS.heygen}" target="_blank" rel="noopener sponsored" style="color:#fcd34d;text-decoration:underline;font-weight:700;">Avatar Vídeo (HeyGen)</a>` +
+        `</div>`
+      );
+    }
+
     function scrubAndDownloadImage() {
       if (!loadedImgElement || !loadedImgFile) return;
       const defense = document.getElementById("img-defense").value;
@@ -1544,7 +1575,8 @@
           a.click();
           document.getElementById("img-audit-log").innerHTML =
             `<span class="threat-badge-green">✅ 100% CLEAN VIDEO VERIFIED: 0 C2PA/Sora/Runway/Kling AI tags remaining in ${escapeHtml(cleanVidName)}.</span>` +
-            `<div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap;"><button type="button" onclick="shareOrSaveCleanImage()" style="background:#00e5a3;color:#042f1e;border:none;border-radius:6px;padding:5px 11px;font-size:0.75rem;font-weight:900;cursor:pointer;">📲 Guardar Vídeo / Compartir</button></div>`;
+            `<div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap;"><button type="button" onclick="shareOrSaveCleanImage()" style="background:#00e5a3;color:#042f1e;border:none;border-radius:6px;padding:5px 11px;font-size:0.75rem;font-weight:900;cursor:pointer;">📲 Guardar Vídeo / Compartir</button></div>` +
+            buildPostCleanPartnerTipHtml();
         });
         return;
       }
@@ -1594,7 +1626,8 @@
           `<div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap;">` +
           `<button type="button" onclick="shareOrSaveCleanImage()" style="background:#00e5a3;color:#042f1e;border:none;border-radius:6px;padding:5px 11px;font-size:0.75rem;font-weight:900;cursor:pointer;">📲 Guardar en Galería / Compartir</button>` +
           `<button type="button" onclick="verifyLastCleanedImage()" style="background:#1e1633;color:#6ee7b7;border:1px solid #00e5a3;border-radius:6px;padding:5px 10px;font-size:0.75rem;font-weight:700;cursor:pointer;">🔍 Verificar 0% Metadatos</button><button type="button" onclick="generateZeroAiCertificate(lastCleanedName)" style="background:#2e1065;color:#e9d5ff;border:1px solid #a855f7;border-radius:6px;padding:5px 10px;font-size:0.75rem;font-weight:700;cursor:pointer;">🏅 Informe Técnico 0% Metadatos</button>` +
-          `</div>`;
+          `</div>` +
+          buildPostCleanPartnerTipHtml();
       });
     }
 
