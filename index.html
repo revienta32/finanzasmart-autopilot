@@ -1716,6 +1716,9 @@
     // Motor de variación de ritmo sintáctico (Burstiness) + Selector de Tono (P3: Académico / Redes / Profesional)
     function humanizeSentenceRhythm(txt) {
       var out = txt
+        .replace(/^[ \t]*[👉🚀✨🔥💡⚡📌]+\s*/gm, "")
+        .replace(/`([^`\n]{2,40})`/g, "$1")
+        .replace(/\bA lot of (people|creators|users|students) don't realize that\b/gi, "Most people miss that")
         .replace(/,\s+(lo que permite|permitiendo así|consolidando así|garantizando que)\s+/gi, ". Esto ayuda a ")
         .replace(/,\s+(which allows|ensuring that|thereby enabling|ultimately leading to)\s+/gi, ". This helps ")
         .replace(/;\s+sin embargo,\s+/gi, ". Aun así, ")
@@ -1723,7 +1726,7 @@
       if (currentHumanizerTone === "social") {
         out = out
           .replace(/\ben definitiva,?\b/gi, "La clave es simple:")
-          .replace(/\bultimately,?\b/gi, "Here's the takeaway:")
+          .replace(/\bultimately,?\b/gi, "Bottom line:")
           .replace(/\bconviene tener claro que\b/gi, "piensa que")
           .replace(/\bnotably,?\b/gi, "honestly,");
       } else if (currentHumanizerTone === "pro") {
