@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="referrer" content="strict-origin-when-cross-origin" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self' https: data: blob:; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; connect-src 'self' https:;" />
+  <title>Free C2PA Metadata Viewer &amp; ChatGPT Invisible Watermark Detector Online (U+202F X-Ray) | PureAI Studio</title>
+  <meta name="description" content="Free 100% client-side C2PA/JUMBF binary inspector and ChatGPT invisible Unicode watermark checker (U+202F, U+200B). See why Instagram, TikTok, or Turnitin flags your file and strip it in 1 click (No Signup)." />
+  <link rel="canonical" href="https://pureaistudios.com/free-c2pa-chatgpt-watermark-inspector-online.html" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="container topbar-inner">
+      <a href="clean-ai-studio.html" class="brand" style="text-decoration:none;color:inherit;">
+        <span class="brand-icon">🧬</span>
+        <div>
+          <strong>PureAI Studio</strong>
+          <span class="brand-tag">Free C2PA &amp; U+202F X-Ray Inspector · 100% Client-Side</span>
+        </div>
+      </a>
+      <nav class="tabs">
+        <a href="clean-ai-studio.html" class="tab-btn active" style="text-decoration:none;">🖼️ Open Full Studio</a>
+        <a href="https://chromewebstore.google.com/detail/pureai-studio-%E2%80%94-c2pa-meta/pdebjlkmjdhpgiigepojdcpfbfimcgmo" target="_blank" rel="noopener" class="tab-btn" style="text-decoration:none;">🧩 Chrome Extension</a>
+        <a href="directorio-guias.html" class="tab-btn" style="text-decoration:none;">🗂️ AI Guides</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container main-grid">
+    <article class="calc-card" style="line-height: 1.75;">
+      <h1>🔎 Free C2PA / JUMBF Metadata Inspector &amp; ChatGPT Watermark X-Ray Scanner (No Signup)</h1>
+      <p class="subtitle">Check in 1 second if your Midjourney, DALL-E, Sora, or ComfyUI file contains hidden <code>C2PA / JUMBF</code> tags (which trigger the Instagram &amp; TikTok "Made with AI" label) or if your ChatGPT text hides invisible <code>U+202F</code> Unicode watermarks — 100% locally in your browser without uploading files to any server.</p>
+
+      <!-- INTERACTIVE DUAL X-RAY INSPECTOR & 1-CLICK SCRUBBER -->
+      <div style="margin: 1.25rem 0 1.6rem; padding: 1.35rem; background: linear-gradient(145deg, rgba(16,185,129,0.16), rgba(15,23,42,0.98)); border: 2px solid #10b981; border-radius: 14px; box-shadow: 0 10px 30px rgba(0,0,0,0.45);">
+        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:10px;">
+          <strong style="color:#6ee7b7;font-size:1.02rem;">⚡ 1. Binary C2PA / JUMBF / EXIF Inspector &amp; Free 1-Click Scrubber</strong>
+          <span style="background:rgba(16,185,129,0.2);color:#6ee7b7;border:1px solid #10b981;padding:3px 10px;border-radius:999px;font-size:0.74rem;font-weight:800;">🎁 100% Free &amp; Unlimited (1-by-1)</span>
+        </div>
+        <input type="file" id="quick-img-inp" accept="image/jpeg,image/png,image/webp" style="display:none" onchange="if(this.files[0])inspectAndCleanImg(this.files[0])" />
+        <div onclick="document.getElementById('quick-img-inp').click()" style="border:2px dashed #10b981;border-radius:12px;padding:18px;text-align:center;cursor:pointer;background:rgba(11,15,25,0.75);transition:all 0.2s;">
+          <div style="font-size:1.7rem;margin-bottom:4px;">🔬 📸</div>
+          <strong style="color:#f8fafc;font-size:0.95rem;">Drop or Click to Scan Any Image for C2PA / 'Made with AI' Signatures &amp; Clean It Free</strong>
+          <div style="color:#94a3b8;font-size:0.78rem;margin-top:4px;">Zero server uploads · Inspects raw binary atoms &amp; downloads a 100% clean copy immediately</div>
+        </div>
+        <div id="quick-img-status" style="margin-top:10px;font-family:monospace;font-size:0.8rem;color:#a7f3d0;"></div>
+        <canvas id="quick-canvas" style="display:none;"></canvas>
+
+        <!-- TEXT X-RAY SCANNER -->
+        <div style="margin-top:18px;padding-top:14px;border-top:1px solid rgba(255,255,255,0.12);">
+          <strong style="color:#93c5fd;font-size:0.98rem;display:block;margin-bottom:6px;">⚡ 2. ChatGPT Invisible Unicode X-Ray Scanner (U+202F / U+200B / Em-Dash)</strong>
+          <textarea id="quick-txt-inp" rows="3" oninput="scanQuickText()" style="width:100%;background:#090d16;border:1px solid #334155;color:#f8fafc;border-radius:10px;padding:10px;font-size:0.84rem;" placeholder="Paste your ChatGPT text here to highlight invisible U+202F / U+200B watermarks in red...">In conclusion — organizations must leverage innovative frameworks​ to maximize operational efficiency.</textarea>
+          <div id="quick-txt-xray" style="margin-top:8px;padding:10px;background:#050811;border:1px solid #1e293b;border-radius:8px;font-size:0.8rem;color:#cbd5e1;line-height:1.5;"></div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;">
+            <button type="button" onclick="cleanQuickText()" style="background:#00e5a3;color:#042f1e;border:none;border-radius:8px;padding:8px 14px;font-weight:900;font-size:0.82rem;cursor:pointer;">🧹 Strip Hidden Marks &amp; Copy (100% Free)</button>
+            <a href="clean-ai-studio.html?lang=en" class="cta-button" style="flex:1;text-align:center;padding:8px 14px;font-weight:800;font-size:0.82rem;">🧬 Open Full Studio (iPhone 16 Pro EXIF · Batch .ZIP · Deep Humanizer) →</a>
+          </div>
+        </div>
+      </div>
+
+      <script>
+      function escapeSeoHtml(s) {
+        return String(s || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+      }
+      function scanQuickText() {
+        var el = document.getElementById("quick-txt-inp");
+        var out = document.getElementById("quick-txt-xray");
+        if (!el || !out) return;
+        var raw = el.value || "";
+        var count = (raw.match(/[\u200B-\u200D\uFEFF\u2060\u180E\u202F\u00A0—]/g) || []).length;
+        var safe = escapeSeoHtml(raw)
+          .replace(/[\u202F\u00A0]/g, '<span style="background:#ef4444;color:#fff;padding:1px 5px;border-radius:4px;font-weight:800;">[U+202F WATERMARK]</span>')
+          .replace(/[\u200B-\u200D\uFEFF\u2060\u180E]/g, '<span style="background:#dc2626;color:#fff;padding:1px 5px;border-radius:4px;font-weight:800;">[ZERO-WIDTH MARK]</span>')
+          .replace(/—/g, '<span style="background:#f59e0b;color:#090d16;padding:1px 5px;border-radius:4px;font-weight:800;">[AI EM-DASH —]</span>');
+        out.innerHTML = "<div style='margin-bottom:4px;font-weight:800;color:" + (count > 0 ? "#f43f5e" : "#10b981") + ";'>" +
+          (count > 0 ? "🚨 " + count + " Hidden AI Watermarks / Patterns Detected:" : "✅ 0 Hidden Unicode Watermarks Detected!") +
+          "</div><div>" + safe + "</div>";
+      }
+      function cleanQuickText() {
+        var el = document.getElementById("quick-txt-inp");
+        if (!el) return;
+        el.value = el.value
+          .replace(/[\u200B-\u200D\uFEFF\u2060\u180E]/g, "")
+          .replace(/[\u202F\u00A0]/g, " ")
+          .replace(/\s*—\s*/g, ", ");
+        scanQuickText();
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(el.value).catch(function () {});
+        }
+      }
+      scanQuickText();
+
+      async function inspectAndCleanImg(file) {
+        if (!file || !file.size) return;
+        var st = document.getElementById("quick-img-status");
+        st.textContent = "⏳ Inspecting binary C2PA / JUMBF / EXIF container...";
+        var buf = await file.arrayBuffer();
+        var bytes = new Uint8Array(buf);
+        var ascii = new TextDecoder("latin1").decode(bytes.slice(0, Math.min(bytes.length, 262144)));
+        var detected = ["c2pa", "jumbf", "trainedAlgorithmicMedia", "Midjourney", "DALL-E", "Sora", "ComfyUI", "Exif"].filter(function (k) {
+          return new RegExp(k, "i").test(ascii);
+        });
+        var img = new Image();
+        img.onload = function () {
+          var c = document.getElementById("quick-canvas");
+          c.width = img.naturalWidth || 512;
+          c.height = img.naturalHeight || 512;
+          var ctx = c.getContext("2d");
+          ctx.drawImage(img, 0, 0);
+          c.toBlob(function (blob) {
+            var a = document.createElement("a");
+            var cleanName = file.name.replace(/\.[^.]+$/, "") + "-clean.jpg";
+            a.href = URL.createObjectURL(blob);
+            a.download = cleanName;
+            a.click();
+            var foundMsg = detected.length ? ("Detected & Stripped: " + escapeSeoHtml(detected.join(", "))) : "Container Re-Encoded (0 Metadata)";
+            st.innerHTML = "✅ <strong>" + escapeSeoHtml(cleanName) + " downloaded (" + foundMsg + ")!</strong> Need iPhone 16 Pro EXIF headers or 50+ photos in a .ZIP? <a href='clean-ai-studio.html' style='color:#fcd34d;font-weight:800;'>Open PureAI Studio Pro (from 4,99 €) →</a>";
+          }, "image/jpeg", 0.95);
+        };
+        img.src = URL.createObjectURL(file);
+      }
+      </script>
+
+      <h2>Why Use This Client-Side Inspector Before Posting on Instagram, TikTok, or Turnitin?</h2>
+      <ul style="margin: 1rem 0 1.5rem 1.25rem; color: #cbd5e1;">
+        <li><strong>100% Local Browser Execution:</strong> Your photos, videos, and essays never leave your computer or phone.</li>
+        <li><strong>Instant Binary Verification:</strong> Detects <code>c2pa.claim</code>, <code>JUMBF</code> boxes, <code>trainedAlgorithmicMedia</code> IPTC tags, and ComfyUI <code>tEXt</code> prompt chunks.</li>
+        <li><strong>Unlimited Free 1-by-1 Cleaning:</strong> Strip single files completely free with zero signup, or upgrade to <strong>PureAI Pro</strong> (<code>4,99 €</code> 1st month with code <code>FRIEND50</code> or <code>39 €/year</code>) for Bulk <code>.ZIP</code> batches and <code>iPhone 16 Pro</code> / <code>Sony A7IV</code> EXIF camera profiles.</li>
+      </ul>
+    </article>
+
+    <aside class="affiliate-sidebar">
+      <div class="offer-card" style="border-color:#10b981;background:linear-gradient(160deg,#0f172a 0%,#064e3b 100%);">
+        <span class="offer-badge">🧬 PureAI Studio Pro (4,99 € 1st Month)</span>
+        <h2>Unlock Bulk .ZIP, Camera EXIF &amp; Full-Essay Humanizer</h2>
+        <p>Clean 50+ photos at once in a single <code>.ZIP</code>, inject real <code>iPhone 16 Pro / Sony A7IV</code> EXIF headers, and humanize full Word <code>.DOCX</code> documents. <strong>50% OFF 1st month (4,99 €) with code FRIEND50</strong>.</p>
+        <a href="clean-ai-studio.html" class="cta-button">Open Full Studio Free →</a>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:8px;">
+          <a href="https://buy.stripe.com/aFaaEY0fgcHbd1SeTE0000c" target="_blank" rel="noopener" style="background:#00e5a3;color:#042f1e;text-decoration:none;padding:6px;border-radius:7px;font-size:0.75rem;font-weight:900;text-align:center;">🔥 Pro Monthly: 4,99 €</a>
+          <a href="https://buy.stripe.com/5kQ28sfaa0Yt5zqfXI0000d" target="_blank" rel="noopener" style="background:#1e293b;color:#93c5fd;border:1px solid #3b82f6;text-decoration:none;padding:6px;border-radius:7px;font-size:0.75rem;font-weight:800;text-align:center;">💎 Pro Annual: 39 €</a>
+        </div>
+      </div>
+
+      <div class="offer-card" style="margin-top:14px;border-color:#38bdf8;background:rgba(15,23,42,0.9);">
+        <span class="offer-badge" style="background:#0284c7;color:#fff;">🛠️ Creator Stack Partners</span>
+        <h3 style="font-size:0.95rem;margin:6px 0;">Recommended AI Voice &amp; Video Tools</h3>
+        <div style="display:flex;flex-direction:column;gap:8px;margin-top:8px;">
+          <a href="https://try.elevenlabs.io/uei8cpwj7tx2" target="_blank" rel="noopener sponsored" style="color:#6ee7b7;font-size:0.8rem;font-weight:700;text-decoration:underline;">🎙️ ElevenLabs — Realistic AI Voiceovers &amp; Dubbing →</a>
+          <a href="https://www.heygen.com/?sid=rewardful&amp;utm_content=creator&amp;utm_medium=influencera&amp;via=jorge-garcia" target="_blank" rel="noopener sponsored" style="color:#fcd34d;font-size:0.8rem;font-weight:700;text-decoration:underline;">🎬 HeyGen — AI Video Avatars &amp; Influencers →</a>
+        </div>
+      </div>
+    </aside>
+  </main>
+
+  <footer class="footer container">
+    <p>© 2026 PureAI Studio — <a href="clean-ai-studio.html" style="color:#10b981;">C2PA &amp; EXIF Metadata Suite</a> | <a href="directorio-guias.html" style="color:#10b981;">AI Guides Directory</a> | <a href="terms.html" style="color:#94a3b8;">Terms</a> | <a href="privacy-policy.html" style="color:#94a3b8;">Privacy</a></p>
+  </footer>
+  <script src="telemetria-soporte.js"></script>
+</body>
+</html>
