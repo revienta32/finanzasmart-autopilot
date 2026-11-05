@@ -766,7 +766,7 @@ async function checkPlatformHealth(options = {}) {
   const mainHtml = fs.existsSync(path.join(__dirname, "clean-ai-studio.html"))
     ? fs.readFileSync(path.join(__dirname, "clean-ai-studio.html"), "utf8")
     : "";
-  if (!mainHtml.includes("https://buy.stripe.com/aFaaEY0fgcHbd1SeTE0000c") || !mainHtml.includes("https://buy.stripe.com/5kQ28sfaa0Yt5zqfXI0000d")) {
+  if (!mainHtml.includes("https://buy.stripe.com/aFacN6e66fTn6DudPA00009") || !mainHtml.includes("https://buy.stripe.com/6oUfZi7HI6iN2ne26S0000e")) {
     alerts.push({ severity: "CRITICAL", code: "STRIPE_LINKS_BROKEN", message: "Enlaces principales de Stripe Checkout ausentes o alterados en clean-ai-studio.html" });
   }
 

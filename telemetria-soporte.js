@@ -192,7 +192,7 @@
   const activeAff = (() => { try { return localStorage.getItem("pureai_aff_partner") || ""; } catch (_) { return ""; } })();
   if (document.querySelectorAll) {
     document.querySelectorAll('a[href*="buy.stripe.com"]').forEach((a) => {
-      if (a.href && a.href.includes("aFaaEY0fgcHbd1SeTE0000c") && !a.href.includes("prefilled_promo_code=")) {
+      if (a.href && (a.href.includes("aFacN6e66fTn6DudPA00009") || a.href.includes("6oUfZi7HI6iN2ne26S0000e")) && !a.href.includes("prefilled_promo_code=")) {
         a.href += (a.href.includes("?") ? "&" : "?") + "prefilled_promo_code=FRIEND50";
       }
       if (activeAff && a.href && !a.href.includes("client_reference_id=")) {
@@ -239,7 +239,7 @@
     const link = e.target.closest("a");
     if (!link || !link.href) return;
     if (link.href.includes("buy.stripe.com")) {
-      const planSelected = link.href.includes("5kQ28sfaa0Yt5zqfXI0000d") ? "PRO_ANNUAL_3900" : "PRO_MONTHLY_499";
+      const planSelected = link.href.includes("6oUfZi7HI6iN2ne26S0000e") ? "PRO_ANNUAL_3900" : "PRO_MONTHLY_499";
       if (planSelected === "PRO_MONTHLY_499" && typeof navigator !== "undefined" && navigator.clipboard && navigator.clipboard.writeText) {
         navigator.clipboard.writeText("FRIEND50").catch(() => {});
       }
@@ -340,8 +340,8 @@
     stickyBar.innerHTML = `
       <span style="color:#f8fafc;font-size:0.82rem;font-weight:700;">🛡️ <strong>PureAI Studio:</strong> Limpia metadatos C2PA/EXIF y caracteres invisibles Unicode 100% en tu navegador</span>
       <a href="clean-ai-studio.html" style="background:linear-gradient(135deg,#00e5a3,#06b6d4);color:#042f1e;text-decoration:none;padding:6px 14px;border-radius:8px;font-size:0.78rem;font-weight:900;">🚀 Probar Gratis (3 Fotos)</a>
-      <a href="https://buy.stripe.com/aFaaEY0fgcHbd1SeTE0000c" target="_blank" rel="noopener" style="background:rgba(168,85,247,0.2);border:1px solid #a855f7;color:#e9d5ff;text-decoration:none;padding:5px 12px;border-radius:8px;font-size:0.76rem;font-weight:800;">🔥 Pro Mensual -50% (4,99 €)</a>
-      <a href="https://buy.stripe.com/5kQ28sfaa0Yt5zqfXI0000d" target="_blank" rel="noopener" style="background:rgba(56,189,248,0.18);border:1px solid #38bdf8;color:#bae6fd;text-decoration:none;padding:5px 12px;border-radius:8px;font-size:0.76rem;font-weight:800;">💎 Pro Anual (39 €/año)</a>
+      <a href="https://buy.stripe.com/aFacN6e66fTn6DudPA00009" target="_blank" rel="noopener" style="background:rgba(168,85,247,0.2);border:1px solid #a855f7;color:#e9d5ff;text-decoration:none;padding:5px 12px;border-radius:8px;font-size:0.76rem;font-weight:800;">🔥 Pro Mensual -50% (4,99 €)</a>
+      <a href="https://buy.stripe.com/6oUfZi7HI6iN2ne26S0000e" target="_blank" rel="noopener" style="background:rgba(56,189,248,0.18);border:1px solid #38bdf8;color:#bae6fd;text-decoration:none;padding:5px 12px;border-radius:8px;font-size:0.76rem;font-weight:800;">💎 Pro Anual (39 €/año)</a>
     `;
     document.body.appendChild(stickyBar);
   }

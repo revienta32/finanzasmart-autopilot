@@ -16,7 +16,7 @@ const cleanAiHtml = fs.readFileSync(path.join(__dirname, "clean-ai-studio.html")
 assert(!cleanAiHtml.includes("https://ntfy.sh"), "clean-ai-studio.html no debe exponer URLs directas de ntfy.sh en el cliente");
 assert(!telemetriaCode.includes("https://ntfy.sh"), "telemetria-soporte.js debe enviar eventos al relay /telemetry y nunca exponer el topic de ntfy.sh en cliente");
 assert(cleanAiHtml.includes("trainedAlgorithmicMedia") && cleanAiHtml.includes("\\u202F"), "Falta motor C2PA y Unicode Scrubber en clean-ai-studio.html");
-assert(cleanAiHtml.includes("https://buy.stripe.com/aFaaEY0fgcHbd1SeTE0000c") && cleanAiHtml.includes("https://buy.stripe.com/5kQ28sfaa0Yt5zqfXI0000d"), "Faltan enlaces de Stripe Checkout en vivo (4,99 €/mes y 39 €/año)");
+assert(cleanAiHtml.includes("https://buy.stripe.com/aFacN6e66fTn6DudPA00009") && cleanAiHtml.includes("https://buy.stripe.com/6oUfZi7HI6iN2ne26S0000e"), "Faltan enlaces de Stripe Checkout en vivo (4,99 €/mes y 39 €/año)");
 assert(!cleanAiHtml.includes("paypal.me") && !cleanAiHtml.includes("revolut.me"), "No deben existir pasarelas ajenas a Stripe en la suite principal");
 assert(cleanAiHtml.includes("telemetria-soporte.js"), "Falta inyección de telemetria-soporte.js en clean-ai-studio.html");
 assert(!fs.existsSync(path.join(__dirname, "calculadoras-PureAI Studio.html")) && !fs.existsSync(path.join(__dirname, "verifactu-studio.html")), "Todo archivo relacionado con PureAI Studio o VeriFactu debe estar eliminado del proyecto");
@@ -834,7 +834,7 @@ assert(cleanAiHtml.includes("terms.html") && cleanAiHtml.includes("Art. 103.m TR
   assert.strictEqual(retFunnel.retentionBreakdown.promoReturningUsers, 1, "Retención Promocional: Debe aislar retornos inducidos por promoción (?ref= / bonus email)");
 
   // 17j. Verificar Mejoras de Conversión en Monetización: ?prefilled_promo_code=FRIEND50, Contexto Dinámico en showProModal (#pro-modal-desc / #pro-modal-title) y Deduplicación de Cuota por Archivo Único
-  assert(cleanAiHtml.includes("https://buy.stripe.com/aFaaEY0fgcHbd1SeTE0000c?prefilled_promo_code=FRIEND50"), "Checkout Friction Zero: Los enlaces del plan mensual deben pre-aplicar ?prefilled_promo_code=FRIEND50 para evitar shock de precio en Stripe");
+  assert(cleanAiHtml.includes("https://buy.stripe.com/aFacN6e66fTn6DudPA00009?prefilled_promo_code=FRIEND50"), "Checkout Friction Zero: Los enlaces del plan mensual deben pre-aplicar ?prefilled_promo_code=FRIEND50 para evitar shock de precio en Stripe");
   paSandbox.showProModal("🔒 Tienes 12 fotos y vídeos en lote listos para descargar en .ZIP", "img_batch_zip");
   assert(getPaEl("pro-modal-title").textContent.includes("Lotes .ZIP Mixtos"), "Paywall Contextual: showProModal debe adaptar #pro-modal-title a la función que disparó el bloqueo");
   assert(getPaEl("pro-modal-desc").textContent.includes("12 fotos y vídeos"), "Paywall Contextual: showProModal debe inyectar el mensaje específico msg en #pro-modal-desc");

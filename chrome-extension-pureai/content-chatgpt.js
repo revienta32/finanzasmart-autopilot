@@ -93,8 +93,8 @@
       "display:flex;gap:6px;align-items:center;flex-wrap:wrap;background:#140e26;border:1px solid #a855f7;border-radius:10px;padding:6px 10px;font-size:11px;color:#f8fafc;";
     box.innerHTML = `
       <span>🔒 <strong>3/3 textos gratis hoy agotados:</strong></span>
-      <a href="https://buy.stripe.com/aFaaEY0fgcHbd1SeTE0000c" target="_blank" rel="noopener" style="background:#00e5a3;color:#042f1e;padding:3px 8px;border-radius:6px;font-weight:800;text-decoration:none;">🔥 Pro Mensual -50% (4,99 €)</a>
-      <a href="https://buy.stripe.com/5kQ28sfaa0Yt5zqfXI0000d" target="_blank" rel="noopener" style="background:#38bdf8;color:#082f49;padding:3px 8px;border-radius:6px;font-weight:800;text-decoration:none;">💎 Pro Anual (39 €/año)</a>
+      <a href="https://buy.stripe.com/aFacN6e66fTn6DudPA00009" target="_blank" rel="noopener" style="background:#00e5a3;color:#042f1e;padding:3px 8px;border-radius:6px;font-weight:800;text-decoration:none;">🔥 Pro Mensual -50% (4,99 €)</a>
+      <a href="https://buy.stripe.com/6oUfZi7HI6iN2ne26S0000e" target="_blank" rel="noopener" style="background:#38bdf8;color:#082f49;padding:3px 8px;border-radius:6px;font-weight:800;text-decoration:none;">💎 Pro Anual (39 €/año)</a>
       <button type="button" class="pureai-key-btn" style="background:#1e293b;color:#cbd5e1;border:1px solid #475569;padding:3px 7px;border-radius:6px;cursor:pointer;font-size:11px;">🔑 Activar Clave Pro</button>
     `;
     box.querySelector(".pureai-key-btn").addEventListener("click", async () => {
