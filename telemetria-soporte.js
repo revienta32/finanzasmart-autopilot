@@ -181,7 +181,7 @@
   }
 
   if (typeof window !== "undefined") {
-    window.sendPureAiAnalyticsEvent = sendTelemetry;
+    window.sendPureAiAnalyticsEvent = sendTelemetry; if (!window.gtag && typeof document !== "undefined" && document.head) { window.dataLayer = window.dataLayer || []; window.gtag = function () { window.dataLayer.push(arguments); }; window.gtag("js", new Date()); window.gtag("config", "AW-18550704085"); if (!document.querySelector("script[src*=AW-18550704085]")) { var gs = document.createElement("script"); gs.async = true; gs.src = "https://www.googletagmanager.com/gtag/js?id=AW-18550704085"; document.head.appendChild(gs); } }
   }
 
   // 1. Atribución de Afiliados 40% (?aff=...)

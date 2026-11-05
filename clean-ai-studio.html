@@ -4,7 +4,16 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="referrer" content="strict-origin-when-cross-origin" />
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self' https: data: blob:; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; media-src 'self' data: blob:; connect-src 'self' https:;" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self' https: data: blob:; script-src 'self' 'unsafe-inline' https://www.googletagmanager.com https://www.googleadservices.com https://googleads.g.doubleclick.net; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; media-src 'self' data: blob:; connect-src 'self' https:;" />
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=AW-18550704085"></script>
+  <script id="google-ads-gtag">
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+
+    gtag('config', 'AW-18550704085');
+  </script>
   <title>PureAI Studio (2026) — Remove 'Made with AI' C2PA, Photoshop Generative Fill Lossless Fix &amp; iPhone 16 Pro EXIF + GPS Injector</title>
   <meta name="description" content="100% Client-Side C2PA/JUMBF Scrubber for AI Creator Agencies (Fanvue/Instagram/TikTok) &amp; Photographers: Strip Photoshop Generative Fill C2PA lossless, clean Sora/Kling .MP4 videos, batch-clean .ZIPs, and inject iPhone 16 Pro / Sony A7IV EXIF + GPS." />
   <link rel="canonical" href="https://pureaistudios.com/clean-ai-studio.html" />
@@ -2555,7 +2564,8 @@
       if (codeInp && !codeInp.value) codeInp.value = myProKey;
       if (typeof history !== "undefined" && history.replaceState && typeof location !== "undefined") {
         var cleanSearchUrl = (location.pathname || "/") + (location.search || "").replace(/[?&]session_id=[^&]+/g, "").replace(/^&/, "?");
-        history.replaceState(null, "", cleanSearchUrl);
+        if (typeof window !== "undefined" && typeof window.gtag === "function") { window.gtag("event", "conversion", { send_to: "AW-18550704085", transaction_id: sessionId }); }
+        if (typeof setTimeout === "function") { setTimeout(function () { history.replaceState(null, "", cleanSearchUrl); }, 4000); } else { history.replaceState(null, "", cleanSearchUrl); }
       }
 
       var soldAff = localStorage.getItem("pureai_aff_partner") || "organic";
