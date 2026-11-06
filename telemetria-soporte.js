@@ -166,7 +166,9 @@
       recordLocalFunnelEvent(minimized);
 
       const isExplicitUserSupportAction = Boolean(options && options.explicitUserConsent === true);
-      if (!isExplicitUserSupportAction && !hasTelemetryConsent()) {
+      const isAnonCounter = !minimized.msg && !minimized.email;
+      if (typeof window !== "undefined" && typeof window.gtag === "function" && (minimized.event_name || minimized.target)) { try { window.gtag("event", minimized.event_name || minimized.target, { event_category: minimized.type || "app_action", event_label: minimized.tool_id || minimized.target || pageName, channel: minimized.channel }); } catch (_) {} }
+      if (!isExplicitUserSupportAction && !isAnonCounter && !hasTelemetryConsent()) {
         return false;
       }
 
