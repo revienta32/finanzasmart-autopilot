@@ -855,8 +855,18 @@ async function runAutoDoctor() {
   const analyticsEvents = Array.isArray(stored.analyticsEventsHistory) ? [...stored.analyticsEventsHistory] : [];
 
   try {
-    const raw = await fetch(BUS_URL).then((r) => r.text());
+    const raw = await fetch(BUS_URL).then((r) => r.text()).catch(() => "");
     const lines = raw.split("\n").filter(Boolean);
+    try {
+      const kvResp = await fetch("https://pureai-stripe-webhook.pureaistudio-app.workers.dev/telemetry").then((r) => r.json());
+      if (kvResp && Array.isArray(kvResp.events)) {
+        for (const kvEv of kvResp.events) {
+          if (kvEv && kvEv.id) {
+            lines.push(JSON.stringify({ id: kvEv.id, event: "message", message: JSON.stringify(kvEv) }));
+          }
+        }
+      }
+    } catch (_) {}
     for (const line of lines) {
       try {
         const env = JSON.parse(line);

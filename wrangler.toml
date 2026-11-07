@@ -1,12 +1,15 @@
 name = "pureai-stripe-webhook"
 main = "stripe-webhook-worker.js"
-compatibility_date = "2026-10-01"
+compatibility_date = "2026-10-31"
 compatibility_flags = ["nodejs_compat"]
+
+[observability]
+enabled = true
 
 [[kv_namespaces]]
 binding = "PUREAI_LICENSES_KV"
-id = "7ae4b6127c314f449df7cdb002bec2b4"
-preview_id = "7ae4b6127c314f449df7cdb002bec2b4"
+id = "2ae8a9c8cd1f449b82cdc9033bac3e3d"
+preview_id = "2ae8a9c8cd1f449b82cdc9033bac3e3d"
 
 # Despliegue en Cloudflare Workers (Free Tier: 100.000 peticiones/día)
 # Para configurar secretos en producción sin exponerlos en el código:
