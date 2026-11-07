@@ -1840,8 +1840,8 @@
     var sessionCleanCount = 0;
 
     function buildPostCleanPartnerTipHtml() {
-      var habitBar = (sessionCleanCount >= 2 || usedImgCredits >= 2)
-        ? `<div style="margin-top:6px;padding:6px 9px;background:rgba(16,185,129,0.12);border:1px solid rgba(16,185,129,0.35);border-radius:8px;font-size:0.72rem;color:#a7f3d0;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px;"><span>📌 <strong>Hábito Creador:</strong> Tu perfil EXIF/GPS ha quedado guardado para tu próxima visita.</span><button type="button" onclick="installPwaApp()" style="background:#10b981;color:#022c22;border:none;border-radius:6px;padding:3px 9px;font-size:0.71rem;font-weight:900;cursor:pointer;">📲 Fijar App en 1 clic (0 MB)</button></div>`
+      var habitBar = (sessionCleanCount >= 1 || usedImgCredits >= 1)
+        ? `<div style="margin-top:6px;padding:7px 10px;background:rgba(16,185,129,0.14);border:1px solid rgba(16,185,129,0.4);border-radius:8px;font-size:0.73rem;color:#a7f3d0;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px;"><span>📌 <strong>Hábito Creador:</strong> Tu perfil EXIF/GPS ha quedado guardado para tu próxima visita.</span><div style="display:flex;gap:5px;flex-wrap:wrap;"><button type="button" onclick="installPwaApp()" style="background:#10b981;color:#022c22;border:none;border-radius:6px;padding:4px 9px;font-size:0.71rem;font-weight:900;cursor:pointer;">📲 Fijar App en 1 clic (0 MB)</button><button type="button" onclick="sharePureAiReferral('wa')" style="background:#059669;color:#fff;border:none;border-radius:6px;padding:4px 9px;font-size:0.71rem;font-weight:800;cursor:pointer;">💬 Compartir por WhatsApp</button></div></div>`
         : "";
       return (
         habitBar +
