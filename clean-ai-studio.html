@@ -336,7 +336,7 @@
               <button type="button" onclick="document.getElementById('img-input').click()" id="ui-btn-pick-img" style="background:#00e5a3;color:#042f1e;border:none;border-radius:8px;padding:7px 14px;font-size:0.8rem;font-weight:900;cursor:pointer;">📂 Subir Foto o Vídeo (.MP4)</button>
               <button type="button" onclick="pasteClipboardImage()" id="ui-btn-paste-img" style="background:rgba(255,255,255,0.06);color:#93c5fd;border:1px solid rgba(56,189,248,0.4);border-radius:8px;padding:7px 12px;font-size:0.78rem;font-weight:700;cursor:pointer;">📋 Pegar (Ctrl+V)</button>
             </div>
-            <button type="button" onclick="loadSampleAiImage()" id="ui-btn-sample-img" style="background:none;border:none;color:#94a3b8;cursor:pointer;font-size:0.75rem;font-weight:700;padding:0;text-decoration:underline;">Probar con ejemplo</button>
+            <button type="button" onclick="loadSampleAiImage()" id="ui-btn-sample-img" style="background:rgba(168,85,247,0.22);border:1px solid #a855f7;color:#f3e8ff;border-radius:8px;cursor:pointer;font-size:0.76rem;font-weight:800;padding:6px 11px;">🧪 Probar Demo 1-Clic (Sin subir foto)</button>
           </div>
 
           <input type="file" id="img-input" accept="image/jpeg,image/png,image/webp,video/mp4,video/quicktime,video/webm,.mp4,.mov" multiple style="display:none" onchange="if(this.files.length)handleSelectedFiles(this.files)" />
@@ -356,7 +356,7 @@
           </div>
 
           <div class="threat-list" id="img-audit-log" style="min-height:42px;display:flex;align-items:center;">
-            <div style="color:#94a3b8;font-size:0.82rem;" id="ui-audit-idle">✨ Sube una foto o vídeo corto arriba para limpiarlo en 1 clic.</div>
+            <div style="color:#cbd5e1;font-size:0.82rem;" id="ui-audit-idle">✨ <strong>100% Gratis y sin registro:</strong> Sube una foto/vídeo arriba o <button type="button" onclick="loadSampleAiImage()" style="background:none;border:none;color:#00e5a3;font-weight:800;text-decoration:underline;cursor:pointer;padding:0;font-size:0.82rem;">haz clic aquí para probar con una Foto IA de ejemplo</button>.</div>
           </div>
 
           <div style="margin-top:10px;background:rgba(10,6,20,0.78);border:1px solid rgba(0,229,163,0.32);border-radius:12px;padding:10px 12px;">
@@ -1052,6 +1052,7 @@
       if (btn) {
         btn.disabled = false;
         btn.style.opacity = "1";
+        btn.style.boxShadow = "0 0 22px rgba(0,229,163,0.45)";
       }
       const wrap = document.getElementById("img-preview-wrap");
       const thumb = document.getElementById("img-preview-thumb");

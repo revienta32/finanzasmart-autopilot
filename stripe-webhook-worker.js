@@ -578,6 +578,16 @@ async function handleWorkerHttpRequest(req, env, sharedStore) {
     delete parsed.ua;
     delete parsed.countryTz;
     delete parsed.deviceFp;
+    const evWithId = { id: "kv_" + Date.now() + "_" + Math.random().toString(36).slice(2, 7), ...parsed };
+    if (env && env.PUREAI_LICENSES_KV && typeof env.PUREAI_LICENSES_KV.get === "function" && typeof env.PUREAI_LICENSES_KV.put === "function") {
+      try {
+        const rawList = await env.PUREAI_LICENSES_KV.get("telemetry:recent_events");
+        const list = rawList ? JSON.parse(rawList) : [];
+        list.push(evWithId);
+        while (list.length > 250) list.shift();
+        await env.PUREAI_LICENSES_KV.put("telemetry:recent_events", JSON.stringify(list));
+      } catch (_) {}
+    }
     const ntfyUrl = (env && env.NTFY_SECRET_TOPIC_URL) || "https://ntfy.sh/pureai_studio_ops_telemetry_94c2e1";
     if (ntfyUrl && typeof fetch === "function") {
       try {
@@ -585,6 +595,17 @@ async function handleWorkerHttpRequest(req, env, sharedStore) {
       } catch (_) {}
     }
     return { status: 200, headers, body: JSON.stringify({ ok: true, relayed: true }) };
+  }
+
+  if (req.method === "GET" && url.pathname === "/telemetry") {
+    let list = [];
+    if (env && env.PUREAI_LICENSES_KV && typeof env.PUREAI_LICENSES_KV.get === "function") {
+      try {
+        const rawList = await env.PUREAI_LICENSES_KV.get("telemetry:recent_events");
+        if (rawList) list = JSON.parse(rawList);
+      } catch (_) {}
+    }
+    return { status: 200, headers, body: JSON.stringify({ ok: true, events: list }) };
   }
 
   return { status: 404, headers, body: JSON.stringify({ ok: false, error: "not_found" }) };

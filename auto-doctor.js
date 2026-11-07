@@ -879,6 +879,12 @@ async function runAutoDoctor() {
             stored.humanPageviews = (stored.humanPageviews || 0) + 1;
             stored.pageviewsByPage[pg] = (stored.pageviewsByPage[pg] || 0) + 1;
           }
+        } else if (data.type === "app_action" && data.target) {
+          stored.appActions = stored.appActions || {};
+          stored.appActions[data.target] = (stored.appActions[data.target] || 0) + 1;
+        } else if (data.type === "click_checkout") {
+          stored.affiliateClicks = stored.affiliateClicks || { stripe_checkout: 0 };
+          stored.affiliateClicks.stripe_checkout = (stored.affiliateClicks.stripe_checkout || 0) + 1;
         } else if (data.type === "sale_verified_session") {
           const isAnnual = data.planInterval === "year" || Number(data.amountCents) >= 3500;
           financialEvents.push({
