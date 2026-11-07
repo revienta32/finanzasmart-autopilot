@@ -1,9 +1,9 @@
-name: PureAI Studio — Daily Operations, Support Triage, Health Monitor & QA
+name: PureAI Studio — 24/7 Cloud Social Agent, SEO Indexer & Mobile Push Monitor
 
 on:
   schedule:
-    # Ejecución diaria optimizada (Coste 0 € y mínimo consumo de minutos de CI/CD)
-    - cron: "0 8 * * *"
+    # Se ejecuta automáticamente en los servidores de GitHub (con tu PC apagado) a las 08:30 y 18:30 UTC
+    - cron: "30 8,18 * * *"
   workflow_dispatch:
 
 jobs:
@@ -11,6 +11,12 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+    env:
+      REDDIT_CLIENT_ID: ${{ secrets.REDDIT_CLIENT_ID }}
+      REDDIT_CLIENT_SECRET: ${{ secrets.REDDIT_CLIENT_SECRET }}
+      REDDIT_USER: ${{ secrets.REDDIT_USER }}
+      REDDIT_PASS: ${{ secrets.REDDIT_PASS }}
+      PUREAI_MOBILE_NTFY_TOPIC: ${{ secrets.PUREAI_MOBILE_NTFY_TOPIC }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -20,7 +26,7 @@ jobs:
         with:
           node-version: "20"
 
-      - name: Run Operations Monitor, Support Triage, SEO Sitemaps & Mandatory QA Suite
+      - name: Run 24/7 Cloud Social Radar, Mobile Push Digest, SEO IndexNow & Mandatory QA Suite
         run: |
           node auto-doctor.js
           node autopilot-ceo.js
@@ -31,5 +37,5 @@ jobs:
           git config user.name "PureAI Studio Ops Bot"
           git config user.email "ops@pureaistudios.com"
           git add sitemap.xml sitemap.txt index.html directorio-guias.html
-          git diff --staged --quiet || git commit -m "chore(ops): daily health monitor, support triage & verified sitemap sync"
+          git diff --staged --quiet || git commit -m "chore(ops): cloud social radar, mobile digest & verified sitemap sync"
           git push
