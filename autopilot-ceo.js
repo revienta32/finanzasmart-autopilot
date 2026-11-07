@@ -485,6 +485,33 @@ async function sendDailyMobilePushDigest(opportunities, telegraphUrls) {
     msgLines.push("👉 " + topOpp.url);
   }
 
+  // Cargar credenciales locales desde .gemini/pureai-private-ops/.env si existen
+  try {
+    const privEnvPath = path.join(process.env.USERPROFILE || process.env.HOME || __dirname, ".gemini", "pureai-private-ops", ".env");
+    if (fs.existsSync(privEnvPath)) {
+      const envLines = fs.readFileSync(privEnvPath, "utf8").split(/\r?\n/);
+      for (const l of envLines) {
+        const m = l.match(/^([A-Z0-9_]+)=(.+)$/);
+        if (m && !process.env[m[1]]) process.env[m[1]] = m[2].trim();
+      }
+    }
+  } catch (_) {}
+
+  if (process.env.TELEGRAM_BOT_TOKEN && process.env.TELEGRAM_CHAT_ID) {
+    try {
+      await fetch("https://api.telegram.org/bot" + process.env.TELEGRAM_BOT_TOKEN + "/sendMessage", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          chat_id: process.env.TELEGRAM_CHAT_ID,
+          text: "🚀 *PureAI Studio — Reporte Cloud 24/7*\n\n" + msgLines.join("\n") + (topOpp ? "\n\n💬 *Respuesta sugerida:*\n" + topOpp.suggestedReply : ""),
+          disable_web_page_preview: true
+        })
+      });
+      console.log("✈️ Telegram report sent to chat " + process.env.TELEGRAM_CHAT_ID);
+    } catch (_) {}
+  }
+
   const pushTopic = process.env.PUREAI_MOBILE_NTFY_TOPIC || "pureai_ceo_mobile_jorge_2026";
   try {
     await fetch("https://ntfy.sh/" + pushTopic, {
@@ -497,7 +524,6 @@ async function sendDailyMobilePushDigest(opportunities, telegraphUrls) {
       },
       body: msgLines.join("\n")
     });
-    console.log("📱 Mobile Push sent to ntfy.sh/" + pushTopic);
   } catch (_) {}
 }
 

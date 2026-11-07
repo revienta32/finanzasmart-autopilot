@@ -677,6 +677,19 @@ async function handleWorkerHttpRequest(req, env, sharedStore) {
         await fetch(ntfyUrl, { method: "POST", body: JSON.stringify(parsed) });
       } catch (_) {}
     }
+    if (env && env.TELEGRAM_BOT_TOKEN && env.TELEGRAM_CHAT_ID && typeof fetch === "function") {
+      const isImportantAction = parsed.event_name === "tool_completed" || parsed.type === "click_checkout" || parsed.type === "sale_verified_session" || parsed.type === "user_bug_report";
+      if (isImportantAction) {
+        try {
+          const tgText = "⚡ [PureAI En Vivo] Acción: " + (parsed.target || parsed.event_name || parsed.type) + " | Canal: " + (parsed.channel || "direct") + " | Idioma: " + (parsed.lang || "es");
+          await fetch("https://api.telegram.org/bot" + env.TELEGRAM_BOT_TOKEN + "/sendMessage", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ chat_id: env.TELEGRAM_CHAT_ID, text: tgText })
+          });
+        } catch (_) {}
+      }
+    }
     return { status: 200, headers, body: JSON.stringify({ ok: true, relayed: true }) };
   }
 
