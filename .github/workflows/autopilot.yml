@@ -2,8 +2,8 @@ name: PureAI Studio — 24/7 Cloud Social Agent, SEO Indexer & Mobile Push Monit
 
 on:
   schedule:
-    # Se ejecuta automáticamente en los servidores de GitHub (con tu PC apagado) a las 08:30 y 18:30 UTC
-    - cron: "30 8,18 * * *"
+    # Se ejecuta automáticamente en los servidores de GitHub (con tu PC apagado) 1 sola vez al día (08:30 UTC)
+    - cron: "30 8 * * *"
   workflow_dispatch:
 
 jobs:

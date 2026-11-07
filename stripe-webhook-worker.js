@@ -677,20 +677,59 @@ async function handleWorkerHttpRequest(req, env, sharedStore) {
         await fetch(ntfyUrl, { method: "POST", body: JSON.stringify(parsed) });
       } catch (_) {}
     }
-    if (env && env.TELEGRAM_BOT_TOKEN && env.TELEGRAM_CHAT_ID && typeof fetch === "function") {
-      const isImportantAction = parsed.event_name === "tool_completed" || parsed.type === "click_checkout" || parsed.type === "sale_verified_session" || parsed.type === "user_bug_report";
-      if (isImportantAction) {
-        try {
-          const tgText = "⚡ [PureAI En Vivo] Acción: " + (parsed.target || parsed.event_name || parsed.type) + " | Canal: " + (parsed.channel || "direct") + " | Idioma: " + (parsed.lang || "es");
-          await fetch("https://api.telegram.org/bot" + env.TELEGRAM_BOT_TOKEN + "/sendMessage", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ chat_id: env.TELEGRAM_CHAT_ID, text: tgText })
-          });
-        } catch (_) {}
-      }
-    }
     return { status: 200, headers, body: JSON.stringify({ ok: true, relayed: true }) };
+  }
+
+  if (req.method === "POST" && url.pathname === "/daily-digest") {
+    let bodyObj = {};
+    try {
+      const raw = typeof req.text === "function" ? await req.text() : String(req.body || "{}");
+      bodyObj = JSON.parse(raw || "{}");
+    } catch (_) {}
+    let list = [];
+    if (env && env.PUREAI_LICENSES_KV && typeof env.PUREAI_LICENSES_KV.get === "function") {
+      try {
+        const rawList = await env.PUREAI_LICENSES_KV.get("telemetry:recent_events");
+        if (rawList) list = JSON.parse(rawList);
+      } catch (_) {}
+    }
+    const kvStats = { visits: 0, photosCleaned: 0, textsCleaned: 0, demosTested: 0, checkouts: 0, engaged15s: 0 };
+    for (const e of list) {
+      if (e.type === "pageview" || e.event_name === "session_start") kvStats.visits++;
+      if (e.target === "image_scrub_download") kvStats.photosCleaned++;
+      if (e.target === "text_watermark_scrub" || e.target === "pro_humanizer_click") kvStats.textsCleaned++;
+      if (e.target === "demo_photo_tested" || e.target === "demo_text_tested") kvStats.demosTested++;
+      if (e.type === "click_checkout" || e.event_name === "checkout_clicked") kvStats.checkouts++;
+      if (e.target === "engaged_15s") kvStats.engaged15s++;
+    }
+    const topOpp = bodyObj && bodyObj.topOpp;
+    const msgLines = [
+      "📅 PureAI Studio — Resumen Diario (1 vez al día):",
+      "• Visitas registradas: " + kvStats.visits + " (Interés >15s: " + kvStats.engaged15s + ")",
+      "• Fotos/MP4 limpiados: " + kvStats.photosCleaned + " | Textos: " + kvStats.textsCleaned + " | Demos 1-clic: " + kvStats.demosTested,
+      "• Clics a Stripe Pro: " + kvStats.checkouts,
+      "• Artículos SEO Cloud activos: " + (Number(bodyObj.articlesCount) || 0) + " (IndexNow 200 OK)"
+    ];
+    if (topOpp && topOpp.title && topOpp.url) {
+      msgLines.push("🎯 Hilo del día (" + (topOpp.platform || "Social") + "): " + String(topOpp.title).slice(0, 80));
+      msgLines.push("👉 " + topOpp.url);
+    }
+    let sent = false;
+    if (env && env.TELEGRAM_BOT_TOKEN && env.TELEGRAM_CHAT_ID && typeof fetch === "function") {
+      try {
+        await fetch("https://api.telegram.org/bot" + env.TELEGRAM_BOT_TOKEN + "/sendMessage", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            chat_id: env.TELEGRAM_CHAT_ID,
+            text: msgLines.join("\n"),
+            disable_web_page_preview: true
+          })
+        });
+        sent = true;
+      } catch (_) {}
+    }
+    return { status: 200, headers, body: JSON.stringify({ ok: true, sent }) };
   }
 
   if (req.method === "GET" && url.pathname === "/telemetry") {

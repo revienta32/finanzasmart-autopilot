@@ -458,72 +458,17 @@ async function fetchLiveSocialOpportunities() {
 }
 
 async function sendDailyMobilePushDigest(opportunities, telegraphUrls) {
-  let kvStats = { visits: 0, photosCleaned: 0, textsCleaned: 0, demosTested: 0, checkouts: 0, engaged15s: 0 };
+  const topOpp = opportunities && opportunities[0] ? opportunities[0] : null;
   try {
-    const kvRes = await fetch("https://pureai-stripe-webhook.pureaistudio-app.workers.dev/telemetry").then((r) => r.json()).catch(() => null);
-    const evs = (kvRes && Array.isArray(kvRes.events)) ? kvRes.events : [];
-    for (const e of evs) {
-      if (e.type === "pageview" || e.event_name === "session_start") kvStats.visits++;
-      if (e.target === "image_scrub_download") kvStats.photosCleaned++;
-      if (e.target === "text_watermark_scrub" || e.target === "pro_humanizer_click") kvStats.textsCleaned++;
-      if (e.target === "demo_photo_tested" || e.target === "demo_text_tested") kvStats.demosTested++;
-      if (e.type === "click_checkout" || e.event_name === "checkout_clicked") kvStats.checkouts++;
-      if (e.target === "engaged_15s") kvStats.engaged15s++;
-    }
-  } catch (_) {}
-
-  const topOpp = opportunities[0];
-  const msgLines = [
-    "📊 Resumen Cloud 24/7 (PC Apagado):",
-    "• Visitas KV recientes: " + kvStats.visits + " (Interés >15s: " + kvStats.engaged15s + ")",
-    "• Fotos/MP4 limpiados: " + kvStats.photosCleaned + " | Textos: " + kvStats.textsCleaned + " | Demos 1-clic: " + kvStats.demosTested,
-    "• Clics a Stripe Pro: " + kvStats.checkouts,
-    "• Artículos Cloud activos: " + telegraphUrls.length + " (IndexNow 200 OK)"
-  ];
-  if (topOpp) {
-    msgLines.push("🎯 Hilo detectado (" + topOpp.platform + "): " + topOpp.title.slice(0, 75));
-    msgLines.push("👉 " + topOpp.url);
-  }
-
-  // Cargar credenciales locales desde .gemini/pureai-private-ops/.env si existen
-  try {
-    const privEnvPath = path.join(process.env.USERPROFILE || process.env.HOME || __dirname, ".gemini", "pureai-private-ops", ".env");
-    if (fs.existsSync(privEnvPath)) {
-      const envLines = fs.readFileSync(privEnvPath, "utf8").split(/\r?\n/);
-      for (const l of envLines) {
-        const m = l.match(/^([A-Z0-9_]+)=(.+)$/);
-        if (m && !process.env[m[1]]) process.env[m[1]] = m[2].trim();
-      }
-    }
-  } catch (_) {}
-
-  if (process.env.TELEGRAM_BOT_TOKEN && process.env.TELEGRAM_CHAT_ID) {
-    try {
-      await fetch("https://api.telegram.org/bot" + process.env.TELEGRAM_BOT_TOKEN + "/sendMessage", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          chat_id: process.env.TELEGRAM_CHAT_ID,
-          text: "🚀 *PureAI Studio — Reporte Cloud 24/7*\n\n" + msgLines.join("\n") + (topOpp ? "\n\n💬 *Respuesta sugerida:*\n" + topOpp.suggestedReply : ""),
-          disable_web_page_preview: true
-        })
-      });
-      console.log("✈️ Telegram report sent to chat " + process.env.TELEGRAM_CHAT_ID);
-    } catch (_) {}
-  }
-
-  const pushTopic = process.env.PUREAI_MOBILE_NTFY_TOPIC || "pureai_ceo_mobile_jorge_2026";
-  try {
-    await fetch("https://ntfy.sh/" + pushTopic, {
+    await fetch("https://pureai-stripe-webhook.pureaistudio-app.workers.dev/daily-digest", {
       method: "POST",
-      headers: {
-        Title: "PureAI Studio - Reporte Diario y Radar Social",
-        Priority: "default",
-        Tags: "rocket,chart_with_upwards_trend",
-        Click: topOpp ? topOpp.url : "https://pureaistudios.com/clean-ai-studio.html"
-      },
-      body: msgLines.join("\n")
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        articlesCount: Array.isArray(telegraphUrls) ? telegraphUrls.length : 0,
+        topOpp
+      })
     });
+    console.log("✈️ Daily Telegram digest triggered via Cloudflare Worker");
   } catch (_) {}
 }
 
