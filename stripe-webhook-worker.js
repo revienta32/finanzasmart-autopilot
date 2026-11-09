@@ -686,64 +686,92 @@ async function handleWorkerHttpRequest(req, env, sharedStore) {
       const raw = typeof req.text === "function" ? await req.text() : String(req.body || "{}");
       bodyObj = JSON.parse(raw || "{}");
     } catch (_) {}
-    let list = [];
-    if (env && env.PUREAI_LICENSES_KV && typeof env.PUREAI_LICENSES_KV.get === "function") {
-      try {
-        const rawList = await env.PUREAI_LICENSES_KV.get("telemetry:recent_events");
-        if (rawList) list = JSON.parse(rawList);
-      } catch (_) {}
-    }
-    const kvStats = { visits: 0, photosCleaned: 0, textsCleaned: 0, demosTested: 0, checkouts: 0, engaged15s: 0 };
-    for (const e of list) {
-      if (e.type === "pageview" || e.event_name === "session_start") kvStats.visits++;
-      if (e.target === "image_scrub_download") kvStats.photosCleaned++;
-      if (e.target === "text_watermark_scrub" || e.target === "pro_humanizer_click") kvStats.textsCleaned++;
-      if (e.target === "demo_photo_tested" || e.target === "demo_text_tested") kvStats.demosTested++;
-      if (e.type === "click_checkout" || e.event_name === "checkout_clicked") kvStats.checkouts++;
-      if (e.target === "engaged_15s") kvStats.engaged15s++;
-    }
-    const topOpp = bodyObj && bodyObj.topOpp;
-    const msgLines = [
-      "📅 PureAI Studio — Resumen Diario (1 vez al día):",
-      "• Visitas registradas: " + kvStats.visits + " (Interés >15s: " + kvStats.engaged15s + ")",
-      "• Fotos/MP4 limpiados: " + kvStats.photosCleaned + " | Textos: " + kvStats.textsCleaned + " | Demos 1-clic: " + kvStats.demosTested,
-      "• Clics a Stripe Pro: " + kvStats.checkouts,
-      "• Artículos SEO Cloud activos: " + (Number(bodyObj.articlesCount) || 0) + " (IndexNow 200 OK)"
-    ];
-    if (topOpp && topOpp.title && topOpp.url) {
-      msgLines.push("🎯 Hilo del día (" + (topOpp.platform || "Social") + "): " + String(topOpp.title).slice(0, 80));
-      msgLines.push("👉 " + topOpp.url);
-    }
-    let sent = false;
-    if (env && env.TELEGRAM_BOT_TOKEN && env.TELEGRAM_CHAT_ID && typeof fetch === "function") {
-      try {
-        await fetch("https://api.telegram.org/bot" + env.TELEGRAM_BOT_TOKEN + "/sendMessage", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            chat_id: env.TELEGRAM_CHAT_ID,
-            text: msgLines.join("\n"),
-            disable_web_page_preview: true
-          })
-        });
-        sent = true;
-      } catch (_) {}
-    }
-    return { status: 200, headers, body: JSON.stringify({ ok: true, sent }) };
-  }
-
-  if (req.method === "GET" && url.pathname === "/telemetry") {
-    let list = [];
-    if (env && env.PUREAI_LICENSES_KV && typeof env.PUREAI_LICENSES_KV.get === "function") {
-      try {
-        const rawList = await env.PUREAI_LICENSES_KV.get("telemetry:recent_events");
-        if (rawList) list = JSON.parse(rawList);
-      } catch (_) {}
-    }
-    return { status: 200, headers, body: JSON.stringify({ ok: true, events: list }) };
+    const res = await buildAndSendDailyTelegramDigest(env, {
+      force: Boolean(bodyObj && bodyObj.force),
+      topOpp: bodyObj && bodyObj.topOpp
+    });
+    return { status: 200, headers, body: JSON.stringify(res) };
   }
 
   return { status: 404, headers, body: JSON.stringify({ ok: false, error: "not_found" }) };
+}
+
+
+async function buildAndSendDailyTelegramDigest(env, options = {}) {
+  const nowMs = Date.now();
+  const todayIso = new Date(nowMs).toISOString().slice(0, 10);
+  if (!options.force && env && env.PUREAI_LICENSES_KV && typeof env.PUREAI_LICENSES_KV.get === "function") {
+    try {
+      const lastSentDate = await env.PUREAI_LICENSES_KV.get("telemetry:last_digest_date");
+      if (lastSentDate === todayIso) {
+        return { ok: true, sent: false, reason: "already_sent_today" };
+      }
+    } catch (_) {}
+  }
+
+  let list = [];
+  if (env && env.PUREAI_LICENSES_KV && typeof env.PUREAI_LICENSES_KV.get === "function") {
+    try {
+      const rawList = await env.PUREAI_LICENSES_KV.get("telemetry:recent_events");
+      if (rawList) list = JSON.parse(rawList);
+    } catch (_) {}
+  }
+
+  function createBucket() {
+    return { visits: 0, engaged15s: 0, photos: 0, texts: 0, demos: 0, paywalls: 0, checkouts: 0 };
+  }
+  const last24h = createBucket();
+  const total = createBucket();
+
+  for (const e of list) {
+    if (e.channel === "test_verificacion_telegram") continue;
+    const evMs = e.ts ? Date.parse(e.ts) : 0;
+    const is24h = evMs > 0 && (nowMs - evMs) <= 24 * 3600 * 1000;
+    const buckets = is24h ? [total, last24h] : [total];
+    for (const b of buckets) {
+      if (e.type === "pageview" || e.event_name === "session_start") b.visits++;
+      if (e.target === "engaged_15s") b.engaged15s++;
+      if (e.target === "image_scrub_download" || e.target === "user_uploaded_photo" || (e.event_name === "tool_completed" && e.tool_id === "img_c2pa_scrubber" && !e.isDemo)) b.photos++;
+      if (e.target === "text_watermark_scrub" || e.target === "pro_humanizer_click" || (e.event_name === "tool_completed" && e.tool_id === "txt_invisible_cleaner" && !e.isDemo)) b.texts++;
+      if (e.target === "demo_photo_tested" || e.target === "demo_text_tested" || e.isDemo === true) b.demos++;
+      if (e.event_name === "paywall_viewed") b.paywalls++;
+      if (e.type === "click_checkout" || e.event_name === "checkout_clicked") b.checkouts++;
+    }
+  }
+
+  const msgLines = [
+    "🕙 PureAI Studio — Resumen Diario (10:00 AM):",
+    "",
+    "🟢 ÚLTIMAS 24 HORAS (HOY):",
+    "• Visitas: " + last24h.visits + " (Interés >15s: " + last24h.engaged15s + ")",
+    "• Uso real: " + last24h.photos + " Fotos/MP4 | " + last24h.texts + " Textos | " + last24h.demos + " Demos",
+    "• Paywalls Pro abiertos: " + last24h.paywalls + " | Clics a Stripe: " + last24h.checkouts,
+    "",
+    "📈 ACUMULADO RECIENTE:",
+    "• Visitas: " + total.visits + " (Interés >15s: " + total.engaged15s + ")",
+    "• Uso total: " + total.photos + " Fotos/MP4 | " + total.texts + " Textos | " + total.demos + " Demos",
+    "• Paywalls Pro abiertos: " + total.paywalls + " | Clics a Stripe: " + total.checkouts
+  ];
+
+  let sent = false;
+  if (env && env.TELEGRAM_BOT_TOKEN && env.TELEGRAM_CHAT_ID && typeof fetch === "function") {
+    try {
+      await fetch("https://api.telegram.org/bot" + env.TELEGRAM_BOT_TOKEN + "/sendMessage", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          chat_id: env.TELEGRAM_CHAT_ID,
+          text: msgLines.join("\n"),
+          disable_web_page_preview: true
+        })
+      });
+      sent = true;
+      if (env.PUREAI_LICENSES_KV && typeof env.PUREAI_LICENSES_KV.put === "function") {
+        await env.PUREAI_LICENSES_KV.put("telemetry:last_digest_date", todayIso);
+      }
+    } catch (_) {}
+  }
+  return { ok: true, sent, last24h, total };
 }
 
 const workerDefaultExport = {
@@ -753,8 +781,21 @@ const workerDefaultExport = {
       return new Response(res.body, { status: res.status, headers: res.headers });
     }
     return res;
+  },
+  async scheduled(event, env, ctx) {
+    const p = buildAndSendDailyTelegramDigest(env || (typeof globalThis !== "undefined" ? globalThis : {}), { force: false });
+    if (ctx && typeof ctx.waitUntil === "function") ctx.waitUntil(p);
+    else await p;
   }
 };
+
+if (typeof addEventListener === "function") {
+  addEventListener("scheduled", (event) => {
+    if (event && typeof event.waitUntil === "function") {
+      event.waitUntil(buildAndSendDailyTelegramDigest(typeof globalThis !== "undefined" ? globalThis : {}, { force: false }));
+    }
+  });
+}
 
 if (typeof addEventListener === "function") {
   addEventListener("fetch", (event) => {

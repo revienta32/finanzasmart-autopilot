@@ -460,7 +460,8 @@ async function fetchLiveSocialOpportunities() {
 async function sendDailyMobilePushDigest(opportunities, telegraphUrls) {
   const topOpp = opportunities && opportunities[0] ? opportunities[0] : null;
   try {
-    await fetch("https://pureai-stripe-webhook.pureaistudio-app.workers.dev/daily-digest", {
+    // El envío diario a Telegram lo ejecuta con precisión exacta el Cron Trigger de Cloudflare a las 10:00 AM CET
+  if (process.env.FORCE_TELEGRAM_DIGEST === "1") await fetch("https://pureai-stripe-webhook.pureaistudio-app.workers.dev/daily-digest", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({

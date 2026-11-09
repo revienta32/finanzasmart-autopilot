@@ -15,3 +15,6 @@ preview_id = "2ae8a9c8cd1f449b82cdc9033bac3e3d"
 # Para configurar secretos en producción sin exponerlos en el código:
 # npx wrangler secret put STRIPE_WEBHOOK_SECRET
 # npx wrangler secret put NTFY_SECRET_TOPIC_URL
+
+[triggers]
+crons = ["0 9 * * *"]
