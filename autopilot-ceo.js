@@ -346,7 +346,7 @@ async function run() {
   });
   fs.writeFileSync(path.join(__dirname, "directorio-guias.html"), dirHtml);
 
-  const fullUrlList = [`${SITE_URL}/`, ...allHtmlFiles.map((f) => `${SITE_URL}/${f}`)];
+  const fullUrlList = [`${SITE_URL}/`, ...allHtmlFiles.filter((f) => f !== "index.html").map((f) => `${SITE_URL}/${f}`)];
   fs.writeFileSync(path.join(__dirname, "sitemap.txt"), fullUrlList.join("\n"));
 
   const sitemapXml = `<?xml version="1.0" encoding="UTF-8"?>

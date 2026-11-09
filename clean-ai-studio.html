@@ -2357,8 +2357,12 @@
       if (navigator.clipboard) {
         navigator.clipboard.writeText(txt).catch(() => {});
       }
+      sessionCleanCount++;
       document.getElementById("txt-audit-log").innerHTML =
-        `<span class="threat-badge-green">✅ Hidden Unicode watermarks (U+202F / U+200B) stripped & copied! Click '✨ Deep AI Humanizer (Pro)' to also replace flagged orange AI clichés.</span>`;
+        (currentUiLang === "es"
+          ? `<span class="threat-badge-green">✅ Marcas Unicode invisibles (U+202F / U+200B) eliminadas y copiadas. Pulsa '✨ Humanizador Profundo (Pro)' para reemplazar también las muletillas marcadas en naranja.</span>`
+          : `<span class="threat-badge-green">✅ Hidden Unicode watermarks (U+202F / U+200B) stripped & copied! Click '✨ Deep AI Humanizer (Pro)' to also replace flagged orange AI clichés.</span>`) +
+        buildPostCleanPartnerTipHtml();
       if (typeof window !== "undefined" && typeof window.sendPureAiAnalyticsEvent === "function") {
         window.sendPureAiAnalyticsEvent({ type: "app_action", event_name: "tool_completed", tool_id: "txt_unicode_scrubber", isDemo: false });
       }
@@ -2534,8 +2538,15 @@
       document.getElementById("txt-input").value = txt;
       analyzeText();
       copyCleanTextBtn();
+      sessionCleanCount++;
       document.getElementById("txt-audit-log").innerHTML =
-        `<span class="threat-badge-green">✅ 100% HIGIENIZADO Y COPIADO: 0 marcas Unicode invisibles (U+202F/U+200B), guiones IA y muletillas frecuentes reemplazadas.</span>` + `<div style="margin-top:6px;display:flex;gap:6px;flex-wrap:wrap;"><button type="button" onclick="generateZeroAiCertificate('Humanized-Document.txt')" style="background:rgba(255,255,255,0.05);color:#cbd5e1;border:1px solid rgba(255,255,255,0.16);border-radius:6px;padding:4px 9px;font-size:0.72rem;font-weight:600;cursor:pointer;">📋 Copiar / Descargar Informe Técnico</button></div>`;
+        (currentUiLang === "es"
+          ? `<span class="threat-badge-green">✅ 100% HIGIENIZADO Y COPIADO: 0 marcas Unicode invisibles (U+202F/U+200B), guiones IA y muletillas frecuentes reemplazadas.</span>`
+          : `<span class="threat-badge-green">✅ 100% HUMANIZED & COPIED: 0 invisible Unicode watermarks (U+202F/U+200B), AI em-dashes & Turnitin/GPTZero clichés replaced.</span>`) +
+        `<div style="margin-top:6px;display:flex;gap:6px;flex-wrap:wrap;"><button type="button" onclick="generateZeroAiCertificate('Humanized-Document.txt')" style="background:rgba(255,255,255,0.05);color:#cbd5e1;border:1px solid rgba(255,255,255,0.16);border-radius:6px;padding:4px 9px;font-size:0.72rem;font-weight:600;cursor:pointer;">` +
+        (currentUiLang === "es" ? "📋 Copiar / Descargar Informe Técnico" : "📋 Copy / Download Technical Certificate") +
+        `</button></div>` +
+        buildPostCleanPartnerTipHtml();
       if (typeof window !== "undefined" && typeof window.sendPureAiAnalyticsEvent === "function") {
         window.sendPureAiAnalyticsEvent({ type: "app_action", event_name: "tool_completed", tool_id: "txt_deep_humanizer", tone: currentHumanizerTone, isDemo: false });
       }
@@ -2753,6 +2764,9 @@
     }
     setLang(initLang);
     loadSampleAiText();
+    if (typeof location !== "undefined" && location.hash === "#card-text-tool" && typeof switchMobileToolTab === "function") {
+      switchMobileToolTab("text");
+    }
 
     (function handleExtensionContextMenuParams() {
       var extTxtMatch = location.search.match(/[?&]ext_txt=([^&]+)/);
