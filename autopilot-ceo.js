@@ -102,6 +102,30 @@ const SEO_PAGES = [
         <li><strong>Instant Browser Extension &amp; Web Studio:</strong> Clean single images for free or unlock Batch <code>.ZIP</code> + iPhone 16 Pro EXIF injection from 4,99 €/month.</li>
       </ul>
     `
+  }  ,
+  {
+    slug: "turnitin-ai-detector-bypass-humanizer-2026.html",
+    title: "How to Humanize ChatGPT Essays for Turnitin & GPTZero (2026 Academic Mode — Free)",
+    h1: "🎓 Academic AI Text Humanizer: Strip U+202F Watermarks & Rewrite LLM Clichés for Turnitin",
+    lead: "Remove invisible ChatGPT Unicode spaces (U+202F, U+200B), em-dashes, and 90+ flagged AI transitional phrases in 1 click locally in your browser.",
+    calcLink: "clean-ai-studio.html?lang=en#card-text-tool",
+    bodyHtml: `
+      <p>University and editorial AI detectors like <strong>Turnitin, GPTZero, and Originality.ai</strong> flag essays based on three forensic signals: hidden narrow no-break spaces (<code>U+202F</code>), repetitive syntactic clichés (<em>"delve into", "furthermore", "in conclusion"</em>), and flat sentence burstiness.</p>
+      <ul style="margin: 1rem 0 1.5rem 1.25rem; color: #cbd5e1;">
+        <li><strong>100% Client-Side Academic Humanizer:</strong> Your essay or <code>.DOCX</code> document never leaves your browser—zero server logs or plagiarism database leaks.</li>
+        <li><strong>Instant X-Ray Watermark Scanner:</strong> See every hidden Unicode marker highlighted in red before scrubbing it for free.</li>
+      </ul>
+    `
+  },
+  {
+    slug: "gptzero-bypass-ai-text-humanizer-free.html",
+    title: "Free GPTZero & Originality.ai Text Humanizer: Fix AI Perplexity, Burstiness & U+202F",
+    h1: "✍️ Lower GPTZero AI Detection Scores: Sentence Burstiness Engine + Unicode Scrubber",
+    lead: "Paste your ChatGPT, Claude, or Gemini draft to strip hidden watermarks and humanize sentence rhythm in Academic, Social, or Agency Copy tone.",
+    calcLink: "clean-ai-studio.html?lang=en#card-text-tool",
+    bodyHtml: `
+      <p>Why does <strong>GPTZero</strong> still flag text even after manual edits? Because copy-pasting from ChatGPT carries invisible Unicode formatting bytes and predictable sentence lengths. <strong>PureAI Studio</strong> cleans both the binary character layer and the stylistic layer in 1 click.</p>
+    `
   }
 ];
 
