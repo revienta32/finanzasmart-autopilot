@@ -233,15 +233,13 @@
     if (btn) {
       const oc = btn.getAttribute("onclick") || "";
       if (btn.id === "btn-pwa-install") sendTelemetry({ type: "app_action", event_name: "lead_captured", target: "pwa_install_click" });
-      else if (btn.id === "btn-scrub-img" || btn.id === "btn-inline-scrub") sendTelemetry({ type: "app_action", event_name: "tool_completed", tool_id: "img_c2pa_scrubber", isDemo: false, target: "image_scrub_download" });
+      else if (btn.id === "btn-inline-scrub") sendTelemetry({ type: "app_action", event_name: "tool_completed", tool_id: "img_c2pa_scrubber", isDemo: false, target: "image_scrub_download" });
       else if (btn.id === "btn-verify-clean") sendTelemetry({ type: "app_action", target: "forensic_verify_click" });
       else if (btn.id === "ui-btn-sample-img") sendTelemetry({ type: "app_action", event_name: "tool_completed", tool_id: "img_c2pa_scrubber", target: "demo_photo_tested", isDemo: true });
       else if (btn.id === "ui-btn-sample-top" || btn.id === "ui-btn-sample") sendTelemetry({ type: "app_action", event_name: "tool_completed", tool_id: "txt_invisible_cleaner", target: "demo_text_tested", isDemo: true });
       else if (btn.id === "ui-btn-paste") sendTelemetry({ type: "app_action", event_name: "input_started", tool_id: "txt_invisible_cleaner", target: "paste_text_clicked" });
       else if (btn.id === "ui-btn-paste-img") sendTelemetry({ type: "app_action", event_name: "input_started", tool_id: "img_c2pa_scrubber", target: "paste_image_clicked" });
       else if (btn.id === "ui-btn-copy-txt") sendTelemetry({ type: "app_action", event_name: "output_copied", tool_id: "txt_invisible_cleaner", target: "copy_clean_text" });
-      else if (btn.id === "ui-btn-scrub-txt") sendTelemetry({ type: "app_action", event_name: "tool_completed", tool_id: "txt_invisible_cleaner", isDemo: false, target: "text_watermark_scrub" });
-      else if (btn.id === "ui-btn-humanize") sendTelemetry({ type: "app_action", event_name: "tool_completed", tool_id: "txt_invisible_cleaner", isDemo: false, target: "pro_humanizer_click" });
       else if (oc.includes("applyCreatorPreset")) sendTelemetry({ type: "app_action", event_name: "preset_selected", tool_id: "img_c2pa_scrubber", target: oc });
       else if (oc.includes("setHumanizerTone")) sendTelemetry({ type: "app_action", event_name: "tone_selected", tool_id: "txt_invisible_cleaner", target: oc });
     }

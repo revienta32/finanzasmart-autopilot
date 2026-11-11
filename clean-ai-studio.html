@@ -342,7 +342,7 @@
         <div>
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:6px;">
             <h3 style="margin:0;font-size:1.15rem;" id="ui-img-title">📸 1. Limpiar Fotos creadas con IA</h3>
-            <span id="free-img-quota-badge" style="font-size:0.75rem;background:rgba(16,185,129,0.16);border:1px solid #10b981;color:#6ee7b7;padding:4px 10px;border-radius:999px;font-weight:800;">🎁 1 a 1 Gratis Ilimitado · 3/3 EXIF Pro</span>
+            <span id="free-img-quota-badge" style="font-size:0.75rem;background:rgba(16,185,129,0.16);border:1px solid #10b981;color:#6ee7b7;padding:4px 10px;border-radius:999px;font-weight:800;">🎁 3/3 Fotos Gratis</span>
           </div>
 
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;gap:6px;flex-wrap:wrap;">
@@ -516,7 +516,7 @@
       </div>
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:8px;margin-bottom:10px;font-size:0.74rem;">
         <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:8px;padding:7px 10px;color:#cbd5e1;">
-          🟢 <strong>Gratis Para Siempre:</strong> Limpieza Neutra 1 a 1 + Marcas Unicode (Ilimitado) + <strong>3 Pruebas EXIF/Vídeo</strong>.
+          🟢 <strong>Plan Gratuito:</strong> <strong>3 Fotos / Vídeos Gratis</strong> (C2PA, Lossless o EXIF) + Limpieza Marcas Unicode.
         </div>
         <div style="background:rgba(0,229,163,0.1);border:1px solid rgba(0,229,163,0.35);border-radius:8px;padding:7px 10px;color:#ecfdf5;">
           💎 <strong>Todo Incluido en Pro:</strong> EXIF iPhone 16 Pro / Sony + GPS Ilimitado + <strong>Lotes .ZIP (Foto/MP4)</strong> + Humanizador + <strong>3 Equipos</strong>.
@@ -1747,11 +1747,11 @@
       }
       var rem = Math.max(0, MAX_FREE_IMG_USES - usedImgCredits);
       if (rem > 0) {
-        badge.textContent = "🎁 1 a 1 Gratis Ilimitado · " + rem + "/" + MAX_FREE_IMG_USES + " EXIF Pro";
+        badge.textContent = "🎁 " + rem + "/" + MAX_FREE_IMG_USES + " Fotos Gratis";
         badge.style.borderColor = "#10b981";
         badge.style.color = "#6ee7b7";
       } else {
-        badge.textContent = "🎁 1 a 1 Gratis · 🔒 EXIF Cámara / .ZIP Pro";
+        badge.textContent = "🔒 0/" + MAX_FREE_IMG_USES + " Gratis · Activa Pro";
         badge.style.borderColor = "#f59e0b";
         badge.style.color = "#fcd34d";
       }
@@ -1912,16 +1912,16 @@
       const isDemoSample = loadedImgFile.name === "dalle3-instagram-sample.jpg";
       const currentFileSig = ((loadedImgFile && loadedImgFile.name) || "") + ":" + ((loadedImgFile && loadedImgFile.size) || 0);
       const isReTestingSameFile = Boolean(currentFileSig && currentFileSig === lastQuotaChargedFileSig);
-      if (!isPureAiPro && !isDemoSample && isAdvancedProImgMode && !isReTestingSameFile && usedImgCredits >= MAX_FREE_IMG_USES) {
+      if (!isPureAiPro && !isDemoSample && !isReTestingSameFile && usedImgCredits >= MAX_FREE_IMG_USES) {
         if (freeProCredits > 0) {
           freeProCredits--;
           try { localStorage.setItem("pureai_free_pro_credits", String(freeProCredits)); } catch (_) {}
           lastQuotaChargedFileSig = currentFileSig;
         } else {
-          showProModal("🔒 Has agotado tus " + MAX_FREE_IMG_USES + "/" + MAX_FREE_IMG_USES + " pruebas gratuitas de Perfiles Técnicos EXIF de Cámara (iPhone 16 Pro / Sony A7IV / Canon R5), Geolocalización GPS y Limpieza de Contenedores de Vídeo (.MP4/.MOV). La Limpieza Neutra de fotos 1 a 1 sigue siendo 100% Gratis e Ilimitada; desbloquea EXIF Pro, Vídeo y Lotes .ZIP desde 🔥 4,99 € (1er mes con FRIEND50) o 39 €/año.", loadedIsVideo ? "video_c2pa_scrubber" : "img_exif_pro_mode");
+          showProModal("🔒 Has agotado tus " + MAX_FREE_IMG_USES + "/" + MAX_FREE_IMG_USES + " limpiezas gratuitas de Fotos y Vídeos. Desbloquea Fotos Ilimitadas, EXIF iPhone 16 Pro / Sony A7IV + GPS, Vídeos .MP4 y Lotes .ZIP desde 🔥 4,99 € (1er mes con FRIEND50) o 39 €/año.", loadedIsVideo ? "video_c2pa_scrubber" : (isAdvancedProImgMode ? "img_exif_pro_mode" : "img_c2pa_scrubber"));
           return;
         }
-      } else if (!isPureAiPro && !isDemoSample && isAdvancedProImgMode && !isReTestingSameFile) {
+      } else if (!isPureAiPro && !isDemoSample && !isReTestingSameFile) {
         persistImgQuota(usedImgCredits + 1);
         lastQuotaChargedFileSig = currentFileSig;
       }

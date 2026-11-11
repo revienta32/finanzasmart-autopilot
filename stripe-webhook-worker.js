@@ -576,6 +576,32 @@ async function handleWorkerHttpRequest(req, env, sharedStore) {
       if (typeof result.commitInMemory === "function") {
         result.commitInMemory();
       }
+      if (eventObj.type === "checkout.session.completed" && result.state === SUBSCRIPTION_STATES.ACTIVE) {
+        const objPaid = (eventObj.data && eventObj.data.object) || {};
+        const amountEur = ((Number(objPaid.amount_total) || 0) / 100).toFixed(2);
+        if (env && env.PUREAI_LICENSES_KV && typeof env.PUREAI_LICENSES_KV.get === "function" && typeof env.PUREAI_LICENSES_KV.put === "function") {
+          try {
+            const rawList = await env.PUREAI_LICENSES_KV.get("telemetry:recent_events");
+            const list = rawList ? JSON.parse(rawList) : [];
+            list.push({ id: "sale_" + eventObj.id, event_name: "purchase_verified", amount_eur: amountEur, planInterval: result.subscription && result.subscription.planInterval, ts: new Date().toISOString() });
+            while (list.length > 250) list.shift();
+            await env.PUREAI_LICENSES_KV.put("telemetry:recent_events", JSON.stringify(list));
+          } catch (_) {}
+        }
+        if (env && env.TELEGRAM_BOT_TOKEN && env.TELEGRAM_CHAT_ID && typeof fetch === "function") {
+          try {
+            await fetch("https://api.telegram.org/bot" + env.TELEGRAM_BOT_TOKEN + "/sendMessage", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                chat_id: env.TELEGRAM_CHAT_ID,
+                text: "💰 ¡NUEVA SUSCRIPCIÓN PAGADA EN STRIPE!\n• Importe: " + amountEur + " €\n• Plan: " + ((result.subscription && result.subscription.planInterval === "year") ? "Anual" : "Mensual") + "\n• Clave Pro: " + ((result.subscription && result.subscription.proKey) || "Activa"),
+                disable_web_page_preview: true
+              })
+            });
+          } catch (_) {}
+        }
+      }
       return {
         status: 200,
         headers,
@@ -718,7 +744,7 @@ async function buildAndSendDailyTelegramDigest(env, options = {}) {
   }
 
   function createBucket() {
-    return { visits: 0, engaged15s: 0, photos: 0, texts: 0, demos: 0, paywalls: 0, checkouts: 0 };
+    return { visits: 0, engaged15s: 0, photos: 0, texts: 0, demos: 0, paywalls: 0, checkouts: 0, paidSales: 0 };
   }
   const last24h = createBucket();
   const total = createBucket();
@@ -731,11 +757,12 @@ async function buildAndSendDailyTelegramDigest(env, options = {}) {
     for (const b of buckets) {
       if (e.type === "pageview" || e.event_name === "session_start") b.visits++;
       if (e.target === "engaged_15s") b.engaged15s++;
-      if (e.target === "image_scrub_download" || e.target === "user_uploaded_photo" || (e.event_name === "tool_completed" && e.tool_id === "img_c2pa_scrubber" && !e.isDemo)) b.photos++;
-      if (e.target === "text_watermark_scrub" || e.target === "pro_humanizer_click" || (e.event_name === "tool_completed" && e.tool_id === "txt_invisible_cleaner" && !e.isDemo)) b.texts++;
+      if (!e.isDemo && (e.target === "image_scrub_download" || (e.event_name === "tool_completed" && (e.tool_id === "img_c2pa_scrubber" || e.tool_id === "video_c2pa_scrubber" || e.tool_id === "img_batch_zip")))) b.photos++;
+      if (!e.isDemo && (e.target === "text_watermark_scrub" || e.target === "pro_humanizer_click" || (e.event_name === "tool_completed" && (e.tool_id === "txt_invisible_cleaner" || e.tool_id === "txt_unicode_scrubber" || e.tool_id === "txt_deep_humanizer")))) b.texts++;
       if (e.target === "demo_photo_tested" || e.target === "demo_text_tested" || e.isDemo === true) b.demos++;
       if (e.event_name === "paywall_viewed") b.paywalls++;
       if (e.type === "click_checkout" || e.event_name === "checkout_clicked") b.checkouts++;
+      if (e.event_name === "purchase_verified") b.paidSales++;
     }
   }
 
@@ -745,12 +772,12 @@ async function buildAndSendDailyTelegramDigest(env, options = {}) {
     "🟢 ÚLTIMAS 24 HORAS (HOY):",
     "• Visitas: " + last24h.visits + " (Interés >15s: " + last24h.engaged15s + ")",
     "• Uso real: " + last24h.photos + " Fotos/MP4 | " + last24h.texts + " Textos | " + last24h.demos + " Demos",
-    "• Paywalls Pro abiertos: " + last24h.paywalls + " | Clics a Stripe: " + last24h.checkouts,
+    "• Paywalls Pro abiertos: " + last24h.paywalls + " | Clics a Stripe: " + last24h.checkouts + " | Ventas pagadas: " + last24h.paidSales,
     "",
     "📈 ACUMULADO RECIENTE:",
     "• Visitas: " + total.visits + " (Interés >15s: " + total.engaged15s + ")",
     "• Uso total: " + total.photos + " Fotos/MP4 | " + total.texts + " Textos | " + total.demos + " Demos",
-    "• Paywalls Pro abiertos: " + total.paywalls + " | Clics a Stripe: " + total.checkouts
+    "• Paywalls Pro abiertos: " + total.paywalls + " | Clics a Stripe: " + total.checkouts + " | Ventas pagadas: " + total.paidSales
   ];
 
   let sent = false;

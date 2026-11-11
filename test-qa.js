@@ -703,10 +703,10 @@ assert(cleanAiHtml.includes("terms.html") && cleanAiHtml.includes("Art. 103.m TR
   const swCurrent = fs.readFileSync(path.join(__dirname, "sw.js"), "utf8");
   assert(swCurrent.includes("pureai-studio-v4") && swCurrent.includes('e.request.mode === "navigate"'), "sw.js debe implementar caché v4 con soporte de navegación offline y revalidación");
 
-  // 17e. Verificar Modelo Híbrido PLG: Limpieza Neutra 1 a 1 ilimitada gratis, 3 pruebas EXIF Cámara Pro y 1 prueba de texto corto (<=180 palabras) en deepHumanizePro
+  // 17e. Verificar Cuota Unificada de 3 Fotos/Vídeos Gratis (tanto en Limpieza Neutra como en EXIF Cámara Pro) y 1 prueba de texto corto (<=180 palabras) en deepHumanizePro
   paSandbox.isPureAiPro = false;
   paSandbox.freeProCredits = 0;
-  paSandbox.persistImgQuota(3); // Simular que ya gastó las 3 pruebas EXIF Pro
+  paSandbox.persistImgQuota(3); // Simular que ya gastó las 3 fotos gratuitas
   paSandbox.loadedImgElement = { naturalWidth: 64, naturalHeight: 64 };
   paSandbox.loadedImgFile = { name: "user-photo.jpg", size: 2048, type: "image/jpeg" };
   paSandbox.loadedIsVideo = false;
@@ -714,8 +714,9 @@ assert(cleanAiHtml.includes("terms.html") && cleanAiHtml.includes("Art. 103.m TR
   getPaEl("img-gps-city").value = "none";
   getPaEl("pro-modal-overlay").style.display = "none";
   paSandbox.scrubAndDownloadImage();
-  assert.strictEqual(getPaEl("pro-modal-overlay").style.display, "none", "PLG: Limpieza Neutra 1 a 1 debe seguir siendo 100% gratis e ilimitada aunque usedImgCredits sea 3");
+  assert.strictEqual(getPaEl("pro-modal-overlay").style.display, "flex", "PLG: La 4ª foto incluso en Limpieza Neutra sin suscripción debe mostrar el modal Pro");
 
+  getPaEl("pro-modal-overlay").style.display = "none";
   getPaEl("img-defense").value = "spoof";
   paSandbox.scrubAndDownloadImage();
   assert.strictEqual(getPaEl("pro-modal-overlay").style.display, "flex", "PLG: El 4º uso de un perfil EXIF Pro (iPhone 16 Pro) sin suscripción debe mostrar el modal Pro");
