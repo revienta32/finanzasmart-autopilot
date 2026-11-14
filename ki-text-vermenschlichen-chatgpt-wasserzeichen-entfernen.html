@@ -122,7 +122,7 @@
         } catch (_) {}
         return false;
       }
-      function seoCleanPhoto(file) {
+      function seoCleanPhoto(file, __gateApproved) {
         if (!file || !file.size) return;
         var st = document.getElementById('seo-quick-status');
         if (file.size > 50 * 1024 * 1024) {
@@ -136,8 +136,56 @@
           if (typeof window.sendPureAiAnalyticsEvent === 'function') {
             window.sendPureAiAnalyticsEvent({ type: 'app_action', event_name: 'paywall_viewed', trigger_tool: 'img_c2pa_scrubber', usedCredits: used });
           }
-          st.innerHTML = '🔒 <strong>1/1 free photo used.</strong> <a href="https://buy.stripe.com/9B6cN6e669uZ4vmeTE0000f" target="_blank" rel="noopener noreferrer" style="color:#00e5a3;font-weight:900;">Unlock Unlimited Photos + Batch .ZIP + iPhone 16 Pro EXIF (€2.99 one-time, no subscription) →</a>';
+          st.innerHTML = '🔒 <strong>1/1 free photo used.</strong> <a href="https://buy.stripe.com/9B6cN6e669uZ4vmeTE0000f" target="_blank" rel="noopener noreferrer" style="color:#00e5a3;font-weight:900;">Unlock 10-File Pass (€2.99 one-time) →</a> · <a href="https://buy.stripe.com/3cIdRae66bD74vm6n80000g" target="_blank" rel="noopener noreferrer" style="color:#e9d5ff;font-weight:900;">50 Files + Batch .ZIP (€9.90) →</a>';
           return;
+        }
+        if (!__gateApproved && typeof fetch === 'function') {
+          if (isPro) {
+            try {
+              var raw = localStorage.getItem('pureai_sub_record_v2');
+              var rec = raw ? JSON.parse(raw) : null;
+              if (rec && rec.unlimited === false) {
+                var key = String(rec.stripeSessionId || rec.key || '').trim();
+                fetch('https://pureai-stripe-webhook.pureaistudio-app.workers.dev/consume-credit', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ code: key, count: 1, opId: 'seo_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8) })
+                }).then(function (r) { return r.json().then(function (d) { return { s: r.status, d: d }; }); })
+                  .then(function (res) {
+                    if (res.s === 200 && res.d && res.d.ok) {
+                      if (typeof res.d.creditsRemaining === 'number') {
+                        rec.creditsRemaining = res.d.creditsRemaining;
+                        if (rec.creditsRemaining <= 0) rec.status = 'EXPIRED';
+                        try { localStorage.setItem('pureai_sub_record_v2', JSON.stringify(rec)); } catch (_) {}
+                      }
+                      seoCleanPhoto(file, true);
+                    } else {
+                      try { localStorage.removeItem('pureai_sub_record_v2'); localStorage.removeItem('pureai_studio_pro'); } catch (_) {}
+                      st.innerHTML = '🔒 <strong>Pack credits exhausted.</strong> <a href="https://buy.stripe.com/9B6cN6e669uZ4vmeTE0000f" target="_blank" rel="noopener noreferrer" style="color:#00e5a3;font-weight:900;">Unlock 10-File Pass (€2.99) →</a>';
+                    }
+                  }).catch(function () { seoCleanPhoto(file, true); });
+                return;
+              }
+            } catch (_) {}
+          } else {
+            fetch('https://pureai-stripe-webhook.pureaistudio-app.workers.dev/check-free-quota', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ consume: true })
+            }).then(function (r) { return r.json(); })
+              .then(function (q) {
+                if (q && q.allowed === false) {
+                  try { localStorage.setItem('pureai_img_used', String(q.used || 1)); } catch (_) {}
+                  if (typeof window.sendPureAiAnalyticsEvent === 'function') {
+                    window.sendPureAiAnalyticsEvent({ type: 'app_action', event_name: 'paywall_viewed', trigger_tool: 'img_c2pa_scrubber', usedCredits: q.used || 1 });
+                  }
+                  st.innerHTML = '🔒 <strong>1/1 free photo used.</strong> <a href="https://buy.stripe.com/9B6cN6e669uZ4vmeTE0000f" target="_blank" rel="noopener noreferrer" style="color:#00e5a3;font-weight:900;">Unlock 10-File Pass (€2.99 one-time) →</a> · <a href="https://buy.stripe.com/3cIdRae66bD74vm6n80000g" target="_blank" rel="noopener noreferrer" style="color:#e9d5ff;font-weight:900;">50 Files + Batch .ZIP (€9.90) →</a>';
+                  return;
+                }
+                seoCleanPhoto(file, true);
+              }).catch(function () { seoCleanPhoto(file, true); });
+            return;
+          }
         }
         try { if (!isPro) localStorage.setItem('pureai_img_used', String(used + 1)); } catch (_) {}
         st.innerHTML = '⏳ Stripping C2PA, JUMBF & EXIF metadata locally...';

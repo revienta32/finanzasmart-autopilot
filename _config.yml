@@ -9,3 +9,6 @@ exclude:
   - chrome-extension-pureai
   - comfyui-pureai-node
   - growth-matrix-engine.js
+  - .agents
+  - AGENTS.md
+  - GEMINI.md

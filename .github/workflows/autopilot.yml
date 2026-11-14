@@ -19,7 +19,6 @@ jobs:
       PUREAI_MOBILE_NTFY_TOPIC: ${{ secrets.PUREAI_MOBILE_NTFY_TOPIC }}
       NTFY_SECRET_TOPIC_URL: ${{ secrets.NTFY_SECRET_TOPIC_URL }}
       ADMIN_DIGEST_TOKEN: ${{ secrets.ADMIN_DIGEST_TOKEN }}
-      STRIPE_WEBHOOK_SECRET: ${{ secrets.STRIPE_WEBHOOK_SECRET }}
       TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
       TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
     steps:
@@ -41,6 +40,6 @@ jobs:
         run: |
           git config user.name "PureAI Studio Ops Bot"
           git config user.email "ops@pureaistudios.com"
-          git add sitemap.xml sitemap.txt feed.xml index.html directorio-guias.html *.html
+          git add sitemap.xml sitemap.txt feed.xml llms.txt llms-full.txt index.html directorio-guias.html *.html
           git diff --staged --quiet || git commit -m "chore(ops): cloud social radar, mobile digest & verified sitemap sync"
           git push

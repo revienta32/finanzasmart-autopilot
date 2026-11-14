@@ -69,12 +69,121 @@
     <script>
     (function(){
       var TOOL_KEY = "photo-gps-remover";
+      var TOOL_ID = TOOL_KEY === "mp4-frame-extractor" ? "video_c2pa_scrubber" : "img_c2pa_scrubber";
+      var WORKER_BASE = "https://pureai-stripe-webhook.pureaistudio-app.workers.dev";
       var MSG_THREATS = "Rastros Ocultos de IA / Metadatos Detectados";
       var MSG_CLEAN = "0 Rastros Ocultos de IA / GPS en el Contenedor";
       var STUDIO_URL = "clean-ai-studio.html?lang=es&utm_source=matrix_photo-gps-remover";
       var currentFile = null;
       var currentFindings = [];
       var loadedImg = null;
+
+      function __mtxTrack(ev) {
+        try {
+          if (typeof window.sendPureAiAnalyticsEvent === "function") window.sendPureAiAnalyticsEvent(ev);
+        } catch (_) {}
+      }
+
+      function __mtxGetVerifiedPro() {
+        try {
+          var raw = localStorage.getItem("pureai_sub_record_v2");
+          if (!raw) return { active: false, unlimited: false, key: "", rec: null };
+          var rec = JSON.parse(raw);
+          if (!rec || rec.verifiedByServer !== true) return { active: false, unlimited: false, key: "", rec: null };
+          var key = String(rec.stripeSessionId || rec.key || "").trim();
+          var m = key.toUpperCase().match(/^PRO-([A-Z2-9]{4})-([A-Z2-9]{4})$/);
+          if (m) {
+            var chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789", h = 0x811c9dc5, s = "PUREAI2026:" + m[1];
+            for (var i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 0x01000193) >>> 0; }
+            var chk = "";
+            for (var j = 0; j < 4; j++) chk += chars.charAt((h >>> (j * 5)) % chars.length);
+            if (chk !== m[2]) return { active: false, unlimited: false, key: "", rec: null };
+          } else if (!/^(cs_live_[a-zA-Z0-9_]{20,}|(sub|pi|cus)_[a-zA-Z0-9]{14,})$/.test(key)) {
+            return { active: false, unlimited: false, key: "", rec: null };
+          }
+          if (rec.unlimited === false && typeof rec.creditsRemaining === "number" && rec.creditsRemaining <= 0) {
+            return { active: false, unlimited: false, key: "", rec: null };
+          }
+          var now = Date.now();
+          var active = (rec.status === "ACTIVE" || rec.status === "CANCELED_AT_PERIOD_END")
+            ? (typeof rec.expiresAt === "number" && now <= rec.expiresAt)
+            : (rec.status === "PAST_DUE" && typeof rec.graceEndsAt === "number" && now <= rec.graceEndsAt);
+          return { active: active, unlimited: rec.unlimited !== false, key: key, rec: rec };
+        } catch (_) {
+          return { active: false, unlimited: false, key: "", rec: null };
+        }
+      }
+
+      function __mtxShowPaywall(reasonMsg) {
+        __mtxTrack({ type: "app_action", event_name: "paywall_viewed", trigger_tool: TOOL_ID });
+        var box = document.getElementById("mtx-audit-box");
+        if (box) {
+          box.style.display = "block";
+          box.innerHTML = "<div style='color:#fcd34d;font-weight:800;'>🔒 " + esc(reasonMsg || "1/1 free file used.") + "</div>" +
+            "<div style='margin-top:8px;display:flex;flex-wrap:wrap;gap:8px;'>" +
+            "<a href='https://buy.stripe.com/9B6cN6e669uZ4vmeTE0000f' target='_blank' rel='noopener noreferrer' style='background:#00e5a3;color:#042f1e;padding:6px 12px;border-radius:8px;font-weight:900;text-decoration:none;'>10 Files · €2.99</a>" +
+            "<a href='https://buy.stripe.com/3cIdRae66bD74vm6n80000g' target='_blank' rel='noopener noreferrer' style='background:#a855f7;color:#fff;padding:6px 12px;border-radius:8px;font-weight:900;text-decoration:none;'>50 + .ZIP · €9.90</a>" +
+            "<a href='" + esc(STUDIO_URL) + "' style='color:#93c5fd;padding:6px 4px;font-weight:700;text-decoration:underline;'>Activate Pro Key →</a></div>";
+        }
+      }
+
+      function __mtxCheckAndConsumeQuota(onAllowed) {
+        var pro = __mtxGetVerifiedPro();
+        var used = 0;
+        try { used = Math.max(0, parseInt(localStorage.getItem("pureai_img_used") || "0", 10) || 0); } catch (_) {}
+        if (!pro.active && used >= 1) {
+          __mtxShowPaywall("1/1 free file used. Unlock 10-File Pass (€2.99) or 50 Files + .ZIP (€9.90).");
+          return;
+        }
+        if (typeof fetch !== "function") {
+          try { if (!pro.active) localStorage.setItem("pureai_img_used", String(used + 1)); } catch (_) {}
+          onAllowed();
+          return;
+        }
+        if (pro.active) {
+          if (pro.unlimited) { onAllowed(); return; }
+          var opId = "mtx_" + Date.now() + "_" + Math.random().toString(36).slice(2, 8);
+          fetch(WORKER_BASE + "/consume-credit", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ code: pro.key, count: 1, opId: opId })
+          }).then(function(r){ return r.json().then(function(d){ return { status: r.status, data: d }; }); })
+            .then(function(res){
+              if (res.status === 200 && res.data && res.data.ok) {
+                if (pro.rec && typeof res.data.creditsRemaining === "number") {
+                  pro.rec.creditsRemaining = res.data.creditsRemaining;
+                  if (pro.rec.creditsRemaining <= 0) pro.rec.status = "EXPIRED";
+                  try { localStorage.setItem("pureai_sub_record_v2", JSON.stringify(pro.rec)); } catch (_) {}
+                }
+                onAllowed();
+              } else {
+                try {
+                  localStorage.removeItem("pureai_sub_record_v2");
+                  localStorage.removeItem("pureai_studio_pro");
+                } catch (_) {}
+                __mtxShowPaywall("Pro Pack credits exhausted or expired.");
+              }
+            }).catch(function(){ onAllowed(); });
+          return;
+        }
+        fetch(WORKER_BASE + "/check-free-quota", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ consume: true })
+        }).then(function(r){ return r.json(); })
+          .then(function(q){
+            if (q && q.allowed === false) {
+              try { localStorage.setItem("pureai_img_used", String(q.used || 1)); } catch (_) {}
+              __mtxShowPaywall("1/1 free file used. Unlock 10-File Pass (€2.99) or 50 Files + .ZIP (€9.90).");
+              return;
+            }
+            try { localStorage.setItem("pureai_img_used", String(used + 1)); } catch (_) {}
+            onAllowed();
+          }).catch(function(){
+            try { localStorage.setItem("pureai_img_used", String(used + 1)); } catch (_) {}
+            onAllowed();
+          });
+      }
 
       function esc(s) {
         return String(s || "").replace(/[&<>"']/g, function(c){
@@ -145,6 +254,7 @@
           }
         }
 
+        __mtxTrack({ type: "app_action", event_name: "file_inspected", tool_id: TOOL_ID, findingsCount: currentFindings.length });
         var certBtn = document.getElementById("mtx-cert-btn");
         if (certBtn) certBtn.style.display = "inline-block";
 
@@ -180,26 +290,22 @@
 
       window.__mtxExportCleanImage = function(mime, quality) {
         if (!loadedImg || !currentFile) return;
-        var used = parseInt(localStorage.getItem("pureai_free_img_uses_v2") || "0", 10) || 0;
-        var hasPro = Boolean(localStorage.getItem("pureai_studio_pro"));
-        if (used >= 1 && !hasPro) {
-          window.location.href = STUDIO_URL;
-          return;
-        }
-        var c = document.createElement("canvas");
-        c.width = loadedImg.naturalWidth || 1024;
-        c.height = loadedImg.naturalHeight || 1024;
-        var ctx = c.getContext("2d");
-        ctx.drawImage(loadedImg, 0, 0);
-        c.toBlob(function(blob) {
-          if (!blob) return;
-          if (!hasPro) localStorage.setItem("pureai_free_img_uses_v2", String(used + 1));
-          var a = document.createElement("a");
-          var ext = mime === "image/png" ? ".png" : ".jpg";
-          a.href = URL.createObjectURL(blob);
-          a.download = currentFile.name.replace(/\.[^.]+$/, "") + "-clean" + ext;
-          a.click();
-        }, mime || "image/jpeg", quality || 0.94);
+        __mtxCheckAndConsumeQuota(function() {
+          var c = document.createElement("canvas");
+          c.width = loadedImg.naturalWidth || 1024;
+          c.height = loadedImg.naturalHeight || 1024;
+          var ctx = c.getContext("2d");
+          ctx.drawImage(loadedImg, 0, 0);
+          c.toBlob(function(blob) {
+            if (!blob) return;
+            var a = document.createElement("a");
+            var ext = mime === "image/png" ? ".png" : ".jpg";
+            a.href = URL.createObjectURL(blob);
+            a.download = currentFile.name.replace(/\.[^.]+$/, "") + "-clean" + ext;
+            a.click();
+            __mtxTrack({ type: "app_action", event_name: "tool_completed", tool_id: TOOL_ID, isDemo: false });
+          }, mime || "image/jpeg", quality || 0.94);
+        });
       };
 
       window.__mtxConvertJpg = function() {
@@ -217,17 +323,20 @@
       window.__mtxCaptureVideoFrame = function() {
         var vid = document.getElementById("mtx-video-el");
         if (!vid || !vid.videoWidth) return;
-        var c = document.createElement("canvas");
-        c.width = vid.videoWidth;
-        c.height = vid.videoHeight;
-        c.getContext("2d").drawImage(vid, 0, 0, c.width, c.height);
-        c.toBlob(function(blob) {
-          if (!blob) return;
-          var a = document.createElement("a");
-          a.href = URL.createObjectURL(blob);
-          a.download = (currentFile ? currentFile.name.replace(/\.[^.]+$/, "") : "video") + "-frame-hd.png";
-          a.click();
-        }, "image/png");
+        __mtxCheckAndConsumeQuota(function() {
+          var c = document.createElement("canvas");
+          c.width = vid.videoWidth;
+          c.height = vid.videoHeight;
+          c.getContext("2d").drawImage(vid, 0, 0, c.width, c.height);
+          c.toBlob(function(blob) {
+            if (!blob) return;
+            var a = document.createElement("a");
+            a.href = URL.createObjectURL(blob);
+            a.download = (currentFile ? currentFile.name.replace(/\.[^.]+$/, "") : "video") + "-frame-hd.png";
+            a.click();
+            __mtxTrack({ type: "app_action", event_name: "tool_completed", tool_id: TOOL_ID, isDemo: false });
+          }, "image/png");
+        });
       };
 
       window.__mtxDownloadCert = function() {

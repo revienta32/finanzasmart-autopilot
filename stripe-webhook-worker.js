@@ -599,7 +599,7 @@ function checkWorkerRateLimit(rateMap, bucketKey, maxPerMinute, nowMs) {
 }
 
 function verifyAdminBearerAuth(req, env) {
-  const expectedSecret = String((env && (env.ADMIN_DIGEST_TOKEN || env.STRIPE_WEBHOOK_SECRET)) || "").trim();
+  const expectedSecret = String((env && env.ADMIN_DIGEST_TOKEN) || "").trim();
   if (expectedSecret.length < 12) return false;
   const authHeader = String((req && req.headers && typeof req.headers.get === "function" && req.headers.get("authorization")) || "").trim();
   if (!authHeader.startsWith("Bearer ")) return false;
@@ -728,6 +728,68 @@ async function persistWebhookResultToKv(env, eventObj, result) {
   }
 }
 
+async function sendWorkerTelegramAlert(env, text) {
+  if (!env || !env.TELEGRAM_BOT_TOKEN || !env.TELEGRAM_CHAT_ID || typeof fetch !== "function") return false;
+  try {
+    await fetch("https://api.telegram.org/bot" + env.TELEGRAM_BOT_TOKEN + "/sendMessage", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        chat_id: env.TELEGRAM_CHAT_ID,
+        text: String(text || "").slice(0, 3900),
+        disable_web_page_preview: true
+      })
+    });
+    return true;
+  } catch (_) {
+    return false;
+  }
+}
+
+function classifyWorkerSupportMessage(rawText) {
+  const lower = String(rawText || "").trim().toLowerCase();
+  if (/vulnerabil|exploit|xss|inyecci[oó]n|bypass|cve-|brecha|hack|security bug|fallo de seguridad/i.test(lower)) {
+    return { category: "SECURITY_VULNERABILITY", priority: "CRITICAL", requiresHumanApproval: true, escalationTarget: "SECURITY_OWNER" };
+  }
+  if (/privacidad|rgpd|gdpr|datos personales|borrar mis datos|derecho de supresi|aepd|arsopol|data deletion|privacy/i.test(lower)) {
+    return { category: "PRIVACY", priority: "HIGH", requiresHumanApproval: true, escalationTarget: "LEGAL_PRIVACY_OWNER" };
+  }
+  if (/reembolso|devoluci[oó]n|devolver|refund|chargeback|contracargo|desistimiento|quiero mi dinero/i.test(lower)) {
+    return { category: "REFUND_REQUEST", priority: "HIGH", requiresHumanApproval: true, escalationTarget: "BILLING_OWNER" };
+  }
+  if (/cobro doble|pago duplicado|cargo duplicado|tarjeta rechazada|error de pago|payment failed|factura|invoice|\biva\b|\bvat\b/i.test(lower)) {
+    return { category: "PAYMENT", priority: "HIGH", requiresHumanApproval: true, escalationTarget: "BILLING_OWNER" };
+  }
+  if (/cancelar|dar de baja|baja de suscripci|unsubscribe|cancel subscription|cambiar a anual|renovaci[oó]n/i.test(lower)) {
+    return { category: "SUBSCRIPTION", priority: "MEDIUM", requiresHumanApproval: false, escalationTarget: "NONE" };
+  }
+  if (/activar pro|clave pro|c[oó]digo de licencia|c[oó]digo pro|pro-|cs_live_|cambi[eé] de m[oó]vil|otro dispositivo|otro navegador|license key|unlock pro/i.test(lower)) {
+    return { category: "PRO_ACCESS", priority: "MEDIUM", requiresHumanApproval: false, escalationTarget: "NONE" };
+  }
+  if (/sugerencia|nueva funci[oó]n|feature request|podr[ií]ais a[ñn]adir|me gustar[ií]a que|idea de mejora/i.test(lower)) {
+    return { category: "FEATURE_REQUEST", priority: "LOW", requiresHumanApproval: false, escalationTarget: "PRODUCT_BACKLOG" };
+  }
+  return { category: "TECHNICAL_ISSUE", priority: "MEDIUM", requiresHumanApproval: false, escalationTarget: "TECH_TRIAGE" };
+}
+
+async function appendFinancialLedgerEvent(env, ledgerEv) {
+  if (!ledgerEv || !ledgerEv.id || !env || !env.PUREAI_LICENSES_KV || typeof env.PUREAI_LICENSES_KV.get !== "function" || typeof env.PUREAI_LICENSES_KV.put !== "function") {
+    return false;
+  }
+  try {
+    const raw = await env.PUREAI_LICENSES_KV.get("finance:ledger_events");
+    const list = raw ? JSON.parse(raw) : [];
+    const safeList = Array.isArray(list) ? list : [];
+    if (safeList.some((x) => x && x.id === ledgerEv.id)) return true;
+    safeList.push(ledgerEv);
+    while (safeList.length > 2000) safeList.shift();
+    await env.PUREAI_LICENSES_KV.put("finance:ledger_events", JSON.stringify(safeList));
+    return true;
+  } catch (_) {
+    return false;
+  }
+}
+
 async function handleWorkerHttpRequest(req, env, sharedStore) {
   const store = sharedStore || createWebhookProcessorStore();
   const rateMap = (sharedStore && sharedStore.rateLimits) || GLOBAL_RATE_LIMITS;
@@ -774,20 +836,27 @@ async function handleWorkerHttpRequest(req, env, sharedStore) {
       }
       if (eventObj.type === "checkout.session.completed" && result.state === SUBSCRIPTION_STATES.ACTIVE) {
         const objPaid = (eventObj.data && eventObj.data.object) || {};
-        const amountEur = ((Number(objPaid.amount_total) || 0) / 100).toFixed(2);
+        const amountCents = Number(objPaid.amount_total) || 0;
+        const taxCents = (objPaid.total_details && Number(objPaid.total_details.amount_tax)) || 0;
+        const amountEur = (amountCents / 100).toFixed(2);
         const rawRef = String(objPaid.client_reference_id || "");
         const affPartner = rawRef.startsWith("aff_") ? rawRef.slice(4) : "organic";
+        const planType = (result.subscription && result.subscription.planType) || (result.subscription && result.subscription.planInterval === "year" ? "annual_unlimited" : "monthly_unlimited");
+        const ledgerType = planType === "pack_10" ? "SALE_PACK_10" : planType === "pack_50" ? "SALE_PACK_50" : (result.subscription && result.subscription.planInterval === "year" ? "SALE_ANNUAL" : "SALE_MONTHLY");
+        const saleId = "sale_" + (eventObj.id || Date.now());
         if (env && env.PUREAI_LICENSES_KV && typeof env.PUREAI_LICENSES_KV.get === "function" && typeof env.PUREAI_LICENSES_KV.put === "function") {
           try {
             const rawList = await env.PUREAI_LICENSES_KV.get("telemetry:recent_events");
             const list = rawList ? JSON.parse(rawList) : [];
             const saleEv = {
-              id: "sale_" + eventObj.id,
+              id: saleId,
               type: "sale_verified_session",
               event_name: "purchase_verified",
               amount_eur: amountEur,
-              amountCents: Number(objPaid.amount_total) || 0,
+              amountCents,
+              taxCents,
               partner: affPartner,
+              planType,
               planInterval: result.subscription && result.subscription.planInterval,
               ts: new Date().toISOString()
             };
@@ -797,27 +866,85 @@ async function handleWorkerHttpRequest(req, env, sharedStore) {
             await env.PUREAI_LICENSES_KV.put("telemetry:recent_events", JSON.stringify(list));
           } catch (_) {}
         }
-        if (env && env.TELEGRAM_BOT_TOKEN && env.TELEGRAM_CHAT_ID && typeof fetch === "function") {
-          const planLabel =
-            result.subscription && result.subscription.planType === "pack_10"
-              ? "Pack 10 usos"
-              : result.subscription && result.subscription.planType === "pack_50"
-                ? "Pack 50 usos + .ZIP"
-                : result.subscription && result.subscription.planInterval === "year"
-                  ? "Anual Ilimitado"
-                  : "Suscripción Mensual";
-          try {
-            await fetch("https://api.telegram.org/bot" + env.TELEGRAM_BOT_TOKEN + "/sendMessage", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                chat_id: env.TELEGRAM_CHAT_ID,
-                text: "💰 ¡NUEVA VENTA PAGADA EN STRIPE!\n• Importe: " + amountEur + " €\n• Plan: " + planLabel + "\n• Clave Pro: " + ((result.subscription && result.subscription.proKey) || "Activa"),
-                disable_web_page_preview: true
-              })
-            });
-          } catch (_) {}
+        await appendFinancialLedgerEvent(env, {
+          id: saleId,
+          type: ledgerType,
+          amountCents,
+          taxCents,
+          affiliateId: affPartner,
+          planType,
+          planInterval: result.subscription && result.subscription.planInterval,
+          ts: new Date().toISOString()
+        });
+        const planLabel =
+          planType === "pack_10"
+            ? "Pack 10 usos"
+            : planType === "pack_50"
+              ? "Pack 50 usos + .ZIP"
+              : result.subscription && result.subscription.planInterval === "year"
+                ? "Anual Ilimitado"
+                : "Suscripción Mensual";
+        await sendWorkerTelegramAlert(
+          env,
+          "💰 ¡NUEVA VENTA PAGADA EN STRIPE!\n• Importe: " + amountEur + " €\n• Plan: " + planLabel + "\n• Clave Pro: " + ((result.subscription && result.subscription.proKey) || "Activa")
+        );
+      } else if (eventObj.type === "invoice.paid" && result.state === SUBSCRIPTION_STATES.ACTIVE) {
+        const objInv = (eventObj.data && eventObj.data.object) || {};
+        if (objInv.billing_reason === "subscription_cycle") {
+          const amountCents = Number(objInv.amount_paid || objInv.amount_total) || 0;
+          const taxCents = Number(objInv.tax) || (objInv.total_details && Number(objInv.total_details.amount_tax)) || 0;
+          const isAnnual = Boolean(result.subscription && result.subscription.planInterval === "year");
+          await appendFinancialLedgerEvent(env, {
+            id: "inv_" + (eventObj.id || Date.now()),
+            type: isAnnual ? "SALE_ANNUAL" : "SALE_MONTHLY",
+            amountCents,
+            taxCents,
+            affiliateId: "organic",
+            planType: isAnnual ? "annual_unlimited" : "monthly_unlimited",
+            planInterval: isAnnual ? "year" : "month",
+            billingReason: "subscription_cycle",
+            ts: new Date().toISOString()
+          });
         }
+      } else if (eventObj.type === "charge.refunded") {
+        const objRef = (eventObj.data && eventObj.data.object) || {};
+        const amountCents = Number(objRef.amount_refunded || objRef.amount) || 0;
+        await appendFinancialLedgerEvent(env, {
+          id: "ref_" + (eventObj.id || Date.now()),
+          type: "REFUND",
+          amountCents,
+          taxCents: 0,
+          wasAnnual: Boolean(result.subscription && result.subscription.planInterval === "year"),
+          ts: new Date().toISOString()
+        });
+        await sendWorkerTelegramAlert(
+          env,
+          "⚠️ REEMBOLSO / CLAWBACK EN STRIPE\n• Importe: " + (amountCents / 100).toFixed(2) + " €\n• Cliente: " + ((result.subscription && result.subscription.customerId) || objRef.customer || "unknown") + "\n• Licencia revocada (REFUNDED)"
+        );
+      } else if (eventObj.type === "charge.dispute.created") {
+        const objDisp = (eventObj.data && eventObj.data.object) || {};
+        const amountCents = Number(objDisp.amount) || 0;
+        await appendFinancialLedgerEvent(env, {
+          id: "disp_" + (eventObj.id || Date.now()),
+          type: "DISPUTE",
+          amountCents,
+          taxCents: 0,
+          reason: String(objDisp.reason || "dispute"),
+          ts: new Date().toISOString()
+        });
+        await sendWorkerTelegramAlert(
+          env,
+          "🚨 DISPUTA / CHARGEBACK EN STRIPE\n• Importe disputado: " + (amountCents / 100).toFixed(2) + " € (+15 € fee)\n• Motivo: " + String(objDisp.reason || "unspecified") + "\n• Requiere revisión manual en Stripe Dashboard"
+        );
+      } else if (eventObj.type === "customer.subscription.deleted") {
+        await appendFinancialLedgerEvent(env, {
+          id: "cancel_" + (eventObj.id || Date.now()),
+          type: "SUBSCRIPTION_CANCELED",
+          amountCents: 0,
+          taxCents: 0,
+          customerId: (result.subscription && result.subscription.customerId) || "",
+          ts: new Date().toISOString()
+        });
       }
       return {
         status: 200,
@@ -1185,13 +1312,55 @@ async function handleWorkerHttpRequest(req, env, sharedStore) {
       return { status: 401, headers, body: JSON.stringify({ ok: false, error: "unauthorized" }) };
     }
     let list = [];
+    let financialLedger = [];
     if (env && env.PUREAI_LICENSES_KV && typeof env.PUREAI_LICENSES_KV.get === "function") {
       try {
         const rawList = await env.PUREAI_LICENSES_KV.get("telemetry:recent_events");
         if (rawList) list = JSON.parse(rawList);
       } catch (_) {}
+      try {
+        const rawLedger = await env.PUREAI_LICENSES_KV.get("finance:ledger_events");
+        if (rawLedger) financialLedger = JSON.parse(rawLedger);
+      } catch (_) {}
     }
-    return { status: 200, headers, body: JSON.stringify({ ok: true, events: list }) };
+    return { status: 200, headers, body: JSON.stringify({ ok: true, events: list, financialLedger }) };
+  }
+
+  if (req.method === "GET" && url.pathname === "/ops-state") {
+    if (!verifyAdminBearerAuth(req, env)) {
+      return { status: 401, headers, body: JSON.stringify({ ok: false, error: "unauthorized" }) };
+    }
+    let state = null;
+    if (env && env.PUREAI_LICENSES_KV && typeof env.PUREAI_LICENSES_KV.get === "function") {
+      try {
+        const rawState = await env.PUREAI_LICENSES_KV.get("ops:autopilot_state");
+        if (rawState) state = JSON.parse(rawState);
+      } catch (_) {}
+    }
+    return { status: 200, headers, body: JSON.stringify({ ok: true, state }) };
+  }
+
+  if (req.method === "POST" && url.pathname === "/ops-state") {
+    if (!verifyAdminBearerAuth(req, env)) {
+      return { status: 401, headers, body: JSON.stringify({ ok: false, error: "unauthorized" }) };
+    }
+    const rawBody = typeof req.text === "function" ? await req.text() : String(req.body || "");
+    if (!rawBody || rawBody.length > 65536) {
+      return { status: 400, headers, body: JSON.stringify({ ok: false, error: "invalid_payload_size" }) };
+    }
+    let parsedState;
+    try {
+      parsedState = JSON.parse(rawBody);
+    } catch (_) {
+      return { status: 400, headers, body: JSON.stringify({ ok: false, error: "invalid_json" }) };
+    }
+    if (!parsedState || typeof parsedState !== "object" || Array.isArray(parsedState)) {
+      return { status: 400, headers, body: JSON.stringify({ ok: false, error: "invalid_state_object" }) };
+    }
+    if (env && env.PUREAI_LICENSES_KV && typeof env.PUREAI_LICENSES_KV.put === "function") {
+      await env.PUREAI_LICENSES_KV.put("ops:autopilot_state", JSON.stringify(parsedState));
+    }
+    return { status: 200, headers, body: JSON.stringify({ ok: true, saved: true }) };
   }
 
   // 3. Endpoint Server-Side de Soporte y Telemetría Opt-In (POST /telemetry | POST /support) para no exponer temas públicos en cliente
@@ -1226,8 +1395,19 @@ async function handleWorkerHttpRequest(req, env, sharedStore) {
       return { status: 403, headers, body: JSON.stringify({ ok: false, error: "forbidden_server_only_event" }) };
     }
     const sanitized = sanitizeClientTelemetryPayload(parsed);
+    const supportMsg =
+      typeof sanitized.msg === "string" && sanitized.msg
+        ? sanitized.msg
+        : typeof parsed.message === "string" && parsed.message
+          ? parsed.message.slice(0, 500)
+          : "";
+    if (supportMsg && !sanitized.msg) sanitized.msg = supportMsg;
+    const isSupportTicket = url.pathname === "/support" || sanitized.type === "user_bug_report" || sanitized.type === "support_inquiry";
+    if (isSupportTicket && !sanitized.type) sanitized.type = "user_bug_report";
+    const triage = isSupportTicket ? classifyWorkerSupportMessage(supportMsg || "") : null;
     const evWithId = {
       ...sanitized,
+      ...(triage ? { triage } : {}),
       id: "kv_" + Date.now() + "_" + Math.random().toString(36).slice(2, 7),
       ts: new Date().toISOString()
     };
@@ -1241,13 +1421,19 @@ async function handleWorkerHttpRequest(req, env, sharedStore) {
         await env.PUREAI_LICENSES_KV.put("telemetry:recent_events", JSON.stringify(list));
       } catch (_) {}
     }
+    if (triage && triage.requiresHumanApproval) {
+      await sendWorkerTelegramAlert(
+        env,
+        "🚨 SOPORTE [" + triage.priority + " / " + triage.category + "]\n• Página: " + (evWithId.page || "web") + "\n• Mensaje: " + String(supportMsg || "(sin detalle)").slice(0, 350) + "\n• Escalado: " + triage.escalationTarget
+      );
+    }
     const ntfyUrl = (env && env.NTFY_SECRET_TOPIC_URL) || "";
     if (ntfyUrl && typeof fetch === "function") {
       try {
-        await fetch(ntfyUrl, { method: "POST", body: JSON.stringify(sanitized) });
+        await fetch(ntfyUrl, { method: "POST", body: JSON.stringify(triage ? { ...sanitized, triage } : sanitized) });
       } catch (_) {}
     }
-    return { status: 200, headers, body: JSON.stringify({ ok: true, relayed: true }) };
+    return { status: 200, headers, body: JSON.stringify(triage ? { ok: true, relayed: true, triage } : { ok: true, relayed: true }) };
   }
 
   if (req.method === "POST" && url.pathname === "/daily-digest") {
@@ -1592,6 +1778,8 @@ async function buildAndSendDailyTelegramDigest(env, options = {}) {
 
   let list = [];
   let storedLifetime = null;
+  let ledgerList = [];
+  let opsState = null;
   if (env && env.PUREAI_LICENSES_KV && typeof env.PUREAI_LICENSES_KV.get === "function") {
     try {
       const rawList = await env.PUREAI_LICENSES_KV.get("telemetry:recent_events");
@@ -1601,10 +1789,19 @@ async function buildAndSendDailyTelegramDigest(env, options = {}) {
       const rawLt = await env.PUREAI_LICENSES_KV.get("telemetry:lifetime_totals");
       if (rawLt) storedLifetime = JSON.parse(rawLt);
     } catch (_) {}
+    try {
+      const rawLedger = await env.PUREAI_LICENSES_KV.get("finance:ledger_events");
+      if (rawLedger) ledgerList = JSON.parse(rawLedger);
+    } catch (_) {}
+    try {
+      const rawOps = await env.PUREAI_LICENSES_KV.get("ops:autopilot_state");
+      if (rawOps) opsState = JSON.parse(rawOps);
+    } catch (_) {}
   }
 
   const last24h = createTelemetryBucket();
   const windowTotal = createTelemetryBucket();
+  let pendingSupportApprovals = 0;
 
   for (const e of list) {
     if (e.channel === "test_verificacion_telegram") continue;
@@ -1612,6 +1809,9 @@ async function buildAndSendDailyTelegramDigest(env, options = {}) {
     const is24h = evMs > 0 && (nowMs - evMs) <= 24 * 3600 * 1000;
     applyEventToTelemetryBucket(windowTotal, e);
     if (is24h) applyEventToTelemetryBucket(last24h, e);
+    if ((e.type === "user_bug_report" || e.type === "support_inquiry") && e.triage && e.triage.requiresHumanApproval) {
+      pendingSupportApprovals++;
+    }
   }
 
   const total = createTelemetryBucket();
@@ -1624,10 +1824,28 @@ async function buildAndSendDailyTelegramDigest(env, options = {}) {
     } catch (_) {}
   }
 
+  let ledgerSalesCount = 0;
+  let ledgerGrossCents = 0;
+  let ledgerRefundsCount = 0;
+  let ledgerDisputesCount = 0;
+  for (const fin of (Array.isArray(ledgerList) ? ledgerList : [])) {
+    if (!fin || !fin.type) continue;
+    if (fin.type === "SALE_MONTHLY" || fin.type === "SALE_ANNUAL" || fin.type === "SALE_PACK_10" || fin.type === "SALE_PACK_50") {
+      ledgerSalesCount++;
+      ledgerGrossCents += Number(fin.amountCents) || 0;
+    } else if (fin.type === "REFUND") {
+      ledgerRefundsCount++;
+    } else if (fin.type === "DISPUTE") {
+      ledgerDisputesCount++;
+    }
+  }
+
   const radarItems = (options.skipRadar || !(env && env.TELEGRAM_BOT_TOKEN)) ? [] : await fetchWorkerTrafficRadar(env);
 
+  const seoPagesCount = opsState && Number.isFinite(Number(opsState.seoPagesCount)) ? Number(opsState.seoPagesCount) : 0;
+  const tgPublishedCount = opsState && opsState.telegraphBySlug ? Object.keys(opsState.telegraphBySlug).length : 0;
   const msgLines = [
-    "🕙 PureAI Studio — Resumen Diario (10:00 AM):",
+    "🕙 PureAI Studio — Informe Ejecutivo Diario (10:00 AM):",
     "",
     "🟢 ÚLTIMAS 24 HORAS (HOY):",
     "• Visitas: " + last24h.visits + " (Interés >15s: " + last24h.engaged15s + ")",
@@ -1637,7 +1855,12 @@ async function buildAndSendDailyTelegramDigest(env, options = {}) {
     "🏛️ HISTÓRICO ACUMULADO (PERMANENTE):",
     "• Visitas: " + total.visits + " (Interés >15s: " + total.engaged15s + ")",
     "• Uso total: " + total.photos + " Fotos/MP4 | " + total.texts + " Textos | " + total.demos + " Demos",
-    "• Paywalls Pro abiertos: " + total.paywalls + " | Clics a Stripe: " + total.checkouts + " | Ventas pagadas: " + total.paidSales
+    "• Paywalls Pro abiertos: " + total.paywalls + " | Clics a Stripe: " + total.checkouts + " | Ventas pagadas: " + total.paidSales,
+    "",
+    "💼 FINOPS PERMANENTE (KV):",
+    "• Ledger Stripe: " + ledgerSalesCount + " ventas (" + (ledgerGrossCents / 100).toFixed(2) + " € bruto) | Reembolsos: " + ledgerRefundsCount + " | Disputas: " + ledgerDisputesCount,
+    "🏢 DEPARTAMENTOS AUTÓNOMOS:",
+    "• Growth/SEO: " + seoPagesCount + " URLs | Telegra.ph únicos: " + tgPublishedCount + " | Soporte humano pendiente: " + pendingSupportApprovals
   ];
 
   if (radarItems.length > 0) {
@@ -1708,6 +1931,9 @@ module.exports = {
   deriveProKeyFromSession,
   createWebhookProcessorStore,
   processStripeWebhookEvent,
+  classifyWorkerSupportMessage,
+  appendFinancialLedgerEvent,
+  buildAndSendDailyTelegramDigest,
   handleWorkerHttpRequest,
   inspectBinaryHeaderForTelegram,
   default: workerDefaultExport

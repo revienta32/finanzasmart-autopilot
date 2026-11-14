@@ -6,7 +6,28 @@ const MAX_POPUP_IMAGE_BYTES = 50 * 1024 * 1024;
 const MAX_POPUP_CANVAS_SIDE = 16384;
 const MAX_POPUP_CANVAS_PIXELS = 67108864;
 let popupProActive = false;
+let popupLicenseRecord = null;
 let popupImgUsed = 0;
+
+function isPopupLicenseActive(lic) {
+  return Boolean(
+    lic &&
+    lic.valid === true &&
+    lic.key &&
+    isValidPopupProLicenseCode(lic.key) &&
+    typeof lic.expiresAt === "number" &&
+    Date.now() <= lic.expiresAt &&
+    (lic.unlimited !== false || (typeof lic.creditsRemaining === "number" && lic.creditsRemaining > 0))
+  );
+}
+
+function renderPopupProButtonLabel(lic) {
+  if (!isPopupLicenseActive(lic)) return "🔑 Activate Pro Key";
+  if (lic.unlimited === false && typeof lic.creditsRemaining === "number") {
+    return "💎 PureAI Pro · " + lic.creditsRemaining + " credits";
+  }
+  return "💎 PureAI Pro Active · Unlimited";
+}
 
 function computePopupKeyChecksumBlock(block4) {
   const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
@@ -50,23 +71,22 @@ function syncPopupStateFromStorage() {
         popupImgUsed = Math.max(0, res.pureai_ext_img_used);
       }
       const lic = res && res.pureai_ext_license_v2;
-      const validCached = Boolean(
-        lic &&
-        lic.valid === true &&
-        lic.key &&
-        isValidPopupProLicenseCode(lic.key) &&
-        typeof lic.expiresAt === "number" &&
-        Date.now() <= lic.expiresAt
-      );
+      const validCached = isPopupLicenseActive(lic);
+      popupLicenseRecord = validCached ? lic : null;
       popupProActive = validCached;
       if (popupProActive && btnActivatePro) {
-        btnActivatePro.textContent = "💎 PureAI Pro Active · Unlimited";
+        btnActivatePro.textContent = renderPopupProButtonLabel(popupLicenseRecord);
       }
       if (validCached && chrome.runtime && typeof chrome.runtime.sendMessage === "function") {
         chrome.runtime.sendMessage({ type: "VERIFY_PUREAI_LICENSE", code: lic.key }, (resp) => {
           if (resp && resp.ok === true && resp.valid === false) {
             popupProActive = false;
+            popupLicenseRecord = null;
             if (btnActivatePro) btnActivatePro.textContent = "🔑 Activate Pro Key";
+          } else if (resp && resp.ok === true && resp.valid === true && resp.record) {
+            popupLicenseRecord = resp.record;
+            popupProActive = isPopupLicenseActive(resp.record);
+            if (btnActivatePro) btnActivatePro.textContent = renderPopupProButtonLabel(resp.record);
           }
         });
       }
@@ -79,9 +99,10 @@ function syncPopupStateFromStorage() {
         }
         if (changes && Object.prototype.hasOwnProperty.call(changes, "pureai_ext_license_v2")) {
           const nl = changes.pureai_ext_license_v2 && changes.pureai_ext_license_v2.newValue;
-          popupProActive = Boolean(nl && nl.valid === true && nl.key && isValidPopupProLicenseCode(nl.key) && typeof nl.expiresAt === "number" && Date.now() <= nl.expiresAt);
+          popupLicenseRecord = isPopupLicenseActive(nl) ? nl : null;
+          popupProActive = Boolean(popupLicenseRecord);
           if (btnActivatePro) {
-            btnActivatePro.textContent = popupProActive ? "💎 PureAI Pro Active · Unlimited" : "🔑 Activate Pro Key";
+            btnActivatePro.textContent = renderPopupProButtonLabel(popupLicenseRecord);
           }
         }
       });
@@ -102,9 +123,12 @@ if (btnActivatePro) {
     if (typeof chrome !== "undefined" && chrome.runtime && typeof chrome.runtime.sendMessage === "function") {
       chrome.runtime.sendMessage({ type: "VERIFY_PUREAI_LICENSE", code: rawKey.trim() }, (resp) => {
         if (resp && resp.valid === true) {
-          popupProActive = true;
-          btnActivatePro.textContent = "💎 PureAI Pro Active · Unlimited";
-          imgStatus.textContent = "🎉 PureAI Pro verified! Unlimited image cleans unlocked.";
+          popupLicenseRecord = resp.record || null;
+          popupProActive = isPopupLicenseActive(popupLicenseRecord);
+          btnActivatePro.textContent = renderPopupProButtonLabel(popupLicenseRecord);
+          imgStatus.textContent = popupLicenseRecord && popupLicenseRecord.unlimited === false
+            ? "🎉 PureAI Pro verified! " + popupLicenseRecord.creditsRemaining + " pack credits available."
+            : "🎉 PureAI Pro verified! Unlimited image cleans unlocked.";
           imgStatus.style.color = "#34d399";
         } else {
           imgStatus.textContent = "⚠️ License could not be verified as active on Stripe.";
@@ -186,7 +210,7 @@ imgInput.addEventListener("change", async (e) => {
   img.src = loadedObjUrl;
 });
 
-btnCleanImg.addEventListener("click", () => {
+btnCleanImg.addEventListener("click", async () => {
   if (!loadedImg || !loadedFile) return;
   const nw = Number(loadedImg.naturalWidth) || 0;
   const nh = Number(loadedImg.naturalHeight) || 0;
@@ -195,12 +219,47 @@ btnCleanImg.addEventListener("click", () => {
     const storedUsed = Math.max(0, parseInt(localStorage.getItem("pureai_ext_img_used") || "0", 10) || 0);
     if (storedUsed > popupImgUsed) popupImgUsed = storedUsed;
   } catch (_) {}
-  if (!popupProActive && popupImgUsed >= MAX_FREE_POPUP_IMG) {
-    imgStatus.textContent = "🔒 Free popup clean used. Grab a €2.99 (10-File) or €9.90 (50-File) Pack below!";
-    imgStatus.style.color = "#fbbf24";
-    return;
-  }
-  if (!popupProActive) {
+  if (popupProActive && popupLicenseRecord && popupLicenseRecord.unlimited === false) {
+    if (typeof chrome !== "undefined" && chrome.runtime && typeof chrome.runtime.sendMessage === "function") {
+      const consumeResp = await new Promise((resolve) => {
+        chrome.runtime.sendMessage({ type: "CONSUME_PUREAI_CREDIT", count: 1 }, (r) => resolve(r || {}));
+      });
+      if (!consumeResp || !consumeResp.ok) {
+        popupProActive = false;
+        popupLicenseRecord = null;
+        if (btnActivatePro) btnActivatePro.textContent = "🔑 Activate Pro Key";
+        imgStatus.textContent = "🔒 Pack credits used up. Grab a €2.99 (10-File) or €9.90 (50-File) Pack below!";
+        imgStatus.style.color = "#fbbf24";
+        return;
+      }
+      if (typeof consumeResp.creditsRemaining === "number") {
+        popupLicenseRecord.creditsRemaining = consumeResp.creditsRemaining;
+        if (consumeResp.creditsRemaining <= 0) {
+          popupProActive = false;
+          popupLicenseRecord = null;
+        }
+        if (btnActivatePro) btnActivatePro.textContent = renderPopupProButtonLabel(popupLicenseRecord);
+      }
+    }
+  } else if (!popupProActive) {
+    if (popupImgUsed >= MAX_FREE_POPUP_IMG) {
+      imgStatus.textContent = "🔒 Free popup clean used. Grab a €2.99 (10-File) or €9.90 (50-File) Pack below!";
+      imgStatus.style.color = "#fbbf24";
+      return;
+    }
+    if (typeof chrome !== "undefined" && chrome.runtime && typeof chrome.runtime.sendMessage === "function") {
+      const fqResp = await new Promise((resolve) => {
+        chrome.runtime.sendMessage({ type: "CHECK_PUREAI_FREE_QUOTA", consume: true }, (r) => resolve(r || { allowed: true }));
+      });
+      if (fqResp && fqResp.allowed === false) {
+        popupImgUsed = MAX_FREE_POPUP_IMG;
+        try { localStorage.setItem("pureai_ext_img_used", String(popupImgUsed)); } catch (_) {}
+        chrome.storage.local.set({ pureai_ext_img_used: popupImgUsed });
+        imgStatus.textContent = "🔒 Free popup clean used. Grab a €2.99 (10-File) or €9.90 (50-File) Pack below!";
+        imgStatus.style.color = "#fbbf24";
+        return;
+      }
+    }
     popupImgUsed += 1;
     try {
       localStorage.setItem("pureai_ext_img_used", String(popupImgUsed));
@@ -230,7 +289,9 @@ btnCleanImg.addEventListener("click", () => {
       a.click();
       setTimeout(() => URL.revokeObjectURL(dlUrl), 3000);
       imgStatus.textContent = popupProActive
-        ? "✅ Downloaded 100% clean JPEG (Pro Unlimited)."
+        ? (popupLicenseRecord && popupLicenseRecord.unlimited === false
+          ? "✅ Downloaded 100% clean JPEG (" + popupLicenseRecord.creditsRemaining + " credits left)."
+          : "✅ Downloaded 100% clean JPEG (Pro Unlimited).")
         : `✅ Downloaded clean JPEG (${Math.min(MAX_FREE_POPUP_IMG, popupImgUsed)}/${MAX_FREE_POPUP_IMG} free used).`;
       imgStatus.style.color = "#34d399";
     },

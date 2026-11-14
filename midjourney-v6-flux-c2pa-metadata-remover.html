@@ -96,6 +96,69 @@
         } catch (_) {}
         return false;
       }
+      function consumeSeoQuotaOrPro(isPro, used, onAllowed) {
+        if (typeof fetch !== "function") {
+          try { if (!isPro) localStorage.setItem("pureai_img_used", String(used + 1)); } catch (_) {}
+          onAllowed();
+          return;
+        }
+        if (isPro) {
+          try {
+            var raw = localStorage.getItem("pureai_sub_record_v2");
+            var rec = raw ? JSON.parse(raw) : null;
+            if (!rec || rec.unlimited !== false) {
+              onAllowed();
+              return;
+            }
+            var key = String(rec.stripeSessionId || rec.key || "").trim();
+            var opId = "seo_" + Date.now() + "_" + Math.random().toString(36).slice(2, 8);
+            fetch("https://pureai-stripe-webhook.pureaistudio-app.workers.dev/consume-credit", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ code: key, count: 1, opId: opId })
+            }).then(function (r) { return r.json().then(function (d) { return { s: r.status, d: d }; }); })
+              .then(function (res) {
+                if (res.s === 200 && res.d && res.d.ok) {
+                  if (typeof res.d.creditsRemaining === "number") {
+                    rec.creditsRemaining = res.d.creditsRemaining;
+                    if (rec.creditsRemaining <= 0) rec.status = "EXPIRED";
+                    try { localStorage.setItem("pureai_sub_record_v2", JSON.stringify(rec)); } catch (_) {}
+                  }
+                  onAllowed();
+                } else {
+                  try {
+                    localStorage.removeItem("pureai_sub_record_v2");
+                    localStorage.removeItem("pureai_studio_pro");
+                  } catch (_) {}
+                  var stEl = document.getElementById("quick-img-status");
+                  if (stEl) stEl.innerHTML = "🔒 <strong>Pack credits exhausted.</strong> <a href='https://buy.stripe.com/9B6cN6e669uZ4vmeTE0000f' target='_blank' rel='noopener noreferrer' style='color:#00e5a3;font-weight:900;'>Unlock 10-File Pass (€2.99 one-time) →</a>";
+                }
+              }).catch(function () { onAllowed(); });
+            return;
+          } catch (_) { onAllowed(); return; }
+        }
+        fetch("https://pureai-stripe-webhook.pureaistudio-app.workers.dev/check-free-quota", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ consume: true })
+        }).then(function (r) { return r.json(); })
+          .then(function (q) {
+            if (q && q.allowed === false) {
+              try { localStorage.setItem("pureai_img_used", String(q.used || 1)); } catch (_) {}
+              if (typeof window.sendPureAiAnalyticsEvent === "function") {
+                window.sendPureAiAnalyticsEvent({ type: "app_action", event_name: "paywall_viewed", trigger_tool: "img_c2pa_scrubber", usedCredits: q.used || 1 });
+              }
+              var stEl = document.getElementById("quick-img-status");
+              if (stEl) stEl.innerHTML = "🔒 <strong>1/1 free photo used.</strong> <a href='https://buy.stripe.com/9B6cN6e669uZ4vmeTE0000f' target='_blank' rel='noopener noreferrer' style='color:#00e5a3;font-weight:900;'>Unlock 10-File Pass (€2.99 one-time) →</a> · <a href='https://buy.stripe.com/3cIdRae66bD74vm6n80000g' target='_blank' rel='noopener noreferrer' style='color:#e9d5ff;font-weight:900;'>50 Files + Batch .ZIP (€9.90) →</a>";
+              return;
+            }
+            try { localStorage.setItem("pureai_img_used", String(used + 1)); } catch (_) {}
+            onAllowed();
+          }).catch(function () {
+            try { localStorage.setItem("pureai_img_used", String(used + 1)); } catch (_) {}
+            onAllowed();
+          });
+      }
       function quickCleanImg(file) {
         if (!file || !file.size) return;
         var st = document.getElementById("quick-img-status");
@@ -115,41 +178,42 @@
           st.innerHTML = "🔒 <strong>1/1 free photo used.</strong> <a href='https://buy.stripe.com/9B6cN6e669uZ4vmeTE0000f' target='_blank' rel='noopener noreferrer' style='color:#00e5a3;font-weight:900;'>Unlock 10-File Pass (€2.99 one-time) →</a> · <a href='https://buy.stripe.com/3cIdRae66bD74vm6n80000g' target='_blank' rel='noopener noreferrer' style='color:#e9d5ff;font-weight:900;'>50 Files + Batch .ZIP (€9.90) →</a>";
           return;
         }
-        try { if (!isPro) localStorage.setItem("pureai_img_used", String(used + 1)); } catch (_) {}
-        st.textContent = "⏳ Scanning & stripping C2PA / EXIF binary containers...";
-        var img = new Image();
-        var objUrl = URL.createObjectURL(file);
-        img.onload = function () {
-          if (URL.revokeObjectURL) URL.revokeObjectURL(objUrl);
-          var nw = Number(img.naturalWidth) || 512, nh = Number(img.naturalHeight) || 512;
-          if (nw > 16384 || nh > 16384 || (nw * nh) > 67108864) {
-            st.textContent = "⚠️ Image pixel dimensions exceed browser safety limit (max 16384px / 67 MP).";
-            return;
-          }
-          var c = document.getElementById("quick-canvas");
-          c.width = nw;
-          c.height = nh;
-          var ctx = c.getContext("2d");
-          ctx.drawImage(img, 0, 0);
-          var d = ctx.getImageData(0, 0, c.width, c.height);
-          for (var i = 0; i < d.data.length; i += 16) {
-            d.data[i] = d.data[i] > 250 ? d.data[i] - 1 : d.data[i] + 1;
-          }
-          ctx.putImageData(d, 0, 0);
-          c.toBlob(function (blob) {
-            var a = document.createElement("a");
-            var cleanName = file.name.replace(/\.[^.]+$/, "") + "-clean.jpg";
-            a.href = URL.createObjectURL(blob);
-            a.download = cleanName;
-            a.click();
-            if (typeof window.sendPureAiAnalyticsEvent === "function") {
-              window.sendPureAiAnalyticsEvent({ type: "app_action", event_name: "tool_completed", tool_id: "img_c2pa_scrubber", isDemo: false });
+        consumeSeoQuotaOrPro(isPro, used, function () {
+          st.textContent = "⏳ Scanning & stripping C2PA / EXIF binary containers...";
+          var img = new Image();
+          var objUrl = URL.createObjectURL(file);
+          img.onload = function () {
+            if (URL.revokeObjectURL) URL.revokeObjectURL(objUrl);
+            var nw = Number(img.naturalWidth) || 512, nh = Number(img.naturalHeight) || 512;
+            if (nw > 16384 || nh > 16384 || (nw * nh) > 67108864) {
+              st.textContent = "⚠️ Image pixel dimensions exceed browser safety limit (max 16384px / 67 MP).";
+              return;
             }
-            st.innerHTML = "✅ <strong>" + escapeSeoHtml(cleanName) + " downloaded (0% C2PA / 0% EXIF)!</strong> (" + (isPro ? "Pro Active" : "1/1 free used") + ") — <a href='clean-ai-studio.html' style='color:#fcd34d;font-weight:800;'>Unlock 10-File Pass (€2.99) or 50 Files + Batch .ZIP (€9.90) →</a>";
-          }, "image/jpeg", 0.95);
-        };
-        img.onerror = function () { if (URL.revokeObjectURL) URL.revokeObjectURL(objUrl); };
-        img.src = objUrl;
+            var c = document.getElementById("quick-canvas");
+            c.width = nw;
+            c.height = nh;
+            var ctx = c.getContext("2d");
+            ctx.drawImage(img, 0, 0);
+            var d = ctx.getImageData(0, 0, c.width, c.height);
+            for (var i = 0; i < d.data.length; i += 16) {
+              d.data[i] = d.data[i] > 250 ? d.data[i] - 1 : d.data[i] + 1;
+            }
+            ctx.putImageData(d, 0, 0);
+            c.toBlob(function (blob) {
+              var a = document.createElement("a");
+              var cleanName = file.name.replace(/\.[^.]+$/, "") + "-clean.jpg";
+              a.href = URL.createObjectURL(blob);
+              a.download = cleanName;
+              a.click();
+              if (typeof window.sendPureAiAnalyticsEvent === "function") {
+                window.sendPureAiAnalyticsEvent({ type: "app_action", event_name: "tool_completed", tool_id: "img_c2pa_scrubber", isDemo: false });
+              }
+              st.innerHTML = "✅ <strong>" + escapeSeoHtml(cleanName) + " downloaded (0% C2PA / 0% EXIF)!</strong> (" + (isPro ? "Pro Active" : "1/1 free used") + ") — <a href='clean-ai-studio.html' style='color:#fcd34d;font-weight:800;'>Unlock 10-File Pass (€2.99) or 50 Files + Batch .ZIP (€9.90) →</a>";
+            }, "image/jpeg", 0.95);
+          };
+          img.onerror = function () { if (URL.revokeObjectURL) URL.revokeObjectURL(objUrl); };
+          img.src = objUrl;
+        });
       }
       </script>
       

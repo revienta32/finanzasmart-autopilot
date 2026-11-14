@@ -2029,7 +2029,323 @@ assert(cleanAiHtml.includes("terms.html") && cleanAiHtml.includes("Art. 103.m TR
     global.fetch = prevGlobalFetch;
   }
 
-  console.log("✅ QA TEST SUITE PASSED (21 SECCIONES / 290+ ASERCIONES): 100% E2E VM + Escala de Tráfico Automática (Certificado Forense PNG + Embed Scanner + Matriz 50 Tools 10 Idiomas + RSS feed.xml + Bot Público Telegram) + Hybrid Credit Packs + Anti-Bypass + Ciberseguridad verificadas sin errores.");
+  // 22. GOBERNANZA CORPORATIVA (PLUGIN ISOLADO), SEPARACIÓN ADMIN_DIGEST_TOKEN, LEDGER KV PERMANENTE, TRIAJE SOPORTE Y CERO DUPLICADOS
+  // 22a. Validación CI-safe del plugin aislado ~/.gemini/config/plugins/pureai-company y sus guardrails
+  const osMod = require("os");
+  const { spawnSync } = require("child_process");
+  const pluginRoot = path.join(osMod.homedir(), ".gemini", "config", "plugins", "pureai-company");
+  if (fs.existsSync(pluginRoot)) {
+    const pjRaw = fs.readFileSync(path.join(pluginRoot, "plugin.json"), "utf8");
+    const pj = JSON.parse(pjRaw);
+    const allowedPjKeys = new Set(["name", "displayName", "version", "description", "logo", "author", "homepage", "suggestedPrompts"]);
+    assert.strictEqual(pj.name, "pureai-company", "GOV-01: plugin.json debe declararse con name='pureai-company'");
+    assert(Object.keys(pj).length <= 10 && Object.keys(pj).every((k) => allowedPjKeys.has(k)), "GOV-01b: plugin.json debe cumplir el esquema compacto de manifest sin campos extraños");
+
+    const agentFiles = fs.readdirSync(path.join(pluginRoot, "agents")).filter((f) => f.endsWith(".md"));
+    assert.strictEqual(agentFiles.length, 6, "GOV-02: Deben existir exactamente 6 subagentes departamentales en pureai-company/agents");
+    const qaSecOpsMd = fs.readFileSync(path.join(pluginRoot, "agents", "qa-secops.md"), "utf8");
+    assert(
+      qaSecOpsMd.includes("subagent: true") &&
+      qaSecOpsMd.includes("mainAgent: false") &&
+      !qaSecOpsMd.includes("write_file") &&
+      !qaSecOpsMd.includes("edit_file"),
+      "GOV-02b: qa-secops debe estar restringido a solo-lectura/auditoría sin write_file ni edit_file"
+    );
+
+    const skillDirs = fs.readdirSync(path.join(pluginRoot, "skills")).filter((d) =>
+      fs.existsSync(path.join(pluginRoot, "skills", d, "SKILL.md"))
+    );
+    assert.strictEqual(skillDirs.length, 7, "GOV-03: Deben existir 7 manuales SKILL.md (1 CEO + 6 departamentos)");
+
+    const agentsRuleTxt = fs.readFileSync(path.join(pluginRoot, "rules", "AGENTS.md"), "utf8");
+    assert(!agentsRuleTxt.trimStart().startsWith("---"), "GOV-04: rules/AGENTS.md no debe llevar frontmatter YAML");
+
+    const hookScript = path.join(pluginRoot, "scripts", "guardrail-hook.js");
+    const runGuardHook = (payload) => {
+      const sp = spawnSync(process.execPath, [hookScript], { input: JSON.stringify(payload), encoding: "utf8" });
+      assert.strictEqual(sp.status, 0, "guardrail-hook.js debe terminar con exit code 0");
+      return JSON.parse(String(sp.stdout || "{}").trim() || "{}");
+    };
+    const denyEnvRes = runGuardHook({
+      hookEventName: "PreToolUse",
+      cwd: __dirname,
+      toolCall: { name: "write_file", args: { Path: path.join(__dirname, ".env") } }
+    });
+    assert.strictEqual(denyEnvRes.decision, "deny", "HOOK-01: guardrail-hook debe bloquear escribir .env en el repositorio público");
+
+    const denyGitAddAll = runGuardHook({
+      hookEventName: "PreToolUse",
+      cwd: __dirname,
+      toolCall: { name: "run_command", args: { CommandLine: "git add ." } }
+    });
+    assert.strictEqual(denyGitAddAll.decision, "deny", "HOOK-02: guardrail-hook debe bloquear 'git add .' en el repositorio público");
+
+    const allowExplicitAdd = runGuardHook({
+      hookEventName: "PreToolUse",
+      cwd: __dirname,
+      toolCall: { name: "run_command", args: { CommandLine: "git add index.html" } }
+    });
+    assert.strictEqual(allowExplicitAdd.decision, "allow", "HOOK-03: guardrail-hook debe permitir 'git add <ruta-explícita>'");
+  }
+
+  // 22b. Separación estricta ADMIN_DIGEST_TOKEN, Ledger KV permanente, alertas Telegram y Triaje /support
+  const s22Store = webhookEngine.createWebhookProcessorStore();
+  const s22KvMap = new Map();
+  const s22Kv = {
+    async get(k) { return s22KvMap.has(k) ? s22KvMap.get(k) : null; },
+    async put(k, v) { s22KvMap.set(k, String(v)); }
+  };
+  const s22WebhookSecret = "whsec_s22_stripe_only_secret";
+  const s22AdminToken = "adm_s22_strict_admin_bearer_token";
+  const s22Env = {
+    STRIPE_WEBHOOK_SECRET: s22WebhookSecret,
+    ADMIN_DIGEST_TOKEN: s22AdminToken,
+    TELEGRAM_BOT_TOKEN: "123456:S22_TEST_ADMIN_BOT",
+    TELEGRAM_CHAT_ID: "999888777",
+    PUREAI_LICENSES_KV: s22Kv
+  };
+  const signS22Stripe = (evtObj) => {
+    const raw = JSON.stringify(evtObj);
+    const ts = Math.floor(Date.now() / 1000);
+    const sig = crypto.createHmac("sha256", s22WebhookSecret).update(`${ts}.${raw}`).digest("hex");
+    return { raw, header: `t=${ts},v1=${sig}` };
+  };
+
+  const s22TgMessages = [];
+  const s22PrevFetch = global.fetch;
+  global.fetch = async (reqUrl, opts) => {
+    const u = String(reqUrl);
+    if (u.includes("api.telegram.org") && u.includes("/sendMessage")) {
+      s22TgMessages.push(JSON.parse((opts && opts.body) || "{}").text || "");
+      return { ok: true, json: async () => ({ ok: true }) };
+    }
+    return { ok: true, json: async () => ({ ok: true }) };
+  };
+  try {
+    // Autenticación admin estricta: STRIPE_WEBHOOK_SECRET rechazado (401), ADMIN_DIGEST_TOKEN aceptado (200)
+    const adminCheckCases = [
+      { method: "GET", path: "/telemetry", body: "" },
+      { method: "POST", path: "/daily-digest", body: JSON.stringify({ force: true, skipRadar: true }) },
+      { method: "GET", path: "/ops-state", body: "" },
+      { method: "POST", path: "/ops-state", body: JSON.stringify({ seoPagesCount: 77, telegraphBySlug: { "mi-guia": { url: "https://telegra.ph/mi-guia" } }, repliedSocialIds: ["t3_s22_ok"] }) }
+    ];
+    for (const tc of adminCheckCases) {
+      const rBad = await webhookEngine.handleWorkerHttpRequest(
+        {
+          method: tc.method,
+          url: "https://api.pureaistudios.com" + tc.path,
+          headers: { get: (h) => (String(h).toLowerCase() === "authorization" ? `Bearer ${s22WebhookSecret}` : "") },
+          text: async () => tc.body
+        },
+        s22Env,
+        s22Store
+      );
+      assert.strictEqual(rBad.status, 401, `SEC-AUTH-01: ${tc.method} ${tc.path} debe rechazar STRIPE_WEBHOOK_SECRET con HTTP 401`);
+
+      const rOk = await webhookEngine.handleWorkerHttpRequest(
+        {
+          method: tc.method,
+          url: "https://api.pureaistudios.com" + tc.path,
+          headers: { get: (h) => (String(h).toLowerCase() === "authorization" ? `Bearer ${s22AdminToken}` : "") },
+          text: async () => tc.body
+        },
+        s22Env,
+        s22Store
+      );
+      assert.strictEqual(rOk.status, 200, `SEC-AUTH-02: ${tc.method} ${tc.path} debe aceptar ADMIN_DIGEST_TOKEN con HTTP 200`);
+    }
+
+    const rOpsGet = await webhookEngine.handleWorkerHttpRequest(
+      {
+        method: "GET",
+        url: "https://api.pureaistudios.com/ops-state",
+        headers: { get: (h) => (String(h).toLowerCase() === "authorization" ? `Bearer ${s22AdminToken}` : "") }
+      },
+      s22Env,
+      s22Store
+    );
+    const opsGetBody = JSON.parse(rOpsGet.body);
+    assert(opsGetBody.ok && opsGetBody.state && opsGetBody.state.seoPagesCount === 77 && opsGetBody.state.telegraphBySlug["mi-guia"], "OPS-STATE-01: GET /ops-state debe recuperar el estado persistido por POST /ops-state");
+
+    // Ledger financiero KV permanente + alertas Stripe + MRR=0 en Pack 10 + invoice.paid subscription_create vs subscription_cycle
+    const s22NowSec = Math.floor(Date.now() / 1000);
+    const postS22Webhook = (evt) => {
+      const signed = signS22Stripe(evt);
+      return webhookEngine.handleWorkerHttpRequest(
+        {
+          method: "POST",
+          url: "https://api.pureaistudios.com/webhook/stripe",
+          headers: { get: (h) => (String(h).toLowerCase() === "stripe-signature" ? signed.header : "") },
+          text: async () => signed.raw
+        },
+        s22Env,
+        s22Store
+      );
+    };
+
+    const p10HookRes = await postS22Webhook({
+      id: "evt_s22_pack10_01",
+      type: "checkout.session.completed",
+      created: s22NowSec,
+      data: { object: { id: "cs_live_s22_pack10_test_0001", customer: "cus_s22_pack10", payment_link: "plink_1UbbsAJGMJW2ESycP7cZbuRv", mode: "payment", payment_status: "paid", amount_total: 299, currency: "eur" } }
+    });
+    assert.strictEqual(p10HookRes.status, 200, "FIN-KV-01: checkout.session.completed de Pack 10 debe procesarse con 200");
+
+    const subCreateHookRes = await postS22Webhook({
+      id: "evt_s22_sub_annual_01",
+      type: "checkout.session.completed",
+      created: s22NowSec + 5,
+      data: { object: { id: "cs_live_s22_annual_test_0001", customer: "cus_s22_sub", payment_intent: "pi_s22_sub_01", mode: "subscription", payment_status: "paid", amount_total: 3900, currency: "eur" } }
+    });
+    assert.strictEqual(subCreateHookRes.status, 200);
+
+    await postS22Webhook({
+      id: "evt_s22_inv_create_01",
+      type: "invoice.paid",
+      created: s22NowSec + 10,
+      data: { object: { id: "in_s22_create_01", customer: "cus_s22_sub", billing_reason: "subscription_create", amount_paid: 3900 } }
+    });
+    const ledgerMid = JSON.parse((await s22Kv.get("finance:ledger_events")) || "[]");
+    assert(!ledgerMid.some((e) => String(e.id || "").startsWith("inv_")), "FIN-KV-02: invoice.paid con billing_reason='subscription_create' NO debe duplicar ingreso en el ledger");
+
+    await postS22Webhook({
+      id: "evt_s22_inv_cycle_01",
+      type: "invoice.paid",
+      created: s22NowSec + 20,
+      data: { object: { id: "in_s22_cycle_01", customer: "cus_s22_sub", billing_reason: "subscription_cycle", amount_paid: 3900 } }
+    });
+    await postS22Webhook({
+      id: "evt_s22_refund_01",
+      type: "charge.refunded",
+      created: s22NowSec + 30,
+      data: { object: { id: "ch_s22_ref_01", customer: "cus_s22_sub", payment_intent: "pi_s22_sub_01", amount_refunded: 3900 } }
+    });
+    await postS22Webhook({
+      id: "evt_s22_dispute_01",
+      type: "charge.dispute.created",
+      created: s22NowSec + 40,
+      data: { object: { id: "dp_s22_disp_01", customer: "cus_s22_pack10", reason: "fraudulent", amount: 299 } }
+    });
+
+    const ledgerFinal = JSON.parse((await s22Kv.get("finance:ledger_events")) || "[]");
+    const pack10LedgerEv = ledgerFinal.find((e) => e.type === "SALE_PACK_10");
+    assert(pack10LedgerEv, "FIN-KV-03: SALE_PACK_10 debe persistirse en finance:ledger_events");
+    assert(ledgerFinal.some((e) => String(e.id || "").startsWith("inv_") && e.billingReason === "subscription_cycle"), "FIN-KV-04: invoice.paid con subscription_cycle sí debe registrarse en el ledger");
+    assert(ledgerFinal.some((e) => e.type === "REFUND"), "FIN-KV-05: charge.refunded debe persistirse como REFUND en KV");
+    assert(ledgerFinal.some((e) => e.type === "DISPUTE"), "FIN-KV-06: charge.dispute.created debe persistirse como DISPUTE en KV");
+    assert(s22TgMessages.some((m) => m.includes("REEMBOLSO / CLAWBACK")), "TG-ALERT-01: Reembolso Stripe debe enviar alerta instantánea a Telegram");
+    assert(s22TgMessages.some((m) => m.includes("DISPUTA / CHARGEBACK")), "TG-ALERT-02: Disputa Stripe debe enviar alerta instantánea a Telegram");
+
+    const packOnlyDigest = autoDoctor.generateAutomatedFinancialDigest([pack10LedgerEv]);
+    assert.strictEqual(packOnlyDigest.normalizedMrrCents, 0, "FIN-MRR-01: Los packs prepago (SALE_PACK_10) no deben sumar al MRR recurrente");
+
+    // Triaje determinista POST /support y escalado instantáneo únicamente ante tickets prioritarios
+    const tgBeforeSupport = s22TgMessages.length;
+    const faqSupportRes = await webhookEngine.handleWorkerHttpRequest(
+      {
+        method: "POST",
+        url: "https://api.pureaistudios.com/support",
+        headers: { get: (h) => (String(h).toLowerCase() === "origin" ? "https://pureaistudios.com" : "") },
+        text: async () => JSON.stringify({ type: "support_inquiry", message: "How do I use the offline photo cleaner?" })
+      },
+      s22Env,
+      s22Store
+    );
+    const faqSupportBody = JSON.parse(faqSupportRes.body);
+    assert.strictEqual(faqSupportRes.status, 200);
+    assert.strictEqual(faqSupportBody.triage.requiresHumanApproval, false, "SUP-01: Duda rutinaria FAQ debe auto-triarse con requiresHumanApproval=false");
+    assert.strictEqual(s22TgMessages.length, tgBeforeSupport, "SUP-01b: Duda rutinaria no debe generar ruido instantáneo en Telegram");
+
+    const urgentSupportRes = await webhookEngine.handleWorkerHttpRequest(
+      {
+        method: "POST",
+        url: "https://api.pureaistudios.com/support",
+        headers: { get: (h) => (String(h).toLowerCase() === "origin" ? "https://pureaistudios.com" : "") },
+        text: async () => JSON.stringify({ type: "support_inquiry", message: "I was double charged on Stripe and need a refund now" })
+      },
+      s22Env,
+      s22Store
+    );
+    const urgentSupportBody = JSON.parse(urgentSupportRes.body);
+    assert.strictEqual(urgentSupportRes.status, 200);
+    assert.strictEqual(urgentSupportBody.triage.requiresHumanApproval, true, "SUP-02: Reembolso/doble cobro debe escalarse con requiresHumanApproval=true");
+    assert.strictEqual(s22TgMessages.length, tgBeforeSupport + 1, "SUP-02b: Ticket urgente debe enviar alerta instantánea a Telegram");
+    assert(s22TgMessages[s22TgMessages.length - 1].includes("🚨 SOPORTE"), "SUP-02c: La alerta debe usar el prefijo 🚨 SOPORTE");
+  } finally {
+    global.fetch = s22PrevFetch;
+  }
+
+  // 22c. Cero duplicados en Telegra.ph normalizados sin tildes y contratos de Extensión v1.2.5 / Matriz / Landings
+  const autopilotCeo = require("./autopilot-ceo.js");
+  assert.strictEqual(
+    autopilotCeo.normalizeSlugMatch("C2PA: Guía rápida (iPhone 16)"),
+    autopilotCeo.normalizeSlugMatch("c2pa guia rapida iphone 16"),
+    "DEDUP-01: normalizeSlugMatch debe colapsar tildes, mayúsculas y puntuación"
+  );
+  const s22TgMap = {};
+  let telegraphCreatePageCalls = 0;
+  const tgFetchPrev = global.fetch;
+  global.fetch = async (reqUrl, opts) => {
+    const u = String(reqUrl);
+    if (u.includes("createAccount")) {
+      return { ok: true, json: async () => ({ ok: true, result: { access_token: "tok_s22_test" } }) };
+    }
+    if (u.includes("createPage")) {
+      telegraphCreatePageCalls++;
+      const body = JSON.parse((opts && opts.body) || "{}");
+      return { ok: true, json: async () => ({ ok: true, result: { url: "https://telegra.ph/" + autopilotCeo.normalizeSlugMatch(body.title || "art") + "-11-14" } }) };
+    }
+    return { ok: true, json: async () => ({ ok: true, result: {} }) };
+  };
+  try {
+    const firstBatchUrls = await autopilotCeo.publishTelegraphArticles([], s22TgMap);
+    assert.strictEqual(telegraphCreatePageCalls, 5, "DEDUP-02a: La primera ejecución debe publicar los 5 artículos canónicos");
+    assert.strictEqual(Object.keys(s22TgMap).length, 5, "DEDUP-02b: telegraphBySlug debe quedar indexado con los 5 slugs canónicos");
+
+    telegraphCreatePageCalls = 0;
+    await autopilotCeo.publishTelegraphArticles([], s22TgMap);
+    assert.strictEqual(telegraphCreatePageCalls, 0, "DEDUP-02c: Re-ejecutar con telegraphBySlug poblado debe emitir exactamente 0 llamadas createPage");
+
+    telegraphCreatePageCalls = 0;
+    const accentedPrevUrls = firstBatchUrls.map((u) => u.replace("como-", "C%C3%B3mo-").replace("anadir-", "a%C3%B1adir-"));
+    await autopilotCeo.publishTelegraphArticles(accentedPrevUrls, {});
+    assert.strictEqual(telegraphCreatePageCalls, 0, "DEDUP-02d: Con URLs previas con tildes o encodeURI (sin mapa) debe seguir emitiendo 0 llamadas createPage");
+  } finally {
+    global.fetch = tgFetchPrev;
+  }
+
+  const extManifest = JSON.parse(fs.readFileSync(path.join(__dirname, "chrome-extension-pureai", "manifest.json"), "utf8"));
+  const extBgCode = fs.readFileSync(path.join(__dirname, "chrome-extension-pureai", "background.js"), "utf8");
+  const extPopupCode = fs.readFileSync(path.join(__dirname, "chrome-extension-pureai", "popup.js"), "utf8");
+  assert.strictEqual(extManifest.version, "1.2.5", "EXT-V125: manifest.json debe reflejar la versión endurecida 1.2.5");
+  assert(
+    extBgCode.includes("CONSUME_PUREAI_CREDIT") &&
+    extBgCode.includes("CHECK_PUREAI_FREE_QUOTA") &&
+    extPopupCode.includes("CONSUME_PUREAI_CREDIT") &&
+    extPopupCode.includes("CHECK_PUREAI_FREE_QUOTA"),
+    "EXT-V125b: background.js y popup.js deben integrar consumo real de créditos y cuota gratuita server-side"
+  );
+
+  const growthMatrixSrc = fs.readFileSync(path.join(__dirname, "growth-matrix-engine.js"), "utf8");
+  assert(
+    growthMatrixSrc.includes("__mtxCheckAndConsumeQuota") &&
+    growthMatrixSrc.includes("pureai_img_used") &&
+    growthMatrixSrc.includes("video_c2pa_scrubber"),
+    "MTX-QUOTA-01: growth-matrix-engine.js debe unificar __mtxCheckAndConsumeQuota y cuota pureai_img_used incluyendo vídeo MP4"
+  );
+  for (const hardenedHtml of [
+    "free-c2pa-chatgpt-watermark-inspector-online.html",
+    "quitar-etiqueta-hecho-con-ia-instagram-tiktok-fotos.html",
+    "remove-made-with-ai-label-instagram-tiktok-c2pa.html"
+  ]) {
+    const htmlTxt = fs.readFileSync(path.join(__dirname, hardenedHtml), "utf8");
+    assert(
+      htmlTxt.includes("/consume-credit") && htmlTxt.includes("/check-free-quota"),
+      `HTML-QUOTA-01: ${hardenedHtml} debe validar /consume-credit y /check-free-quota antes de exportar`
+    );
+  }
+
+  console.log("✅ QA TEST SUITE PASSED (22 SECCIONES / 315+ ASERCIONES): 100% E2E VM + Gobernanza Corporativa (Plugin & Guardrails) + Separación ADMIN_DIGEST_TOKEN + Ledger KV Permanente + Triaje Soporte + Cero Duplicados + Hybrid Credit Packs + Anti-Bypass + Ciberseguridad verificadas sin errores.");
 })();
 
 

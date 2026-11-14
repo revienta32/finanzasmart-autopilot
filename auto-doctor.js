@@ -11,11 +11,25 @@
 const fs = require("fs");
 const path = require("path");
 
+const PRIVATE_OPS_DIR = path.join(process.env.USERPROFILE || process.env.HOME || __dirname, ".gemini", "pureai-private-ops");
+try { fs.mkdirSync(PRIVATE_OPS_DIR, { recursive: true }); } catch (_) {}
+(function loadPrivateEnvIfPresent() {
+  try {
+    const envPath = path.join(PRIVATE_OPS_DIR, ".env");
+    if (!fs.existsSync(envPath)) return;
+    const lines = fs.readFileSync(envPath, "utf8").split(/\r?\n/);
+    for (const line of lines) {
+      const m = line.match(/^\s*([A-Z0-9_]+)\s*=\s*(.*)\s*$/);
+      if (m && !process.env[m[1]]) {
+        process.env[m[1]] = m[2].replace(/^['"]|['"]$/g, "");
+      }
+    }
+  } catch (_) {}
+})();
+
 const BUS_URL = process.env.NTFY_SECRET_TOPIC_URL
   ? String(process.env.NTFY_SECRET_TOPIC_URL).replace(/\/+$/, "") + "/json?poll=1&since=48h"
   : "";
-const PRIVATE_OPS_DIR = path.join(process.env.USERPROFILE || process.env.HOME || __dirname, ".gemini", "pureai-private-ops");
-try { fs.mkdirSync(PRIVATE_OPS_DIR, { recursive: true }); } catch (_) {}
 const METRICS_FILE = path.join(PRIVATE_OPS_DIR, "metricas-y-bugs.json");
 
 const SUPPORT_CATEGORIES = {
@@ -192,6 +206,14 @@ function generateAutomatedFinancialDigest(rawEvents, options = {}) {
       digest.estimatedStripeFeesCents += fee;
       digest.activeSubscriptionsCount++;
       digest.normalizedMrrCents += (ev.type === "SALE_ANNUAL" ? Math.round(baseNet / 12) : baseNet);
+      if (ev.affiliateId && ev.affiliateId !== "organic" && ev.affiliateId !== "self_referral_blocked") {
+        digest.estimatedAffiliateHoldCents += Math.round(Math.max(0, baseNet - fee) * 0.40);
+      }
+    } else if (ev.type === "SALE_PACK_10" || ev.type === "SALE_PACK_50") {
+      digest.verifiedSalesCount++;
+      digest.grossCollectionsCents += amount;
+      digest.totalVatCents += tax;
+      digest.estimatedStripeFeesCents += fee;
       if (ev.affiliateId && ev.affiliateId !== "organic" && ev.affiliateId !== "self_referral_blocked") {
         digest.estimatedAffiliateHoldCents += Math.round(Math.max(0, baseNet - fee) * 0.40);
       }
@@ -858,15 +880,24 @@ async function runAutoDoctor() {
 
   const seenIds = new Set(stored.processedIds || []);
   const financialEvents = Array.isArray(stored.financialEventsHistory) ? [...stored.financialEventsHistory] : [];
+  const seenFinIds = new Set(financialEvents.map((e) => e && e.id).filter(Boolean));
   const analyticsEvents = Array.isArray(stored.analyticsEventsHistory) ? [...stored.analyticsEventsHistory] : [];
 
   try {
     const raw = BUS_URL ? await fetch(BUS_URL).then((r) => r.text()).catch(() => "") : "";
     const lines = raw.split("\n").filter(Boolean);
     try {
-      const adminSecret = process.env.ADMIN_DIGEST_TOKEN || process.env.STRIPE_WEBHOOK_SECRET || "";
+      const adminSecret = process.env.ADMIN_DIGEST_TOKEN || "";
       const kvHeaders = adminSecret ? { Authorization: "Bearer " + adminSecret } : {};
       const kvResp = await fetch("https://pureai-stripe-webhook.pureaistudio-app.workers.dev/telemetry", { headers: kvHeaders }).then((r) => r.json());
+      if (kvResp && Array.isArray(kvResp.financialLedger)) {
+        for (const finEv of kvResp.financialLedger) {
+          if (finEv && finEv.id && !seenFinIds.has(finEv.id)) {
+            seenFinIds.add(finEv.id);
+            financialEvents.push(finEv);
+          }
+        }
+      }
       if (kvResp && Array.isArray(kvResp.events)) {
         for (const kvEv of kvResp.events) {
           if (kvEv && kvEv.id) {
@@ -904,14 +935,21 @@ async function runAutoDoctor() {
           stored.affiliateClicks = stored.affiliateClicks || { stripe_checkout: 0 };
           stored.affiliateClicks.stripe_checkout = (stored.affiliateClicks.stripe_checkout || 0) + 1;
         } else if (data.type === "sale_verified_session") {
-          const isAnnual = data.planInterval === "year" || Number(data.amountCents) >= 3500;
-          financialEvents.push({
-            id: data.maskedSession || env.id,
-            type: isAnnual ? "SALE_ANNUAL" : "SALE_MONTHLY",
-            amountCents: Number(data.amountCents) || (isAnnual ? 3900 : 499),
-            taxCents: Number(data.taxCents) || (isAnnual ? 677 : 86),
-            affiliateId: data.partner || "organic"
-          });
+          const finId = data.maskedSession || env.id;
+          if (!seenFinIds.has(finId)) {
+            seenFinIds.add(finId);
+            const pType = data.planType || "";
+            const isPack10 = pType === "pack_10";
+            const isPack50 = pType === "pack_50";
+            const isAnnual = !isPack10 && !isPack50 && (data.planInterval === "year" || Number(data.amountCents) >= 3500);
+            financialEvents.push({
+              id: finId,
+              type: isPack10 ? "SALE_PACK_10" : isPack50 ? "SALE_PACK_50" : isAnnual ? "SALE_ANNUAL" : "SALE_MONTHLY",
+              amountCents: Number(data.amountCents) || (isPack10 ? 299 : isPack50 ? 990 : isAnnual ? 3900 : 499),
+              taxCents: Number(data.taxCents) || 0,
+              affiliateId: data.partner || "organic"
+            });
+          }
         } else if (data.type === "user_bug_report") {
           const triage = classifySupportInquiry(data.msg || "");
           const ticket = {
@@ -924,8 +962,8 @@ async function runAutoDoctor() {
           stored.userBugReports.unshift(ticket);
           stored.userBugReports = stored.userBugReports.slice(0, 50);
           stored.supportTicketsTriaged = stored.userBugReports;
-          if (triage.priority === "CRITICAL") {
-            await dispatchCriticalOperationalAlert({ severity: "CRITICAL", code: triage.category, message: ticket.msg });
+          if (triage.priority === "CRITICAL" || triage.requiresHumanApproval === true) {
+            await dispatchCriticalOperationalAlert({ severity: triage.priority || "HIGH", code: triage.category, message: ticket.msg });
           }
         } else if (data.type === "js_error" || data.type === "js_promise_error") {
           stored.jsErrors.unshift({ page: data.page, msg: data.msg, line: data.line, ts: data.ts });

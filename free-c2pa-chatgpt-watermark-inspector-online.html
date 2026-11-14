@@ -155,36 +155,85 @@
             window.sendPureAiAnalyticsEvent({ type: "app_action", event_name: "paywall_viewed", trigger_tool: "img_c2pa_scrubber", usedCredits: used });
           }
           var scanSummary = detected.length ? ("Signatures detected: <strong>" + escapeSeoHtml(detected.join(", ")) + "</strong>. ") : "Container inspected. ";
-          st.innerHTML = "🔒 " + scanSummary + "<strong>3/3 free photo cleans used.</strong> <a href='https://buy.stripe.com/9B6cN6e669uZ4vmeTE0000f' target='_blank' rel='noopener noreferrer' style='color:#00e5a3;font-weight:900;'>Unlock Unlimited Photos + Batch .ZIP + iPhone 16 Pro EXIF (€2.99 one-time, no subscription) →</a>";
+          st.innerHTML = "🔒 " + scanSummary + "<strong>1/1 free photo used.</strong> <a href='https://buy.stripe.com/9B6cN6e669uZ4vmeTE0000f' target='_blank' rel='noopener noreferrer' style='color:#00e5a3;font-weight:900;'>Unlock 10-File Pass (€2.99 one-time) →</a> · <a href='https://buy.stripe.com/3cIdRae66bD74vm6n80000g' target='_blank' rel='noopener noreferrer' style='color:#e9d5ff;font-weight:900;'>50 Files + .ZIP (€9.90) →</a>";
           return;
         }
-        try { if (!isPro) localStorage.setItem("pureai_img_used", String(used + 1)); } catch (_) {}
-        var img = new Image();
-        var objUrl = URL.createObjectURL(file);
-        img.onload = function () {
-          if (URL.revokeObjectURL) URL.revokeObjectURL(objUrl);
-          var nw = Number(img.naturalWidth) || 512, nh = Number(img.naturalHeight) || 512;
-          if (nw > 16384 || nh > 16384 || (nw * nh) > 67108864) {
-            st.textContent = "⚠️ Image pixel dimensions exceed browser safety limit (max 16384px / 67 MP).";
-            return;
-          }
-          var c = document.getElementById("quick-canvas");
-          c.width = nw;
-          c.height = nh;
-          var ctx = c.getContext("2d");
-          ctx.drawImage(img, 0, 0);
-          c.toBlob(function (blob) {
-            var a = document.createElement("a");
-            var cleanName = file.name.replace(/\.[^.]+$/, "") + "-clean.jpg";
-            a.href = URL.createObjectURL(blob);
-            a.download = cleanName;
-            a.click();
-            var foundMsg = detected.length ? ("Detected & Stripped: " + escapeSeoHtml(detected.join(", "))) : "Container Re-Encoded (0 Metadata)";
-            st.innerHTML = "✅ <strong>" + escapeSeoHtml(cleanName) + " downloaded (" + foundMsg + ")!</strong> (" + (isPro ? "Pro Unlimited" : ("1/1 free used")) + ") — <a href='clean-ai-studio.html' style='color:#fcd34d;font-weight:800;'>Open PureAI Studio Pro (from €2.99 one-time) →</a>";
-          }, "image/jpeg", 0.95);
+        var runInspectClean = function () {
+          try { if (!isPro) localStorage.setItem("pureai_img_used", String(used + 1)); } catch (_) {}
+          var img = new Image();
+          var objUrl = URL.createObjectURL(file);
+          img.onload = function () {
+            if (URL.revokeObjectURL) URL.revokeObjectURL(objUrl);
+            var nw = Number(img.naturalWidth) || 512, nh = Number(img.naturalHeight) || 512;
+            if (nw > 16384 || nh > 16384 || (nw * nh) > 67108864) {
+              st.textContent = "⚠️ Image pixel dimensions exceed browser safety limit (max 16384px / 67 MP).";
+              return;
+            }
+            var c = document.getElementById("quick-canvas");
+            c.width = nw;
+            c.height = nh;
+            var ctx = c.getContext("2d");
+            ctx.drawImage(img, 0, 0);
+            c.toBlob(function (blob) {
+              var a = document.createElement("a");
+              var cleanName = file.name.replace(/\.[^.]+$/, "") + "-clean.jpg";
+              a.href = URL.createObjectURL(blob);
+              a.download = cleanName;
+              a.click();
+              if (typeof window.sendPureAiAnalyticsEvent === "function") {
+                window.sendPureAiAnalyticsEvent({ type: "app_action", event_name: "tool_completed", tool_id: "img_c2pa_scrubber", isDemo: false });
+              }
+              var foundMsg = detected.length ? ("Detected & Stripped: " + escapeSeoHtml(detected.join(", "))) : "Container Re-Encoded (0 Metadata)";
+              st.innerHTML = "✅ <strong>" + escapeSeoHtml(cleanName) + " downloaded (" + foundMsg + ")!</strong> (" + (isPro ? "Pro Active" : ("1/1 free used")) + ") — <a href='clean-ai-studio.html' style='color:#fcd34d;font-weight:800;'>Open PureAI Studio Pro (from €2.99 one-time) →</a>";
+            }, "image/jpeg", 0.95);
+          };
+          img.onerror = function () { if (URL.revokeObjectURL) URL.revokeObjectURL(objUrl); };
+          img.src = objUrl;
         };
-        img.onerror = function () { if (URL.revokeObjectURL) URL.revokeObjectURL(objUrl); };
-        img.src = objUrl;
+        if (typeof fetch !== "function") { runInspectClean(); return; }
+        if (isPro) {
+          try {
+            var rawSub = localStorage.getItem("pureai_sub_record_v2");
+            var subRec = rawSub ? JSON.parse(rawSub) : null;
+            if (!subRec || subRec.unlimited !== false) { runInspectClean(); return; }
+            var licKey = String(subRec.stripeSessionId || subRec.key || "").trim();
+            fetch("https://pureai-stripe-webhook.pureaistudio-app.workers.dev/consume-credit", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ code: licKey, count: 1, opId: "insp_" + Date.now() + "_" + Math.random().toString(36).slice(2, 8) })
+            }).then(function (r) { return r.json().then(function (d) { return { s: r.status, d: d }; }); })
+              .then(function (res) {
+                if (res.s === 200 && res.d && res.d.ok) {
+                  if (typeof res.d.creditsRemaining === "number") {
+                    subRec.creditsRemaining = res.d.creditsRemaining;
+                    if (subRec.creditsRemaining <= 0) subRec.status = "EXPIRED";
+                    try { localStorage.setItem("pureai_sub_record_v2", JSON.stringify(subRec)); } catch (_) {}
+                  }
+                  runInspectClean();
+                } else {
+                  try { localStorage.removeItem("pureai_sub_record_v2"); localStorage.removeItem("pureai_studio_pro"); } catch (_) {}
+                  st.innerHTML = "🔒 <strong>Pack credits exhausted.</strong> <a href='https://buy.stripe.com/9B6cN6e669uZ4vmeTE0000f' target='_blank' rel='noopener noreferrer' style='color:#00e5a3;font-weight:900;'>Unlock 10-File Pass (€2.99) →</a>";
+                }
+              }).catch(function () { runInspectClean(); });
+            return;
+          } catch (_) { runInspectClean(); return; }
+        }
+        fetch("https://pureai-stripe-webhook.pureaistudio-app.workers.dev/check-free-quota", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ consume: true })
+        }).then(function (r) { return r.json(); })
+          .then(function (q) {
+            if (q && q.allowed === false) {
+              try { localStorage.setItem("pureai_img_used", String(q.used || 1)); } catch (_) {}
+              if (typeof window.sendPureAiAnalyticsEvent === "function") {
+                window.sendPureAiAnalyticsEvent({ type: "app_action", event_name: "paywall_viewed", trigger_tool: "img_c2pa_scrubber", usedCredits: q.used || 1 });
+              }
+              st.innerHTML = "🔒 <strong>1/1 free photo used.</strong> <a href='https://buy.stripe.com/9B6cN6e669uZ4vmeTE0000f' target='_blank' rel='noopener noreferrer' style='color:#00e5a3;font-weight:900;'>Unlock 10-File Pass (€2.99 one-time) →</a>";
+              return;
+            }
+            runInspectClean();
+          }).catch(function () { runInspectClean(); });
       }
       </script>
 
@@ -192,19 +241,22 @@
       <ul style="margin: 1rem 0 1.5rem 1.25rem; color: #cbd5e1;">
         <li><strong>100% Local Browser Execution:</strong> Your photos, videos, and essays never leave your computer or phone.</li>
         <li><strong>Instant Binary Verification:</strong> Detects <code>c2pa.claim</code>, <code>JUMBF</code> boxes, <code>trainedAlgorithmicMedia</code> IPTC tags, and ComfyUI <code>tEXt</code> prompt chunks.</li>
-        <li><strong>3 Free Photo Cleans + Free Text Scanner:</strong> Inspect and strip up to 3 photos free (with unlimited Unicode text X-Ray) with zero signup, or upgrade to <strong>PureAI Pro</strong> (<code>4,99 €</code> 1st month with code <code>DIRECT</code> or <code>39 €/year</code>) for Unlimited Photos, Bulk <code>.ZIP</code> batches, and <code>iPhone 16 Pro</code> / <code>Sony A7IV</code> EXIF camera profiles.</li>
+        <li><strong>1 Free Photo Clean + Unlimited Text Scanner:</strong> Inspect and strip 1 photo free (with unlimited Unicode text X-Ray) with zero signup, or unlock <strong>PureAI Pro</strong> (<code>2,99 €</code> 10-File Pass, <code>9,90 €</code> 50-File + <code>.ZIP</code> Pack, or <code>39 €/year</code> Unlimited) for Bulk <code>.ZIP</code> batches and <code>iPhone 16 Pro</code> / <code>Sony A7IV</code> EXIF camera profiles.</li>
       </ul>
     </article>
 
     <aside class="affiliate-sidebar">
       <div class="offer-card" style="border-color:#10b981;background:linear-gradient(160deg,#0f172a 0%,#064e3b 100%);">
-        <span class="offer-badge">🧬 PureAI Studio Pro (4,99 € 1st Month)</span>
+        <span class="offer-badge">🧬 PureAI Studio Pro (from 2,99 €)</span>
         <h2>Unlock Bulk .ZIP, Camera EXIF &amp; Full-Essay Humanizer</h2>
-        <p>Clean 50+ photos at once in a single <code>.ZIP</code>, inject real <code>iPhone 16 Pro / Sony A7IV</code> EXIF headers, and humanize full Word <code>.DOCX</code> documents. <strong>50% OFF 1st month (4,99 €) with code DIRECT</strong>.</p>
+        <p>Clean 50+ photos at once in a single <code>.ZIP</code>, inject real <code>iPhone 16 Pro / Sony A7IV</code> EXIF headers, and humanize full Word <code>.DOCX</code> documents. <strong>No subscription required on 10-file (2,99 €) or 50-file (9,90 €) packs</strong>.</p>
         <a href="clean-ai-studio.html" class="cta-button">Open Full Studio Free →</a>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:8px;">
-          <a href="https://buy.stripe.com/9B6cN6e669uZ4vmeTE0000f" target="_blank" rel="noopener" style="background:#00e5a3;color:#042f1e;text-decoration:none;padding:6px;border-radius:7px;font-size:0.75rem;font-weight:900;text-align:center;">🔥 Pro Monthly: 4,99 €</a>
-          <a href="https://buy.stripe.com/eVq00k7HIfTn1jabHs0000h" target="_blank" rel="noopener" style="background:#1e293b;color:#93c5fd;border:1px solid #3b82f6;text-decoration:none;padding:6px;border-radius:7px;font-size:0.75rem;font-weight:800;text-align:center;">💎 Pro Annual: 39 €</a>
+          <a href="https://buy.stripe.com/9B6cN6e669uZ4vmeTE0000f" target="_blank" rel="noopener" style="background:#00e5a3;color:#042f1e;text-decoration:none;padding:6px;border-radius:7px;font-size:0.75rem;font-weight:900;text-align:center;">⚡ 10 Files: 2,99 €</a>
+          <a href="https://buy.stripe.com/3cIdRae66bD74vm6n80000g" target="_blank" rel="noopener" style="background:#8b5cf6;color:#fff;text-decoration:none;padding:6px;border-radius:7px;font-size:0.75rem;font-weight:900;text-align:center;">📦 50 + .ZIP: 9,90 €</a>
+        </div>
+        <div style="margin-top:6px;">
+          <a href="https://buy.stripe.com/eVq00k7HIfTn1jabHs0000h" target="_blank" rel="noopener" style="display:block;background:#1e293b;color:#93c5fd;border:1px solid #3b82f6;text-decoration:none;padding:6px;border-radius:7px;font-size:0.75rem;font-weight:800;text-align:center;">💎 Pro Annual Unlimited: 39 €</a>
         </div>
       </div>
 

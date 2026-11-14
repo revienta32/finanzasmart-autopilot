@@ -7,7 +7,28 @@
 
 const fs = require("fs");
 const path = require("path");
+const os = require("os");
 const growthMatrix = require("./growth-matrix-engine");
+
+function loadPrivateEnvIfPresent() {
+  const candidates = [
+    path.join(process.env.USERPROFILE || process.env.HOME || os.homedir(), ".gemini", "pureai-private-ops", ".env"),
+    path.join(__dirname, ".env")
+  ];
+  for (const envPath of candidates) {
+    try {
+      if (!fs.existsSync(envPath)) continue;
+      const lines = fs.readFileSync(envPath, "utf8").split(/\r?\n/);
+      for (const line of lines) {
+        const m = line.match(/^\s*([A-Z0-9_]+)\s*=\s*(.*)\s*$/);
+        if (m && !process.env[m[1]]) {
+          process.env[m[1]] = m[2].replace(/^['"]|['"]$/g, "");
+        }
+      }
+      break;
+    } catch (_) {}
+  }
+}
 
 const SITE_URL = "https://pureaistudios.com";
 const INDEXNOW_KEY = "b8f4c2d1e9a74b6c8d3e2f1a0b9c8d7e";
@@ -348,6 +369,69 @@ function buildSeoPageHtml(page) {
         } catch (_) {}
         return false;
       }
+      function consumeSeoQuotaOrPro(isPro, used, onAllowed) {
+        if (typeof fetch !== "function") {
+          try { if (!isPro) localStorage.setItem("pureai_img_used", String(used + 1)); } catch (_) {}
+          onAllowed();
+          return;
+        }
+        if (isPro) {
+          try {
+            var raw = localStorage.getItem("pureai_sub_record_v2");
+            var rec = raw ? JSON.parse(raw) : null;
+            if (!rec || rec.unlimited !== false) {
+              onAllowed();
+              return;
+            }
+            var key = String(rec.stripeSessionId || rec.key || "").trim();
+            var opId = "seo_" + Date.now() + "_" + Math.random().toString(36).slice(2, 8);
+            fetch("https://pureai-stripe-webhook.pureaistudio-app.workers.dev/consume-credit", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ code: key, count: 1, opId: opId })
+            }).then(function (r) { return r.json().then(function (d) { return { s: r.status, d: d }; }); })
+              .then(function (res) {
+                if (res.s === 200 && res.d && res.d.ok) {
+                  if (typeof res.d.creditsRemaining === "number") {
+                    rec.creditsRemaining = res.d.creditsRemaining;
+                    if (rec.creditsRemaining <= 0) rec.status = "EXPIRED";
+                    try { localStorage.setItem("pureai_sub_record_v2", JSON.stringify(rec)); } catch (_) {}
+                  }
+                  onAllowed();
+                } else {
+                  try {
+                    localStorage.removeItem("pureai_sub_record_v2");
+                    localStorage.removeItem("pureai_studio_pro");
+                  } catch (_) {}
+                  var stEl = document.getElementById("quick-img-status");
+                  if (stEl) stEl.innerHTML = "🔒 <strong>Pack credits exhausted.</strong> <a href='https://buy.stripe.com/9B6cN6e669uZ4vmeTE0000f' target='_blank' rel='noopener noreferrer' style='color:#00e5a3;font-weight:900;'>Unlock 10-File Pass (€2.99 one-time) →</a>";
+                }
+              }).catch(function () { onAllowed(); });
+            return;
+          } catch (_) { onAllowed(); return; }
+        }
+        fetch("https://pureai-stripe-webhook.pureaistudio-app.workers.dev/check-free-quota", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ consume: true })
+        }).then(function (r) { return r.json(); })
+          .then(function (q) {
+            if (q && q.allowed === false) {
+              try { localStorage.setItem("pureai_img_used", String(q.used || 1)); } catch (_) {}
+              if (typeof window.sendPureAiAnalyticsEvent === "function") {
+                window.sendPureAiAnalyticsEvent({ type: "app_action", event_name: "paywall_viewed", trigger_tool: "img_c2pa_scrubber", usedCredits: q.used || 1 });
+              }
+              var stEl = document.getElementById("quick-img-status");
+              if (stEl) stEl.innerHTML = "🔒 <strong>1/1 free photo used.</strong> <a href='https://buy.stripe.com/9B6cN6e669uZ4vmeTE0000f' target='_blank' rel='noopener noreferrer' style='color:#00e5a3;font-weight:900;'>Unlock 10-File Pass (€2.99 one-time) →</a> · <a href='https://buy.stripe.com/3cIdRae66bD74vm6n80000g' target='_blank' rel='noopener noreferrer' style='color:#e9d5ff;font-weight:900;'>50 Files + Batch .ZIP (€9.90) →</a>";
+              return;
+            }
+            try { localStorage.setItem("pureai_img_used", String(used + 1)); } catch (_) {}
+            onAllowed();
+          }).catch(function () {
+            try { localStorage.setItem("pureai_img_used", String(used + 1)); } catch (_) {}
+            onAllowed();
+          });
+      }
       function quickCleanImg(file) {
         if (!file || !file.size) return;
         var st = document.getElementById("quick-img-status");
@@ -367,41 +451,42 @@ function buildSeoPageHtml(page) {
           st.innerHTML = "🔒 <strong>1/1 free photo used.</strong> <a href='https://buy.stripe.com/9B6cN6e669uZ4vmeTE0000f' target='_blank' rel='noopener noreferrer' style='color:#00e5a3;font-weight:900;'>Unlock 10-File Pass (€2.99 one-time) →</a> · <a href='https://buy.stripe.com/3cIdRae66bD74vm6n80000g' target='_blank' rel='noopener noreferrer' style='color:#e9d5ff;font-weight:900;'>50 Files + Batch .ZIP (€9.90) →</a>";
           return;
         }
-        try { if (!isPro) localStorage.setItem("pureai_img_used", String(used + 1)); } catch (_) {}
-        st.textContent = "⏳ Scanning & stripping C2PA / EXIF binary containers...";
-        var img = new Image();
-        var objUrl = URL.createObjectURL(file);
-        img.onload = function () {
-          if (URL.revokeObjectURL) URL.revokeObjectURL(objUrl);
-          var nw = Number(img.naturalWidth) || 512, nh = Number(img.naturalHeight) || 512;
-          if (nw > 16384 || nh > 16384 || (nw * nh) > 67108864) {
-            st.textContent = "⚠️ Image pixel dimensions exceed browser safety limit (max 16384px / 67 MP).";
-            return;
-          }
-          var c = document.getElementById("quick-canvas");
-          c.width = nw;
-          c.height = nh;
-          var ctx = c.getContext("2d");
-          ctx.drawImage(img, 0, 0);
-          var d = ctx.getImageData(0, 0, c.width, c.height);
-          for (var i = 0; i < d.data.length; i += 16) {
-            d.data[i] = d.data[i] > 250 ? d.data[i] - 1 : d.data[i] + 1;
-          }
-          ctx.putImageData(d, 0, 0);
-          c.toBlob(function (blob) {
-            var a = document.createElement("a");
-            var cleanName = file.name.replace(/\\.[^.]+$/, "") + "-clean.jpg";
-            a.href = URL.createObjectURL(blob);
-            a.download = cleanName;
-            a.click();
-            if (typeof window.sendPureAiAnalyticsEvent === "function") {
-              window.sendPureAiAnalyticsEvent({ type: "app_action", event_name: "tool_completed", tool_id: "img_c2pa_scrubber", isDemo: false });
+        consumeSeoQuotaOrPro(isPro, used, function () {
+          st.textContent = "⏳ Scanning & stripping C2PA / EXIF binary containers...";
+          var img = new Image();
+          var objUrl = URL.createObjectURL(file);
+          img.onload = function () {
+            if (URL.revokeObjectURL) URL.revokeObjectURL(objUrl);
+            var nw = Number(img.naturalWidth) || 512, nh = Number(img.naturalHeight) || 512;
+            if (nw > 16384 || nh > 16384 || (nw * nh) > 67108864) {
+              st.textContent = "⚠️ Image pixel dimensions exceed browser safety limit (max 16384px / 67 MP).";
+              return;
             }
-            st.innerHTML = "✅ <strong>" + escapeSeoHtml(cleanName) + " downloaded (0% C2PA / 0% EXIF)!</strong> (" + (isPro ? "Pro Active" : "1/1 free used") + ") — <a href='clean-ai-studio.html' style='color:#fcd34d;font-weight:800;'>Unlock 10-File Pass (€2.99) or 50 Files + Batch .ZIP (€9.90) →</a>";
-          }, "image/jpeg", 0.95);
-        };
-        img.onerror = function () { if (URL.revokeObjectURL) URL.revokeObjectURL(objUrl); };
-        img.src = objUrl;
+            var c = document.getElementById("quick-canvas");
+            c.width = nw;
+            c.height = nh;
+            var ctx = c.getContext("2d");
+            ctx.drawImage(img, 0, 0);
+            var d = ctx.getImageData(0, 0, c.width, c.height);
+            for (var i = 0; i < d.data.length; i += 16) {
+              d.data[i] = d.data[i] > 250 ? d.data[i] - 1 : d.data[i] + 1;
+            }
+            ctx.putImageData(d, 0, 0);
+            c.toBlob(function (blob) {
+              var a = document.createElement("a");
+              var cleanName = file.name.replace(/\\.[^.]+$/, "") + "-clean.jpg";
+              a.href = URL.createObjectURL(blob);
+              a.download = cleanName;
+              a.click();
+              if (typeof window.sendPureAiAnalyticsEvent === "function") {
+                window.sendPureAiAnalyticsEvent({ type: "app_action", event_name: "tool_completed", tool_id: "img_c2pa_scrubber", isDemo: false });
+              }
+              st.innerHTML = "✅ <strong>" + escapeSeoHtml(cleanName) + " downloaded (0% C2PA / 0% EXIF)!</strong> (" + (isPro ? "Pro Active" : "1/1 free used") + ") — <a href='clean-ai-studio.html' style='color:#fcd34d;font-weight:800;'>Unlock 10-File Pass (€2.99) or 50 Files + Batch .ZIP (€9.90) →</a>";
+            }, "image/jpeg", 0.95);
+          };
+          img.onerror = function () { if (URL.revokeObjectURL) URL.revokeObjectURL(objUrl); };
+          img.src = objUrl;
+        });
       }
       </script>`
     : "";
@@ -501,7 +586,16 @@ function buildSeoPageHtml(page) {
 </html>`;
 }
 
-async function publishTelegraphArticles(prevArticles = []) {
+function normalizeSlugMatch(s) {
+  return String(s || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
+async function publishTelegraphArticles(prevArticles = [], telegraphBySlug = {}) {
   const accRes = await fetch(
     "https://api.telegra.ph/createAccount?short_name=PureAIStudio&author_name=PureAI+Studio&author_url=" +
       encodeURIComponent(SITE_URL)
@@ -562,8 +656,21 @@ async function publishTelegraphArticles(prevArticles = []) {
 
   const publishedUrls = [];
   for (const art of articles) {
-    const alreadyExists = prevArticles.some((u) => decodeURIComponent(u).toLowerCase().includes(art.slugKey.slice(0, 18).toLowerCase()));
-    if (alreadyExists) continue;
+    const normSlugPrefix = normalizeSlugMatch(art.slugKey).slice(0, 18);
+    const normTitlePrefix = normalizeSlugMatch(art.title).slice(0, 28);
+    const matchedPrev = prevArticles.find((u) => {
+      let decoded = String(u || "");
+      try { decoded = decodeURIComponent(decoded); } catch (_) {}
+      const nu = normalizeSlugMatch(decoded);
+      return (normSlugPrefix && nu.includes(normSlugPrefix)) || (normTitlePrefix && nu.includes(normTitlePrefix));
+    });
+    const alreadyExists = Boolean((telegraphBySlug && telegraphBySlug[art.slugKey]) || matchedPrev);
+    if (alreadyExists) {
+      if (telegraphBySlug && !telegraphBySlug[art.slugKey] && matchedPrev) {
+        telegraphBySlug[art.slugKey] = matchedPrev;
+      }
+      continue;
+    }
     const res = await fetch("https://api.telegra.ph/createPage", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -578,12 +685,16 @@ async function publishTelegraphArticles(prevArticles = []) {
     }).then((r) => r.json());
     if (res.ok && res.result && res.result.url) {
       publishedUrls.push(res.result.url);
+      if (telegraphBySlug && typeof telegraphBySlug === "object") {
+        telegraphBySlug[art.slugKey] = res.result.url;
+      }
     }
   }
   return publishedUrls;
 }
 
 async function run() {
+  loadPrivateEnvIfPresent();
   fs.writeFileSync(path.join(__dirname, `${INDEXNOW_KEY}.txt`), INDEXNOW_KEY);
 
   const allUrls = [
@@ -668,6 +779,8 @@ ${fullUrlList
   fs.writeFileSync(path.join(__dirname, "sitemap.xml"), sitemapXml);
 
   let prevArticles = [];
+  let telegraphBySlug = {};
+  const seenSocialIds = new Set();
   const privOpsDir = path.join(process.env.USERPROFILE || process.env.HOME || __dirname, ".gemini", "pureai-private-ops");
   try { fs.mkdirSync(privOpsDir, { recursive: true }); } catch (_) {}
   const reportPath = path.join(privOpsDir, "red-de-trafico.json");
@@ -675,38 +788,84 @@ ${fullUrlList
     try {
       const prev = JSON.parse(fs.readFileSync(reportPath, "utf8"));
       prevArticles = (prev.telegraphCloudArticles || []).filter((u) => !/-\d{2}-\d{2}-\d+$/.test(u));
+      if (prev.telegraphBySlug && typeof prev.telegraphBySlug === "object") {
+        Object.assign(telegraphBySlug, prev.telegraphBySlug);
+      }
+      if (Array.isArray(prev.repliedSocialIds)) {
+        for (const sid of prev.repliedSocialIds) if (sid) seenSocialIds.add(String(sid));
+      }
     } catch (_) {}
   }
-  const telegraphUrls = await publishTelegraphArticles(prevArticles);
+  const adminToken = (process.env.ADMIN_DIGEST_TOKEN || "").trim();
+  if (adminToken && typeof fetch === "function") {
+    try {
+      const opsRes = await fetch("https://pureai-stripe-webhook.pureaistudio-app.workers.dev/ops-state", {
+        headers: { Authorization: "Bearer " + adminToken }
+      }).then((r) => (r && r.ok ? r.json() : null)).catch(() => null);
+      if (opsRes && opsRes.state) {
+        if (opsRes.state.telegraphBySlug && typeof opsRes.state.telegraphBySlug === "object") {
+          Object.assign(telegraphBySlug, opsRes.state.telegraphBySlug);
+        }
+        if (Array.isArray(opsRes.state.telegraphCloudArticles)) {
+          prevArticles = [...new Set([...prevArticles, ...opsRes.state.telegraphCloudArticles])];
+        }
+        if (Array.isArray(opsRes.state.repliedSocialIds)) {
+          for (const sid of opsRes.state.repliedSocialIds) if (sid) seenSocialIds.add(String(sid));
+        }
+      }
+    } catch (_) {}
+  }
+
+  const telegraphUrls = await publishTelegraphArticles(prevArticles, telegraphBySlug);
   console.log("Published Telegraph Cloud Articles:", telegraphUrls);
 
-  const indexRes = await fetch("https://api.indexnow.org/indexnow", {
-    method: "POST",
-    headers: { "Content-Type": "application/json; charset=utf-8" },
-    body: JSON.stringify({
-      host: "pureaistudios.com",
-      key: INDEXNOW_KEY,
-      keyLocation: `${SITE_URL}/${INDEXNOW_KEY}.txt`,
-      urlList: [...fullUrlList, `${SITE_URL}/feed.xml`, `${SITE_URL}/llms.txt`, `${SITE_URL}/llms-full.txt`]
-    })
-  });
-  console.log("IndexNow status:", indexRes.status);
+  try {
+    const indexRes = await fetch("https://api.indexnow.org/indexnow", {
+      method: "POST",
+      headers: { "Content-Type": "application/json; charset=utf-8" },
+      body: JSON.stringify({
+        host: "pureaistudios.com",
+        key: INDEXNOW_KEY,
+        keyLocation: `${SITE_URL}/${INDEXNOW_KEY}.txt`,
+        urlList: [...fullUrlList, `${SITE_URL}/feed.xml`, `${SITE_URL}/llms.txt`, `${SITE_URL}/llms-full.txt`]
+      })
+    });
+    console.log("IndexNow status:", indexRes.status);
+  } catch (_) {}
 
-  const mergedArticles = [...new Set([...telegraphUrls, ...prevArticles])];
-  const opportunities = await fetchLiveSocialOpportunities();
+  const mergedArticles = [...new Set([...Object.values(telegraphBySlug), ...telegraphUrls, ...prevArticles])];
+  const opportunities = await fetchLiveSocialOpportunities(seenSocialIds);
   await sendDailyMobilePushDigest(opportunities, mergedArticles);
   const report = {
     updatedAt: new Date().toISOString(),
     mainSite: SITE_URL,
     seoPages: fullUrlList,
+    seoPagesCount: fullUrlList.length,
+    telegraphBySlug,
     telegraphCloudArticles: mergedArticles,
+    repliedSocialIds: [...seenSocialIds].slice(-200),
     latestSocialOpportunities: opportunities
   };
   fs.writeFileSync(reportPath, JSON.stringify(report, null, 2));
+  if (adminToken && typeof fetch === "function") {
+    try {
+      await fetch("https://pureai-stripe-webhook.pureaistudio-app.workers.dev/ops-state", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: "Bearer " + adminToken },
+        body: JSON.stringify({
+          updatedAt: report.updatedAt,
+          seoPagesCount: report.seoPagesCount,
+          telegraphBySlug,
+          telegraphCloudArticles: mergedArticles,
+          repliedSocialIds: report.repliedSocialIds
+        })
+      });
+    } catch (_) {}
+  }
 }
 
 
-async function fetchLiveSocialOpportunities() {
+async function fetchLiveSocialOpportunities(seenSocialIds = new Set()) {
   const opportunities = [];
   try {
     const hnUrl = "https://hn.algolia.com/api/v1/search_by_date?query=C2PA%20OR%20%22Made%20with%20AI%22%20OR%20%22ChatGPT%20watermark%22%20OR%20SynthID&tags=story&hitsPerPage=3";
@@ -745,7 +904,7 @@ async function fetchLiveSocialOpportunities() {
 
   // Si existen credenciales OAuth de Reddit en entorno (GitHub Secrets), publicar 1 respuesta útil al día automáticamente
   if (process.env.REDDIT_CLIENT_ID && process.env.REDDIT_CLIENT_SECRET && process.env.REDDIT_USER && process.env.REDDIT_PASS) {
-    const targetReddit = opportunities.find((o) => o.fullname && o.platform.startsWith("Reddit"));
+    const targetReddit = opportunities.find((o) => o.fullname && o.platform.startsWith("Reddit") && !(seenSocialIds && seenSocialIds.has(o.fullname)));
     if (targetReddit) {
       try {
         const auth = Buffer.from(process.env.REDDIT_CLIENT_ID + ":" + process.env.REDDIT_CLIENT_SECRET).toString("base64");
@@ -777,6 +936,9 @@ async function fetchLiveSocialOpportunities() {
             }).toString()
           });
           targetReddit.autoPosted = true;
+          if (seenSocialIds && typeof seenSocialIds.add === "function") {
+            seenSocialIds.add(targetReddit.fullname);
+          }
         }
       } catch (_) {}
     }
@@ -789,7 +951,7 @@ async function sendDailyMobilePushDigest(opportunities, telegraphUrls) {
   const topOpp = opportunities && opportunities[0] ? opportunities[0] : null;
   try {
     // El envío diario a Telegram lo ejecuta con precisión exacta el Cron Trigger de Cloudflare a las 10:00 AM CET
-    const digestToken = process.env.ADMIN_DIGEST_TOKEN || process.env.STRIPE_WEBHOOK_SECRET || "";
+    const digestToken = process.env.ADMIN_DIGEST_TOKEN || "";
     if (process.env.FORCE_TELEGRAM_DIGEST === "1" && digestToken) {
       await fetch("https://pureai-stripe-webhook.pureaistudio-app.workers.dev/daily-digest", {
         method: "POST",
@@ -810,5 +972,5 @@ async function sendDailyMobilePushDigest(opportunities, telegraphUrls) {
 if (require.main === module) {
   run().catch(console.error);
 } else {
-  module.exports = { SEO_PAGES, buildSeoPageHtml };
+  module.exports = { SEO_PAGES, buildSeoPageHtml, publishTelegraphArticles, normalizeSlugMatch };
 }
