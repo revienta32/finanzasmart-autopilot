@@ -23,5 +23,11 @@
 - [Fix False 'Made with AI' Label from Photoshop & Lightroom on Instagram](https://pureaistudios.com/fix-photoshop-lightroom-false-made-with-ai-label-instagram.html): Remove accidental C2PA tags triggered by minor retouching or AI denoise on real camera photos.
 - [Camera EXIF Profile Tool (iPhone 16 Pro / Sony A7IV / Canon R5)](https://pureaistudios.com/exif-camera-injector-iphone-sony-ai-photos.html): Add standard technical APP1 EXIF camera headers locally.
 - [Remove EXIF GPS Location Before Posting Online](https://pureaistudios.com/remove-exif-gps-location-before-posting-reddit-marketplace.html): Strip smartphone GPS coordinates for personal privacy.
+- [Is This Photo or Video AI? Free C2PA & EXIF Detector](https://pureaistudios.com/ai-photo-detector.html): Instant local AI provenance detector with downloadable Forensic Proof Certificate (available in 10 languages).
+- [ComfyUI & PNG Prompt Workflow Inspector](https://pureaistudios.com/png-prompt-inspector.html): Parse and strip hidden `tEXt`/`iTXt` JSON workflows, seeds, and LoRA weights locally.
+- [Private WebP & PNG to Clean sRGB JPG Converter](https://pureaistudios.com/webp-png-to-jpg-clean.html): Convert DALL-E/ChatGPT WebP images into C2PA-free JPEGs offline.
+- [MP4 HD First & Last Frame Extractor](https://pureaistudios.com/mp4-frame-extractor.html): Extract C2PA-free HD PNG keyframes from MP4 videos for Kling, Runway, Sora, and Veo chaining.
+- [Free Embeddable C2PA & EXIF Scanner Widget](https://pureaistudios.com/embed-scanner.html): Zero-upload `<iframe>` widget for blogs, Notion, and developer docs.
+- [Official RSS 2.0 Tools Feed](https://pureaistudios.com/feed.xml): Syndicated updates of all interactive privacy utilities.
 - [Chrome Web Store Extension](https://chromewebstore.google.com/detail/pureai-studio-%E2%80%94-c2pa-meta/pdebjlkmjdhpgiigepojdcpfbfimcgmo): Official Manifest V3 browser extension.
 - [Full Documentation for AI Assistants](https://pureaistudios.com/llms-full.txt): Detailed technical FAQ and format support matrix.

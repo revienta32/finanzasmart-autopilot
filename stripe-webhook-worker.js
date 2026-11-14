@@ -1266,7 +1266,173 @@ async function handleWorkerHttpRequest(req, env, sharedStore) {
     return { status: 200, headers, body: JSON.stringify(res) };
   }
 
+  // 7. Bot Público Viral de Telegram (Escáner Forense C2PA / EXIF GPS en RAM sin guardar archivos)
+  if (req.method === "POST" && url.pathname === "/telegram-public-bot") {
+    const pubBotToken = (env && env.PUBLIC_TELEGRAM_BOT_TOKEN) ? String(env.PUBLIC_TELEGRAM_BOT_TOKEN).trim() : "";
+    const pubWebhookSecret = (env && env.PUBLIC_TELEGRAM_WEBHOOK_SECRET) ? String(env.PUBLIC_TELEGRAM_WEBHOOK_SECRET).trim() : "";
+    if (!pubBotToken || !pubWebhookSecret) {
+      return { status: 503, headers, body: JSON.stringify({ ok: false, error: "public_bot_not_configured" }) };
+    }
+    const gotSecret = (req.headers && typeof req.headers.get === "function" ? req.headers.get("x-telegram-bot-api-secret-token") : "") || "";
+    if (!timingSafeStringEqual(gotSecret, pubWebhookSecret)) {
+      return { status: 401, headers, body: JSON.stringify({ ok: false, error: "invalid_telegram_secret" }) };
+    }
+    if (clientIp) {
+      const rl = checkWorkerRateLimit(rateMap, `tgpub:${clientIp}`, 40, Date.now());
+      if (!rl.allowed) {
+        return { status: 429, headers, body: JSON.stringify({ ok: false, error: "rate_limited" }) };
+      }
+    }
+    let update = {};
+    try {
+      const raw = typeof req.text === "function" ? await req.text() : String(req.body || "{}");
+      if (raw.length > 65536) return { status: 413, headers, body: JSON.stringify({ ok: false }) };
+      update = JSON.parse(raw || "{}");
+    } catch (_) {
+      return { status: 400, headers, body: JSON.stringify({ ok: false, error: "invalid_json" }) };
+    }
+    const msg = update && (update.message || update.edited_message);
+    const chatId = msg && msg.chat && msg.chat.id;
+    if (!chatId) {
+      return { status: 200, headers, body: JSON.stringify({ ok: true, ignored: true }) };
+    }
+    const isEsUser = String((msg.from && msg.from.language_code) || "").toLowerCase().startsWith("es");
+    const replyResult = await handlePublicTelegramBotMessage(pubBotToken, chatId, msg, isEsUser);
+    return { status: 200, headers, body: JSON.stringify(replyResult) };
+  }
+
+  if (req.method === "POST" && url.pathname === "/setup-public-telegram-bot") {
+    if (!verifyAdminBearerAuth(req, env)) {
+      return { status: 401, headers, body: JSON.stringify({ ok: false, error: "unauthorized" }) };
+    }
+    const pubBotToken = (env && env.PUBLIC_TELEGRAM_BOT_TOKEN) ? String(env.PUBLIC_TELEGRAM_BOT_TOKEN).trim() : "";
+    const pubWebhookSecret = (env && env.PUBLIC_TELEGRAM_WEBHOOK_SECRET) ? String(env.PUBLIC_TELEGRAM_WEBHOOK_SECRET).trim() : "";
+    if (!pubBotToken || !pubWebhookSecret) {
+      return { status: 400, headers, body: JSON.stringify({ ok: false, error: "missing_public_bot_secrets" }) };
+    }
+    const webhookUrl = `${url.origin}/telegram-public-bot`;
+    const tgRes = await fetch(`https://api.telegram.org/bot${pubBotToken}/setWebhook`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        url: webhookUrl,
+        secret_token: pubWebhookSecret,
+        allowed_updates: ["message"]
+      })
+    }).then((r) => r.json()).catch(() => ({ ok: false }));
+    return { status: 200, headers, body: JSON.stringify({ ok: Boolean(tgRes && tgRes.ok), webhookUrl }) };
+  }
+
   return { status: 404, headers, body: JSON.stringify({ ok: false, error: "not_found" }) };
+}
+
+function inspectBinaryHeaderForTelegram(bytes) {
+  const arr = bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes || []);
+  const slice = arr.subarray(0, Math.min(arr.length, 65536));
+  const ascii = new TextDecoder("latin1").decode(slice);
+  let hasGpsBin = false;
+  for (let i = 0; i + 3 < slice.length; i++) {
+    if (
+      (slice[i] === 0x25 && slice[i + 1] === 0x88 && slice[i + 2] === 0x04 && slice[i + 3] === 0x00) ||
+      (slice[i] === 0x88 && slice[i + 1] === 0x25 && slice[i + 2] === 0x00 && slice[i + 3] === 0x04)
+    ) {
+      hasGpsBin = true;
+      break;
+    }
+  }
+  const findings = [];
+  if (/c2pa|jumbf|c2ma|contentcredentials/i.test(ascii)) findings.push("C2PA / JUMBF AI Content Credentials");
+  if (/trainedAlgorithmicMedia|DigitalSourceType/i.test(ascii)) findings.push("IPTC / XMP trainedAlgorithmicMedia");
+  if (/GPSInfo|GPSLatitude|GPSLongitude/.test(ascii) || hasGpsBin) findings.push("EXIF Binary GPS Coordinates (0x8825)");
+  if (/Exif\0\0/.test(ascii)) findings.push("Camera / Device EXIF APP1 Header");
+  if (/ComfyUI|workflow|parameters|Midjourney|Stable Diffusion|DALL-E|Sora|Runway|Kling/i.test(ascii)) findings.push("Embedded AI Generator / Prompt Chunk");
+  return { hasThreats: findings.length > 0, findings };
+}
+
+async function handlePublicTelegramBotMessage(botToken, chatId, msg, isEs) {
+  const studioUrl = isEs
+    ? "https://pureaistudios.com/clean-ai-studio.html?lang=es&utm_source=telegram_bot"
+    : "https://pureaistudios.com/clean-ai-studio.html?lang=en&utm_source=telegram_bot";
+  const shareUrl = "https://t.me/share/url?url=" + encodeURIComponent("https://pureaistudios.com") + "&text=" + encodeURIComponent(
+    isEs
+      ? "🔎 Escáner y limpiador gratis de etiquetas 'Creado con IA' (C2PA), vídeos MP4 y GPS EXIF 100% privado:"
+      : "🔎 Free 100% local C2PA 'Made with AI', MP4 & EXIF GPS forensic scanner & cleaner:"
+  );
+  const inlineKeyboard = {
+    inline_keyboard: [
+      [{ text: isEs ? "🧹 Limpiar C2PA / Añadir EXIF iPhone 16 Pro" : "🧹 Strip C2PA / Add iPhone 16 Pro EXIF", url: studioUrl }],
+      [{ text: isEs ? "📲 Compartir Escáner en Telegram" : "📲 Share Scanner on Telegram", url: shareUrl }]
+    ]
+  };
+
+  let fileId = "";
+  let fileSize = 0;
+  let isCompressedPhotoHint = false;
+  if (msg.document && msg.document.file_id) {
+    fileId = msg.document.file_id;
+    fileSize = Number(msg.document.file_size) || 0;
+  } else if (Array.isArray(msg.photo) && msg.photo.length > 0) {
+    const largest = msg.photo[msg.photo.length - 1];
+    fileId = largest.file_id;
+    fileSize = Number(largest.file_size) || 0;
+    isCompressedPhotoHint = true;
+  } else if (msg.video && msg.video.file_id) {
+    fileId = msg.video.file_id;
+    fileSize = Number(msg.video.file_size) || 0;
+  }
+
+  let replyText = "";
+  let findings = [];
+  if (!fileId) {
+    replyText = isEs
+      ? "🧬 PureAI Forensic Scanner\n\nEnvíame cualquier foto (JPG/PNG/WebP) o vídeo MP4 (preferiblemente como 'Archivo / Documento' sin comprimir) y analizaré en memoria RAM si esconde:\n• Etiquetas 'Creado con IA' (C2PA / JUMBF)\n• Workflows ocultos de ComfyUI / Midjourney / Sora\n• Coordenadas exactas GPS EXIF (0x8825)\n\n🛡️ 0 bytes guardados. O usa el estudio 100% local en tu navegador abajo:"
+      : "🧬 PureAI Forensic Scanner\n\nSend me any photo (JPG/PNG/WebP) or MP4 video (ideally as an uncompressed 'File / Document') and I will inspect in RAM whether it hides:\n• 'Made with AI' C2PA / JUMBF credentials\n• Hidden ComfyUI / Midjourney / Sora tags\n• Exact EXIF GPS coordinates (0x8825)\n\n🛡️ 0 bytes stored. Or launch the 100% local browser studio below:";
+  } else if (fileSize > 20 * 1024 * 1024) {
+    replyText = isEs
+      ? "⚠️ El archivo supera el límite de 20 MB de la API de bots de Telegram. Ábrelo directamente en PureAI Studio (soporta hasta 150 MB 100% en tu propio navegador sin subirlo):"
+      : "⚠️ File exceeds Telegram's 20 MB Bot API limit. Open it directly in PureAI Studio (supports up to 150 MB 100% locally in your browser with zero upload):";
+  } else {
+    try {
+      const gf = await fetch(`https://api.telegram.org/bot${botToken}/getFile?file_id=${encodeURIComponent(fileId)}`).then((r) => r.json());
+      const filePath = gf && gf.ok && gf.result && gf.result.file_path;
+      if (filePath && typeof fetch === "function") {
+        const binRes = await fetch(`https://api.telegram.org/file/bot${botToken}/${filePath}`, {
+          headers: { Range: "bytes=0-65535" }
+        });
+        const buf = await binRes.arrayBuffer();
+        const report = inspectBinaryHeaderForTelegram(new Uint8Array(buf));
+        findings = report.findings;
+      }
+    } catch (_) {}
+
+    if (findings.length > 0) {
+      replyText = (isEs ? "⚠️ RASTROS OCULTOS DETECTADOS:\n" : "⚠️ HIDDEN METADATA DETECTED:\n") +
+        findings.map((f) => "• " + f).join("\n") +
+        (isEs
+          ? "\n\nPulsa abajo para exportar una copia 100% limpia o inyectar EXIF de iPhone 16 Pro desde tu navegador:"
+          : "\n\nTap below to export a 100% clean copy or inject iPhone 16 Pro EXIF locally in your browser:");
+    } else {
+      replyText = isEs
+        ? "✅ 0 firmas ocultas C2PA / GPS detectadas en la cabecera analizada." + (isCompressedPhotoHint ? "\n💡 Consejo: Telegram comprime las fotos normales; envíala como 'Archivo' o analízala sin compresión en nuestra web:" : "\nPuedes inyectar EXIF de cámara real (iPhone 16 Pro / Sony A7IV) abajo:")
+        : "✅ 0 hidden C2PA / GPS signatures found in scanned header." + (isCompressedPhotoHint ? "\n💡 Tip: Telegram recompresses standard photos; send as 'File/Document' or scan the original locally on our web studio:" : "\nYou can also inject real camera EXIF (iPhone 16 Pro / Sony A7IV) below:");
+    }
+  }
+
+  if (typeof fetch === "function") {
+    try {
+      await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          chat_id: chatId,
+          text: replyText,
+          reply_markup: inlineKeyboard,
+          disable_web_page_preview: true
+        })
+      });
+    } catch (_) {}
+  }
+  return { ok: true, findings };
 }
 
 
@@ -1498,5 +1664,6 @@ module.exports = {
   createWebhookProcessorStore,
   processStripeWebhookEvent,
   handleWorkerHttpRequest,
+  inspectBinaryHeaderForTelegram,
   default: workerDefaultExport
 };

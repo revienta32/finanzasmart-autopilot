@@ -1239,6 +1239,84 @@
     var MAX_IMAGE_BYTES = 50 * 1024 * 1024;
     var MAX_CANVAS_SIDE = 16384;
     var MAX_CANVAS_PIXELS = 67108864;
+    var lastForensicScanState = null;
+
+    function downloadForensicProofCard() {
+      var st = lastForensicScanState;
+      if (!st || !st.fileName) return false;
+      var canvas = document.createElement("canvas");
+      canvas.width = 1080;
+      canvas.height = 1350;
+      var ctx = canvas.getContext("2d");
+      if (ctx && typeof ctx.fillRect === "function") {
+        ctx.fillStyle = "#060913";
+        ctx.fillRect(0, 0, 1080, 1350);
+        ctx.strokeStyle = st.hasThreats ? "#f43f5e" : "#10b981";
+        ctx.lineWidth = 8;
+        if (typeof ctx.strokeRect === "function") ctx.strokeRect(36, 36, 1008, 1278);
+
+        ctx.fillStyle = "#a855f7";
+        ctx.font = "bold 26px system-ui, sans-serif";
+        if (typeof ctx.fillText === "function") {
+          ctx.fillText("PUREAI STUDIO · 100% LOCAL FORENSIC CERTIFICATE", 84, 112);
+          ctx.fillStyle = "#f8fafc";
+          ctx.font = "bold 44px system-ui, sans-serif";
+          ctx.fillText(st.hasThreats ? "⚠️ AI / METADATA SIGNATURES FOUND" : "✅ 0 HIDDEN C2PA / AI / GPS TRACES", 84, 178);
+          ctx.fillStyle = "#94a3b8";
+          ctx.font = "27px system-ui, sans-serif";
+          ctx.fillText("Asset: " + String(st.fileName).slice(0, 44) + " (" + st.sizeLabel + ")", 84, 236);
+
+          var listY = 320;
+          if (loadedImgElement && !loadedImgElement.isVideo && typeof ctx.drawImage === "function") {
+            try {
+              ctx.drawImage(loadedImgElement, 84, 275, 220, 220);
+              listY = 545;
+            } catch (_) {}
+          }
+
+          var items = st.items && st.items.length ? st.items : ["0 C2PA / JUMBF Content Credentials", "0 EXIF GPS Location Tags (0x8825)", "0 Hidden AI Prompt / XMP Signatures"];
+          ctx.fillStyle = st.hasThreats ? "#fecdd3" : "#a7f3d0";
+          ctx.font = "29px system-ui, sans-serif";
+          for (var i = 0; i < items.length && i < 6; i++) {
+            ctx.fillText("• " + String(items[i]).slice(0, 58), 84, listY + i * 58);
+          }
+
+          ctx.fillStyle = "#10b981";
+          ctx.font = "bold 34px system-ui, sans-serif";
+          ctx.fillText("Scan & Clean Free at PureAIStudios.com", 84, 1195);
+          ctx.fillStyle = "#64748b";
+          ctx.font = "24px system-ui, sans-serif";
+          ctx.fillText(new Date().toISOString().replace("T", " ").slice(0, 19) + " UTC · Zero Server Upload (100% RAM)", 84, 1244);
+        }
+      }
+
+      if (typeof canvas.toBlob === "function") {
+        canvas.toBlob(function (blob) {
+          if (!blob) return;
+          var safeBase = String(st.fileName).replace(/\.[^.]+$/, "").replace(/[^a-zA-Z0-9_-]/g, "_").slice(0, 32) || "asset";
+          var outName = "pureai-forensic-proof-" + safeBase + ".png";
+          if (typeof navigator !== "undefined" && typeof navigator.share === "function" && typeof File === "function") {
+            try {
+              var shareFile = new File([blob], outName, { type: "image/png" });
+              if (!navigator.canShare || navigator.canShare({ files: [shareFile] })) {
+                navigator.share({
+                  title: "PureAI Forensic Audit",
+                  text: "Verified 100% locally at https://pureaistudios.com",
+                  files: [shareFile]
+                }).catch(function () {});
+                return;
+              }
+            } catch (_) {}
+          }
+          var dl = document.createElement("a");
+          dl.href = URL.createObjectURL(blob);
+          dl.download = outName;
+          dl.click();
+        }, "image/png");
+      }
+      return true;
+    }
+
     async function inspectVideoFile(file) {
       if (!file || !file.size || file.size <= 0 || file.size > MAX_VIDEO_BYTES) {
         var errLogV = document.getElementById("img-audit-log");
@@ -1262,7 +1340,16 @@
       const hasAiVideoSig = /c2pa|jumbf|Sora|Runway|Kling|HeyGen|Pika|Luma|Lavf|trainedAlgorithmicMedia|contentcredentials/i.test(headAscii + " " + tailAscii);
       const log = document.getElementById("img-audit-log");
       const mb = (file.size / (1024 * 1024)).toFixed(2);
-      log.innerHTML = `<div style="color:#fde68a;font-size:0.82rem;line-height:1.45;">🎬 <strong>Vídeo corto cargado: "${escapeHtml(file.name)}" (${mb} MB)</strong> — ${hasAiVideoSig ? "Rastro C2PA/Encoder IA detectado en átomos del contenedor." : "Contenedor MP4/MOV analizado (cabecera y átomos finales)."} Pulsa el botón verde abajo para limpiar cabeceras del contenedor y descargar.</div>`;
+      lastForensicScanState = {
+        fileName: String(file.name || "video.mp4"),
+        sizeLabel: mb + " MB",
+        hasThreats: Boolean(hasAiVideoSig),
+        items: hasAiVideoSig
+          ? ["C2PA / JUMBF or AI Video Encoder Atom Detected", "MP4 / MOV Container Audited Locally in RAM"]
+          : ["0 C2PA / AI Video Provenance Signatures", "MP4 / MOV Container Audited Locally in RAM"]
+      };
+      const vidCertBtnLabel = currentUiLang === "es" ? "🪪 Certificado Forense Compartible (PNG)" : "🪪 Shareable Forensic Proof Card (PNG)";
+      log.innerHTML = `<div style="color:#fde68a;font-size:0.82rem;line-height:1.45;">🎬 <strong>Vídeo corto cargado: "${escapeHtml(file.name)}" (${mb} MB)</strong> — ${hasAiVideoSig ? "Rastro C2PA/Encoder IA detectado en átomos del contenedor." : "Contenedor MP4/MOV analizado (cabecera y átomos finales)."} Pulsa el botón verde abajo para limpiar cabeceras del contenedor y descargar.<div style="margin-top:7px;"><button type="button" onclick="downloadForensicProofCard()" style="padding:4px 10px;border-radius:7px;border:1px solid rgba(168,85,247,0.55);background:rgba(168,85,247,0.16);color:#f3e8ff;font-size:0.75rem;font-weight:700;cursor:pointer;">${vidCertBtnLabel}</button></div></div>`;
       const btn = document.getElementById("btn-scrub-img");
       if (btn) {
         btn.disabled = false;
@@ -1481,6 +1568,13 @@
       const provenanceNotice = hasC2paProvenance
         ? `<div style="margin-top:4px;font-size:0.74rem;color:#cbd5e1;">ℹ️ <em>Aviso de Gobernanza: Este archivo contiene credenciales de procedencia C2PA. Úselo solo en obras propias; si publica deepfakes en ámbito profesional, recuerde los deberes de transparencia del Art. 50 del Reglamento (UE) 2024/1689 (AI Act).</em></div>`
         : "";
+      lastForensicScanState = {
+        fileName: String(file.name || "image.jpg"),
+        sizeLabel: (file.size / 1024).toFixed(1) + " KB",
+        hasThreats: hasRealThreats,
+        items: hasRealThreats ? findings.slice() : cleanInfoBadges.slice()
+      };
+      const certBtnHtml = `<div style="margin-top:7px;"><button type="button" onclick="downloadForensicProofCard()" style="padding:4px 10px;border-radius:7px;border:1px solid rgba(168,85,247,0.55);background:rgba(168,85,247,0.16);color:#f3e8ff;font-size:0.75rem;font-weight:700;cursor:pointer;">${currentUiLang === "es" ? "🪪 Certificado Forense Compartible (PNG)" : "🪪 Shareable Forensic Proof Card (PNG)"}</button></div>`;
       if (hasRealThreats) {
         const summaryMsg = currentUiLang === "es"
           ? `⚠️ <strong>Metadatos detectados en "${escapeHtml(file.name)}"</strong> (${(file.size / 1024).toFixed(0)} KB)${batchQueue.length > 1 ? ` · ${batchQueue.length} archivos` : ""} — Pulsa el botón verde abajo para exportar una copia limpia.${snippetHtml}${provenanceNotice}`
@@ -1488,7 +1582,7 @@
         log.innerHTML =
           `<div style="color:#fde68a;font-size:0.82rem;line-height:1.45;width:100%;">${summaryMsg}<div style="margin-top:6px;display:flex;flex-wrap:wrap;gap:4px;">` +
           findings.map((f) => `<span class="threat-badge-red">${f}</span>`).join("") +
-          `</div></div>`;
+          `</div>${certBtnHtml}</div>`;
       } else {
         const cleanSummaryMsg = currentUiLang === "es"
           ? `✅ <strong>0 amenazas C2PA/IA en "${escapeHtml(file.name)}"</strong> (${(file.size / 1024).toFixed(0)} KB)${batchQueue.length > 1 ? ` · ${batchQueue.length} archivos` : ""} — Puedes re-exportar o aplicar un perfil EXIF de cámara abajo.`
@@ -1496,7 +1590,7 @@
         log.innerHTML =
           `<div style="color:#a7f3d0;font-size:0.82rem;line-height:1.45;width:100%;">${cleanSummaryMsg}<div style="margin-top:6px;display:flex;flex-wrap:wrap;gap:4px;">` +
           cleanInfoBadges.map((b) => `<span class="threat-badge-green">${b}</span>`).join("") +
-          `</div></div>`;
+          `</div>${certBtnHtml}</div>`;
       }
 
       const img = new Image();
@@ -1910,14 +2004,14 @@
     function copyEmbedWidgetCode() {
       var partnerInp = document.getElementById("partner-id-inp");
       var alias = (partnerInp && partnerInp.value ? partnerInp.value.trim().replace(/[^a-zA-Z0-9_.-]/g, "_") : "") || localStorage.getItem("pureai_my_ref") || "partner";
-      var iframeCode = '<iframe src="https://pureaistudios.com/clean-ai-studio.html?embed=1&aff=' + encodeURIComponent(alias) + '" width="100%" height="760" style="border:1px solid rgba(168,85,247,0.35);border-radius:18px;overflow:hidden;" loading="lazy"></iframe>';
+      var iframeCode = '<iframe src="https://pureaistudios.com/embed-scanner.html?aff=' + encodeURIComponent(alias) + '" width="100%" height="430" style="border:1px solid rgba(16,185,129,0.45);border-radius:16px;overflow:hidden;" loading="lazy"></iframe>';
       if (navigator.clipboard && navigator.clipboard.writeText) {
         navigator.clipboard.writeText(iframeCode).catch(function () {});
       }
       var out = document.getElementById("partner-link-out");
       if (out) {
         out.style.display = "block";
-        out.innerHTML = "✅ <strong>¡Código &lt;iframe&gt; copiado al portapapeles!</strong> Pégalo en tu web, WordPress o Notion. Ganarás el <strong>40% en Stripe</strong> de cada usuario que desbloquee Pro desde tu widget:<br><br><code>" + escapeHtml(iframeCode) + "</code>";
+        out.innerHTML = "✅ <strong>¡Código &lt;iframe&gt; ligero copiado al portapapeles!</strong> Pégalo en tu web, WordPress o Notion. Ganarás el <strong>40% en Stripe</strong> de cada usuario que desbloquee Pro desde tu escáner:<br><br><code>" + escapeHtml(iframeCode) + "</code>";
       }
       return iframeCode;
     }

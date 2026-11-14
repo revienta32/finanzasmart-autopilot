@@ -46,6 +46,13 @@ function getPaEl(id) {
       click() {},
       getContext() {
         return {
+          fillStyle: "",
+          strokeStyle: "",
+          lineWidth: 1,
+          font: "",
+          fillRect() {},
+          strokeRect() {},
+          fillText() {},
           drawImage() {},
           getImageData(x, y, w, h) { return { data: new Uint8ClampedArray((w || 8) * (h || 8) * 4) }; },
           putImageData() {}
@@ -707,7 +714,7 @@ assert(cleanAiHtml.includes("terms.html") && cleanAiHtml.includes("Art. 103.m TR
   const termsCurrent = fs.readFileSync(path.join(__dirname, "terms.html"), "utf8");
   assert(!privPolicyCurrent.includes("[NOMBRE COMPLETO") && !termsCurrent.includes("[NOMBRE COMPLETO"), "privacy-policy.html y terms.html no deben contener marcadores de borrador sin completar");
   const swCurrent = fs.readFileSync(path.join(__dirname, "sw.js"), "utf8");
-  assert(swCurrent.includes("pureai-studio-v6") && swCurrent.includes('e.request.mode === "navigate"'), "sw.js debe implementar caché v6 con soporte de navegación offline y revalidación");
+  assert(swCurrent.includes("pureai-studio-v7") && swCurrent.includes('e.request.mode === "navigate"'), "sw.js debe implementar caché v7 con soporte de navegación offline y revalidación");
 
   // 17e. Verificar Cuota Gratuita de 1 Foto/Vídeo Gratis (MAX_FREE_IMG_USES = 1) y 1 prueba de texto corto (<=180 palabras) en deepHumanizePro
   assert.strictEqual(paSandbox.MAX_FREE_IMG_USES, 1, "CRO: MAX_FREE_IMG_USES debe ser exactamente 1 exportación gratuita");
@@ -1843,7 +1850,120 @@ assert(cleanAiHtml.includes("terms.html") && cleanAiHtml.includes("Art. 103.m TR
   assert.strictEqual(lifeDigestBody.ok, true, "TG-LIFE-01: /daily-digest debe responder ok=true");
   assert(lifeDigestBody.total.visits >= 500 && lifeDigestBody.total.paidSales === 4, "TG-LIFE-01b: El contador histórico permanente nunca debe bajar aunque rote la ventana reciente");
 
-  console.log("✅ QA TEST SUITE PASSED (20 SECCIONES / 270+ ASERCIONES): 100% E2E VM + Hybrid Credit Packs (2,99 € / 9,90 € / 39 €) + Atomic Credit Ledger (/consume-credit) + Anti-Incognito Quota (/check-free-quota) + CRO Paywall Asset Preview + Round-2 Adversarial Security + Pre-Incorporation Gate + Mom-Test Scorer + 5 Core Validation Tests + 90-Day Bottleneck Diagnostics + Batch Mixto Foto/MP4 + Lossless JPEG + MP4 Camera Udta + EXIF GPS 0x8825 + Pagos/Webhooks KV + CFO + Legal/AI Act + Ciberseguridad verificadas sin errores.");
+  // 21. ESCALA DE TRÁFICO 100% AUTOMÁTICA: Certificado Forense Viral, Widget Embebible, Matriz Multilingüe (10 idiomas × 5 tools + RSS) y Bot Público Telegram
+  // 21a. Certificado Forense Compartible (1080x1350 PNG) y nuevo iframe embed-scanner.html
+  const beforeCertBlobs = cleanedBlobs.length;
+  await paSandbox.inspectImageFile({
+    name: 'test"<img src=x onerror=alert(1)>.jpg',
+    size: 4096,
+    type: "image/jpeg",
+    arrayBuffer: async () => new TextEncoder().encode("JFIF c2pa jumbf trainedAlgorithmicMedia").buffer
+  });
+  assert(getPaEl("img-audit-log").innerHTML.includes("downloadForensicProofCard()"), "VIRAL-01: inspectImageFile debe mostrar el botón del Certificado Forense Compartible");
+  assert(!getPaEl("img-audit-log").innerHTML.includes("<img src=x"), "VIRAL-01b: Nombre malicioso debe seguir escapado contra XSS");
+  const certResult = paSandbox.downloadForensicProofCard();
+  assert.strictEqual(certResult, true, "VIRAL-02: downloadForensicProofCard() debe generar el certificado PNG local");
+  assert(cleanedBlobs.length > beforeCertBlobs, "VIRAL-02b: downloadForensicProofCard() debe emitir un Blob descargable");
+  const partnerEmbedSnippet = paSandbox.copyEmbedWidgetCode();
+  assert(partnerEmbedSnippet.includes("https://pureaistudios.com/embed-scanner.html?aff="), "VIRAL-03: copyEmbedWidgetCode() debe apuntar al nuevo widget ligero embed-scanner.html");
+
+  const embedScannerHtml = fs.readFileSync(path.join(__dirname, "embed-scanner.html"), "utf8");
+  assert(embedScannerHtml.includes('http-equiv="Content-Security-Policy"') && embedScannerHtml.includes('href="https://pureaistudios.com/"'), "EMBED-01: embed-scanner.html debe tener CSP activa y atribución dofollow hacia pureaistudios.com");
+
+  // 21b. Motor de Matriz Multilingüe (50 páginas = 10 idiomas × 5 herramientas interactivas reales + hreflang + feed.xml)
+  const growthMatrix = require("./growth-matrix-engine.js");
+  const allMatrix = growthMatrix.getAllMatrixEntries();
+  assert.strictEqual(allMatrix.length, 50, "MTX-01: La matriz completa debe contener exactamente 50 herramientas localizadas (10 idiomas × 5 tools)");
+  const waveDay0 = growthMatrix.getUnlockedMatrixPages("2026-11-14T09:00:00Z");
+  const waveDay2 = growthMatrix.getUnlockedMatrixPages("2026-11-16T09:00:00Z");
+  const waveDay10 = growthMatrix.getUnlockedMatrixPages("2026-11-24T09:00:00Z");
+  assert.strictEqual(waveDay0.length, 15, "MTX-02a: Ola inicial (Día 0) debe desbloquear 15 páginas (EN, ES, PT × 5 tools)");
+  assert.strictEqual(waveDay2.length, 31, "MTX-02b: Día +2 debe desbloquear progresivamente +16 páginas (total 31)");
+  assert.strictEqual(waveDay10.length, 50, "MTX-02c: Ola completa llega al tope de 50 páginas sin excederlo");
+
+  const ptDetectorPath = path.join(__dirname, "pt-ai-photo-detector.html");
+  const feedXmlPath = path.join(__dirname, "feed.xml");
+  assert(fs.existsSync(ptDetectorPath), "MTX-03: autopilot-ceo.js debe haber generado pt-ai-photo-detector.html en disco");
+  assert(fs.existsSync(feedXmlPath), "MTX-04: autopilot-ceo.js debe haber generado feed.xml (RSS 2.0) en disco");
+  const ptDetectorHtml = fs.readFileSync(ptDetectorPath, "utf8");
+  assert(
+    ptDetectorHtml.includes('hreflang="en" href="https://pureaistudios.com/ai-photo-detector.html"') &&
+    ptDetectorHtml.includes('hreflang="es" href="https://pureaistudios.com/es-ai-photo-detector.html"') &&
+    ptDetectorHtml.includes('hreflang="x-default" href="https://pureaistudios.com/ai-photo-detector.html"') &&
+    ptDetectorHtml.includes('"@type":"FAQPage"') &&
+    ptDetectorHtml.includes("window.__mtxHandleFile"),
+    "MTX-05: Cada página de la matriz debe incluir hreflang cruzado válido, FAQPage JSON-LD y motor JS interactivo real"
+  );
+  const feedXmlContent = fs.readFileSync(feedXmlPath, "utf8");
+  assert(feedXmlContent.includes('<rss version="2.0"') && feedXmlContent.includes("https://pureaistudios.com/ai-photo-detector.html"), "MTX-06: feed.xml debe ser un documento RSS 2.0 válido con las herramientas activas");
+
+  // 21c. Bot Público Viral de Telegram (/telegram-public-bot): aislamiento de secretos, rechazo 401 y escaneo C2PA en RAM
+  const tgBinReport = webhookEngine.inspectBinaryHeaderForTelegram(new TextEncoder().encode("JFIF\0\0Exif\0\0 c2pa jumbf ComfyUI GPSLatitude"));
+  assert(tgBinReport.hasThreats === true && tgBinReport.findings.length >= 3, "TGPUB-01: inspectBinaryHeaderForTelegram debe detectar firmas C2PA, GPS y ComfyUI en RAM");
+
+  const pubEnv = Object.assign({}, secEnv, {
+    PUBLIC_TELEGRAM_BOT_TOKEN: "123456:TEST_PUBLIC_BOT_TOKEN_ISOLATED",
+    PUBLIC_TELEGRAM_WEBHOOK_SECRET: "pub_tg_secret_998877"
+  });
+  const unauthTgPub = await webhookEngine.handleWorkerHttpRequest(
+    {
+      method: "POST",
+      url: "https://pureai-stripe-webhook.pureaistudio-app.workers.dev/telegram-public-bot",
+      headers: { get: (h) => (String(h).toLowerCase() === "x-telegram-bot-api-secret-token" ? "wrong_secret" : "") },
+      text: async () => JSON.stringify({ message: { chat: { id: 777 }, text: "/start" } })
+    },
+    pubEnv
+  );
+  assert.strictEqual(unauthTgPub.status, 401, "TGPUB-02: /telegram-public-bot debe rechazar con 401 cualquier webhook sin X-Telegram-Bot-Api-Secret-Token legítimo");
+
+  const prevGlobalFetch = global.fetch;
+  let capturedTgBotPayload = null;
+  global.fetch = async (reqUrl, opts) => {
+    const u = String(reqUrl);
+    if (u.includes("/getFile?")) {
+      return { ok: true, json: async () => ({ ok: true, result: { file_path: "documents/sample_ai.png" } }) };
+    }
+    if (u.includes("/file/bot")) {
+      const sampleBytes = new TextEncoder().encode("PNG\r\n c2pa jumbf trainedAlgorithmicMedia workflow ComfyUI");
+      return { ok: true, arrayBuffer: async () => sampleBytes.buffer };
+    }
+    if (u.includes("/sendMessage")) {
+      capturedTgBotPayload = JSON.parse(opts.body);
+      return { ok: true, json: async () => ({ ok: true }) };
+    }
+    return { ok: true, json: async () => ({ ok: true }) };
+  };
+  try {
+    const validTgPub = await webhookEngine.handleWorkerHttpRequest(
+      {
+        method: "POST",
+        url: "https://pureai-stripe-webhook.pureaistudio-app.workers.dev/telegram-public-bot",
+        headers: { get: (h) => (String(h).toLowerCase() === "x-telegram-bot-api-secret-token" ? "pub_tg_secret_998877" : "") },
+        text: async () => JSON.stringify({
+          message: {
+            chat: { id: 888999 },
+            from: { language_code: "es" },
+            document: { file_id: "doc_ai_1", file_size: 12000 }
+          }
+        })
+      },
+      pubEnv
+    );
+    const validTgBody = JSON.parse(validTgPub.body);
+    assert.strictEqual(validTgPub.status, 200, "TGPUB-03: /telegram-public-bot autenticado debe responder 200");
+    assert(validTgBody.ok === true && validTgBody.findings.some((f) => f.includes("C2PA")), "TGPUB-03b: Debe detectar C2PA en el archivo simulado en RAM");
+    assert(
+      capturedTgBotPayload &&
+      capturedTgBotPayload.chat_id === 888999 &&
+      JSON.stringify(capturedTgBotPayload.reply_markup).includes("utm_source=telegram_bot") &&
+      JSON.stringify(capturedTgBotPayload.reply_markup).includes("t.me/share/url"),
+      "TGPUB-04: La respuesta del bot público debe incluir teclado inline hacia pureaistudios.com y botón viral de compartir"
+    );
+  } finally {
+    global.fetch = prevGlobalFetch;
+  }
+
+  console.log("✅ QA TEST SUITE PASSED (21 SECCIONES / 290+ ASERCIONES): 100% E2E VM + Escala de Tráfico Automática (Certificado Forense PNG + Embed Scanner + Matriz 50 Tools 10 Idiomas + RSS feed.xml + Bot Público Telegram) + Hybrid Credit Packs + Anti-Bypass + Ciberseguridad verificadas sin errores.");
 })();
 
 

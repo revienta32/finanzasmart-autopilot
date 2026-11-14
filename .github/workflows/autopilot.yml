@@ -41,6 +41,6 @@ jobs:
         run: |
           git config user.name "PureAI Studio Ops Bot"
           git config user.email "ops@pureaistudios.com"
-          git add sitemap.xml sitemap.txt index.html directorio-guias.html
+          git add sitemap.xml sitemap.txt feed.xml index.html directorio-guias.html *.html
           git diff --staged --quiet || git commit -m "chore(ops): cloud social radar, mobile digest & verified sitemap sync"
           git push

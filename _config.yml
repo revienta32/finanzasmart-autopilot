@@ -8,3 +8,4 @@ exclude:
   - README.md
   - chrome-extension-pureai
   - comfyui-pureai-node
+  - growth-matrix-engine.js

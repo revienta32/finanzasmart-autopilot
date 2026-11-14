@@ -1,8 +1,9 @@
-const CACHE_NAME = "pureai-studio-v6";
+const CACHE_NAME = "pureai-studio-v7";
 const ASSETS = [
   "./",
   "./index.html",
   "./clean-ai-studio.html",
+  "./embed-scanner.html",
   "./styles.css",
   "./telemetria-soporte.js",
   "./privacy-policy.html",

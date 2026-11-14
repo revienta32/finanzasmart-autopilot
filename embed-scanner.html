@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="referrer" content="strict-origin-when-cross-origin" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self' https: data: blob:; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; connect-src 'self' https:; object-src 'none'; base-uri 'self'; form-action 'self';" />
+  <title>Free Embeddable C2PA, AI &amp; EXIF GPS Scanner Widget | PureAI Studio</title>
+  <meta name="description" content="Free 100% client-side C2PA, JUMBF, ComfyUI PNG &amp; EXIF GPS metadata scanner widget. Zero server uploads. Embed on any blog, Notion, or website in 1 click." />
+  <link rel="canonical" href="https://pureaistudios.com/embed-scanner.html" />
+  <style>
+    :root { color-scheme: dark; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: #060913;
+      color: #f8fafc;
+      padding: 14px;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .widget-shell {
+      width: 100%;
+      max-width: 620px;
+      background: linear-gradient(155deg, #0f172a 0%, #070b16 100%);
+      border: 1.5px solid rgba(16, 185, 129, 0.55);
+      border-radius: 16px;
+      padding: 18px;
+      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5);
+    }
+    .hdr {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 10px;
+    }
+    .badge {
+      font-size: 0.72rem;
+      font-weight: 800;
+      padding: 3px 9px;
+      border-radius: 99px;
+      background: rgba(16, 185, 129, 0.16);
+      color: #6ee7b7;
+      border: 1px solid rgba(16, 185, 129, 0.4);
+    }
+    h1 {
+      font-size: 1.05rem;
+      line-height: 1.35;
+      margin-bottom: 10px;
+      color: #f8fafc;
+    }
+    .drop {
+      display: block;
+      border: 2px dashed rgba(168, 85, 247, 0.55);
+      border-radius: 12px;
+      padding: 18px 12px;
+      text-align: center;
+      cursor: pointer;
+      background: rgba(2, 6, 23, 0.65);
+      transition: border-color 0.2s, background 0.2s;
+    }
+    .drop:hover { border-color: #10b981; background: rgba(16, 185, 129, 0.06); }
+    .res {
+      display: none;
+      margin-top: 12px;
+      padding: 10px 12px;
+      border-radius: 10px;
+      background: #020617;
+      border: 1px solid #334155;
+      font-size: 0.8rem;
+      line-height: 1.45;
+    }
+    .tag-red {
+      display: inline-block;
+      margin: 4px 4px 0 0;
+      padding: 2px 7px;
+      border-radius: 6px;
+      font-size: 0.72rem;
+      background: rgba(244, 63, 94, 0.18);
+      border: 1px solid rgba(244, 63, 94, 0.45);
+      color: #fecdd3;
+    }
+    .actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 12px;
+    }
+    .btn-primary {
+      flex: 1;
+      min-width: 190px;
+      text-align: center;
+      padding: 9px 14px;
+      border-radius: 9px;
+      background: #10b981;
+      color: #022c22;
+      font-weight: 800;
+      font-size: 0.83rem;
+      text-decoration: none;
+    }
+    .btn-ghost {
+      padding: 9px 12px;
+      border-radius: 9px;
+      border: 1px solid #334155;
+      background: #0f172a;
+      color: #cbd5e1;
+      font-size: 0.78rem;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .foot {
+      margin-top: 12px;
+      padding-top: 9px;
+      border-top: 1px solid rgba(51, 65, 85, 0.6);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 6px;
+      font-size: 0.73rem;
+      color: #94a3b8;
+    }
+    .foot a {
+      color: #10b981;
+      font-weight: 700;
+      text-decoration: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="widget-shell">
+    <div class="hdr">
+      <span class="badge" id="w-badge">🛡️ 100% Local RAM Scan · 0 Uploads</span>
+      <span style="font-size:0.74rem;color:#94a3b8;">JPG · PNG · WebP · MP4</span>
+    </div>
+    <h1 id="w-title">🔎 Free C2PA, AI Provenance &amp; EXIF GPS Forensic Scanner</h1>
+
+    <label class="drop" for="w-file">
+      <div style="font-size:1.35rem;margin-bottom:3px;">📂</div>
+      <div id="w-drop-txt" style="font-weight:700;font-size:0.88rem;">Drop photo or MP4 here (or click to inspect locally)</div>
+      <div id="w-sub-txt" style="font-size:0.73rem;color:#94a3b8;margin-top:3px;">Instant check for 'Made with AI' C2PA tags, ComfyUI workflows &amp; GPS location</div>
+      <input id="w-file" type="file" accept="image/jpeg,image/png,image/webp,video/mp4,video/quicktime" style="display:none;" />
+    </label>
+
+    <div class="res" id="w-res"></div>
+
+    <div class="actions">
+      <a id="w-clean-link" class="btn-primary" href="https://pureaistudios.com/clean-ai-studio.html?utm_source=embed_widget" target="_blank" rel="noopener">⚡ Clean Metadata &amp; Add Camera EXIF →</a>
+      <button type="button" class="btn-ghost" id="w-copy-embed">📋 Embed on Your Site</button>
+    </div>
+
+    <div class="foot">
+      <span>Powered by <a href="https://pureaistudios.com/" target="_blank">PureAI Studio — Free Local C2PA &amp; EXIF Scrubber</a></span>
+      <span id="w-copied" style="color:#6ee7b7;font-weight:700;"></span>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      function escapeHtml(s) {
+        return String(s || "").replace(/[&<>"']/g, function (c) {
+          return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+        });
+      }
+
+      var params = new URLSearchParams(window.location.search || "");
+      var rawAff = (params.get("aff") || "").replace(/[^a-zA-Z0-9_.-]/g, "").slice(0, 40);
+      var isEs = (params.get("lang") || navigator.language || "").toLowerCase().indexOf("es") === 0;
+
+      var studioUrl = "https://pureaistudios.com/clean-ai-studio.html?utm_source=embed_widget" + (rawAff ? "&aff=" + encodeURIComponent(rawAff) : "");
+      var linkEl = document.getElementById("w-clean-link");
+      if (linkEl) linkEl.href = studioUrl;
+
+      if (isEs) {
+        document.getElementById("w-badge").textContent = "🛡️ Escáner 100% Local · 0 Subidas";
+        document.getElementById("w-title").textContent = "🔎 Escáner Gratis de Rastros IA (C2PA), Prompts PNG y GPS EXIF";
+        document.getElementById("w-drop-txt").textContent = "Arrastra una foto o vídeo MP4 aquí (o pulsa para analizar)";
+        document.getElementById("w-sub-txt").textContent = "Detecta al instante por qué Instagram/TikTok marca 'Creado con IA' o coordenadas GPS";
+        linkEl.textContent = "⚡ Limpiar Metadatos / Añadir EXIF Cámara →";
+        document.getElementById("w-copy-embed").textContent = "📋 Insertar en tu Web";
+      }
+
+      var inp = document.getElementById("w-file");
+      inp.addEventListener("change", async function () {
+        var f = inp.files && inp.files[0];
+        if (!f || !f.size || f.size > 150 * 1024 * 1024) return;
+        var buf = await f.arrayBuffer();
+        var bytes = new Uint8Array(buf);
+        var head = bytes.subarray(0, Math.min(bytes.length, 262144));
+        var tail = bytes.length > 262144 ? bytes.subarray(Math.max(262144, bytes.length - 131072)) : new Uint8Array(0);
+        var dec = new TextDecoder("latin1");
+        var ascii = dec.decode(head) + (tail.length ? "\n" + dec.decode(tail) : "");
+
+        var hasGpsBin = false;
+        for (var i = 0; i + 3 < Math.min(head.length, 65536); i++) {
+          if ((head[i] === 0x25 && head[i + 1] === 0x88 && head[i + 2] === 0x04 && head[i + 3] === 0x00) ||
+              (head[i] === 0x88 && head[i + 1] === 0x25 && head[i + 2] === 0x00 && head[i + 3] === 0x04)) {
+            hasGpsBin = true;
+            break;
+          }
+        }
+
+        var findings = [];
+        if (/c2pa|jumbf|c2ma|contentcredentials/i.test(ascii)) findings.push("C2PA / JUMBF AI Provenance");
+        if (/trainedAlgorithmicMedia|DigitalSourceType/i.test(ascii)) findings.push("XMP trainedAlgorithmicMedia");
+        if (/GPSInfo|GPSLatitude|GPSLongitude/.test(ascii) || hasGpsBin) findings.push("EXIF GPS Location (0x8825)");
+        if (/Exif\0\0/.test(ascii)) findings.push("EXIF APP1 Device Header");
+        if (/ComfyUI|workflow|parameters|Midjourney|Stable Diffusion|DALL-E|Sora|Runway|Kling/i.test(ascii)) findings.push("Embedded AI Generator / Prompt Tag");
+
+        var res = document.getElementById("w-res");
+        res.style.display = "block";
+        var safeName = escapeHtml(f.name);
+        var kb = (f.size / 1024).toFixed(1) + " KB";
+        if (findings.length > 0) {
+          res.innerHTML = "<strong style='color:#fda4af;'>⚠️ " + (isEs ? "Rastros detectados en " : "Metadata detected in ") + safeName + " (" + kb + "):</strong><div>" +
+            findings.map(function (x) { return "<span class='tag-red'>" + escapeHtml(x) + "</span>"; }).join("") + "</div>";
+        } else {
+          res.innerHTML = "<strong style='color:#6ee7b7;'>✅ " + safeName + " (" + kb + ") — " +
+            (isEs ? "0 firmas ocultas C2PA / IA / GPS detectadas." : "0 hidden C2PA / AI / GPS threats detected.") + "</strong>";
+        }
+      });
+
+      document.getElementById("w-copy-embed").addEventListener("click", function () {
+        var snippet = '<iframe src="https://pureaistudios.com/embed-scanner.html' + (rawAff ? "?aff=" + encodeURIComponent(rawAff) : "") + '" width="100%" height="430" style="border:0;border-radius:16px;overflow:hidden;" loading="lazy"></iframe>';
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(snippet).catch(function () {});
+        }
+        document.getElementById("w-copied").textContent = isEs ? "¡Código <iframe> copiado!" : "<iframe> code copied!";
+      });
+    })();
+  </script>
+  <script src="telemetria-soporte.js" defer></script>
+</body>
+</html>

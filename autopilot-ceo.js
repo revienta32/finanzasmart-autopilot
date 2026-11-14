@@ -7,6 +7,7 @@
 
 const fs = require("fs");
 const path = require("path");
+const growthMatrix = require("./growth-matrix-engine");
 
 const SITE_URL = "https://pureaistudios.com";
 const INDEXNOW_KEY = "b8f4c2d1e9a74b6c8d3e2f1a0b9c8d7e";
@@ -546,6 +547,41 @@ async function run() {
     allUrls.push(`${SITE_URL}/${page.slug}`);
   }
 
+  // Ola progresiva multilingüe (10 idiomas × 5 herramientas interactivas reales con hreflang cruzado)
+  const unlockedMatrixEntries = growthMatrix.getUnlockedMatrixPages(new Date());
+  for (const mEntry of unlockedMatrixEntries) {
+    fs.writeFileSync(
+      path.join(__dirname, mEntry.slug),
+      growthMatrix.buildMatrixToolHtml(mEntry, unlockedMatrixEntries)
+    );
+    allUrls.push(`${SITE_URL}/${mEntry.slug}`);
+  }
+
+  // Generar feed RSS 2.0 oficial (feed.xml) para sindicación automática y rastreadores
+  const rssItems = [
+    {
+      title: "PureAI Studio — 100% Local C2PA, EXIF Camera Injector, MP4 & Unicode Scrubber",
+      url: `${SITE_URL}/clean-ai-studio.html`,
+      description: "Strip C2PA Content Credentials, clean MP4 AI video containers, and inject iPhone 16 Pro EXIF headers locally in your browser."
+    },
+    {
+      title: "Free Embeddable C2PA, AI & EXIF GPS Forensic Scanner Widget",
+      url: `${SITE_URL}/embed-scanner.html`,
+      description: "Lightweight zero-upload iframe scanner widget for blogs, Notion, and creator communities."
+    },
+    ...SEO_PAGES.map((p) => ({
+      title: p.title,
+      url: `${SITE_URL}/${p.slug}`,
+      description: p.lead
+    })),
+    ...unlockedMatrixEntries.map((m) => ({
+      title: m.title,
+      url: `${SITE_URL}/${m.slug}`,
+      description: m.lead
+    }))
+  ];
+  fs.writeFileSync(path.join(__dirname, "feed.xml"), growthMatrix.buildRssFeedXml(rssItems, new Date()));
+
   const NON_AI_FINANCE_PATTERN = /^(cfo-control-financiero|panel-reclutamiento|kit-marca-canal)/i;
   const allHtmlFiles = fs
     .readdirSync(__dirname)
@@ -602,7 +638,7 @@ ${fullUrlList
       host: "pureaistudios.com",
       key: INDEXNOW_KEY,
       keyLocation: `${SITE_URL}/${INDEXNOW_KEY}.txt`,
-      urlList: [...fullUrlList, `${SITE_URL}/llms.txt`, `${SITE_URL}/llms-full.txt`]
+      urlList: [...fullUrlList, `${SITE_URL}/feed.xml`, `${SITE_URL}/llms.txt`, `${SITE_URL}/llms-full.txt`]
     })
   });
   console.log("IndexNow status:", indexRes.status);
