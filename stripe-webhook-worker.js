@@ -1349,6 +1349,36 @@ function inspectBinaryHeaderForTelegram(bytes) {
   return { hasThreats: findings.length > 0, findings };
 }
 
+function extractSafePublicHttpsUrl(rawText) {
+  const txt = String(rawText || "").trim();
+  if (!txt || txt.startsWith("/")) return "";
+  const match = txt.match(/https:\/\/[^\s<>"'`()]+/i);
+  if (!match) return "";
+  try {
+    const parsed = new URL(match[0]);
+    if (parsed.protocol !== "https:") return "";
+    if (parsed.username || parsed.password) return "";
+    const host = (parsed.hostname || "").toLowerCase();
+    if (!host || !host.includes(".") || host.includes("[") || /^\d+$/.test(host)) return "";
+    if (
+      host === "localhost" ||
+      host.endsWith(".local") ||
+      host.endsWith(".internal") ||
+      /^127\./.test(host) ||
+      /^10\./.test(host) ||
+      /^0\./.test(host) ||
+      /^192\.168\./.test(host) ||
+      /^169\.254\./.test(host) ||
+      /^172\.(1[6-9]|2\d|3[01])\./.test(host)
+    ) {
+      return "";
+    }
+    return parsed.toString();
+  } catch (_) {
+    return "";
+  }
+}
+
 async function handlePublicTelegramBotMessage(botToken, chatId, msg, isEs) {
   const studioUrl = isEs
     ? "https://pureaistudios.com/clean-ai-studio.html?lang=es&utm_source=telegram_bot"
@@ -1381,27 +1411,42 @@ async function handlePublicTelegramBotMessage(botToken, chatId, msg, isEs) {
     fileSize = Number(msg.video.file_size) || 0;
   }
 
+  const directHttpsUrl = !fileId && msg && typeof msg.text === "string" ? extractSafePublicHttpsUrl(msg.text) : "";
+
   let replyText = "";
   let findings = [];
-  if (!fileId) {
+  if (!fileId && !directHttpsUrl) {
     replyText = isEs
-      ? "🧬 PureAI Forensic Scanner\n\nEnvíame cualquier foto (JPG/PNG/WebP) o vídeo MP4 (preferiblemente como 'Archivo / Documento' sin comprimir) y analizaré en memoria RAM si esconde:\n• Etiquetas 'Creado con IA' (C2PA / JUMBF)\n• Workflows ocultos de ComfyUI / Midjourney / Sora\n• Coordenadas exactas GPS EXIF (0x8825)\n\n🛡️ 0 bytes guardados. O usa el estudio 100% local en tu navegador abajo:"
-      : "🧬 PureAI Forensic Scanner\n\nSend me any photo (JPG/PNG/WebP) or MP4 video (ideally as an uncompressed 'File / Document') and I will inspect in RAM whether it hides:\n• 'Made with AI' C2PA / JUMBF credentials\n• Hidden ComfyUI / Midjourney / Sora tags\n• Exact EXIF GPS coordinates (0x8825)\n\n🛡️ 0 bytes stored. Or launch the 100% local browser studio below:";
-  } else if (fileSize > 20 * 1024 * 1024) {
+      ? "🧬 PureAI Forensic Scanner\n\nEnvíame cualquier foto (JPG/PNG/WebP), vídeo MP4 (como 'Archivo / Documento' sin comprimir) o pega una URL pública https:// de imagen/vídeo y analizaré en memoria RAM si esconde:\n• Etiquetas 'Creado con IA' (C2PA / JUMBF)\n• Workflows ocultos de ComfyUI / Midjourney / Sora\n• Coordenadas exactas GPS EXIF (0x8825)\n\n🛡️ 0 bytes guardados. O usa el estudio 100% local en tu navegador abajo:"
+      : "🧬 PureAI Forensic Scanner\n\nSend me any photo (JPG/PNG/WebP), MP4 video (as an uncompressed 'File / Document'), or paste a public https:// image/video link and I will inspect in RAM whether it hides:\n• 'Made with AI' C2PA / JUMBF credentials\n• Hidden ComfyUI / Midjourney / Sora tags\n• Exact EXIF GPS coordinates (0x8825)\n\n🛡️ 0 bytes stored. Or launch the 100% local browser studio below:";
+  } else if (fileId && fileSize > 20 * 1024 * 1024) {
     replyText = isEs
       ? "⚠️ El archivo supera el límite de 20 MB de la API de bots de Telegram. Ábrelo directamente en PureAI Studio (soporta hasta 150 MB 100% en tu propio navegador sin subirlo):"
       : "⚠️ File exceeds Telegram's 20 MB Bot API limit. Open it directly in PureAI Studio (supports up to 150 MB 100% locally in your browser with zero upload):";
   } else {
     try {
-      const gf = await fetch(`https://api.telegram.org/bot${botToken}/getFile?file_id=${encodeURIComponent(fileId)}`).then((r) => r.json());
-      const filePath = gf && gf.ok && gf.result && gf.result.file_path;
-      if (filePath && typeof fetch === "function") {
-        const binRes = await fetch(`https://api.telegram.org/file/bot${botToken}/${filePath}`, {
-          headers: { Range: "bytes=0-65535" }
+      let targetBinUrl = directHttpsUrl;
+      if (fileId) {
+        const gf = await fetch(`https://api.telegram.org/bot${botToken}/getFile?file_id=${encodeURIComponent(fileId)}`).then((r) => r.json());
+        const filePath = gf && gf.ok && gf.result && gf.result.file_path;
+        if (filePath) targetBinUrl = `https://api.telegram.org/file/bot${botToken}/${filePath}`;
+      }
+      if (targetBinUrl && typeof fetch === "function") {
+        const fetchPromise = fetch(targetBinUrl, {
+          method: "GET",
+          redirect: "follow",
+          headers: { Range: "bytes=0-65535", "User-Agent": "PureAIScannerBot/1.0" }
         });
-        const buf = await binRes.arrayBuffer();
-        const report = inspectBinaryHeaderForTelegram(new Uint8Array(buf));
-        findings = report.findings;
+        const binRes = await Promise.race([
+          fetchPromise,
+          new Promise((_, rej) => setTimeout(() => rej(new Error("timeout")), 3500))
+        ]);
+        if (binRes && typeof binRes.arrayBuffer === "function") {
+          const buf = await binRes.arrayBuffer();
+          const sliceBytes = new Uint8Array(buf).subarray(0, 65536);
+          const report = inspectBinaryHeaderForTelegram(sliceBytes);
+          findings = report.findings;
+        }
       }
     } catch (_) {}
 

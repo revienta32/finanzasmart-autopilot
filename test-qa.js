@@ -1959,6 +1959,59 @@ assert(cleanAiHtml.includes("terms.html") && cleanAiHtml.includes("Art. 103.m TR
       JSON.stringify(capturedTgBotPayload.reply_markup).includes("t.me/share/url"),
       "TGPUB-04: La respuesta del bot público debe incluir teclado inline hacia pureaistudios.com y botón viral de compartir"
     );
+
+    // 21d. Verificar imagen demo C2PA+ComfyUI+GPS y escaneo directo por URL https:// con bloqueo SSRF
+    const demoPngPath = path.join(__dirname, "demo-ai-c2pa-gps-sample.png");
+    assert(fs.existsSync(demoPngPath), "DEMO-01: demo-ai-c2pa-gps-sample.png debe existir en la raíz pública");
+    const demoPngBytes = fs.readFileSync(demoPngPath);
+    assert.strictEqual(demoPngBytes[0], 0x89, "DEMO-01b: demo-ai-c2pa-gps-sample.png debe tener firma mágica PNG válida");
+    const demoReport = webhookEngine.inspectBinaryHeaderForTelegram(demoPngBytes);
+    assert(demoReport.hasThreats && demoReport.findings.length >= 5, `DEMO-02: demo-ai-c2pa-gps-sample.png debe activar los 5 detectores forenses (hallados: ${demoReport.findings.length})`);
+
+    let fetchedDemoUrl = false;
+    let ssrfFetched = false;
+    global.fetch = async (reqUrl, opts) => {
+      const u = String(reqUrl);
+      if (u.includes("127.0.0.1")) ssrfFetched = true;
+      if (u === "https://pureaistudios.com/demo-ai-c2pa-gps-sample.png") {
+        fetchedDemoUrl = true;
+        return { ok: true, arrayBuffer: async () => demoPngBytes.buffer.slice(demoPngBytes.byteOffset, demoPngBytes.byteOffset + demoPngBytes.byteLength) };
+      }
+      if (u.includes("/sendMessage")) {
+        capturedTgBotPayload = JSON.parse(opts.body);
+        return { ok: true, json: async () => ({ ok: true }) };
+      }
+      return { ok: true, json: async () => ({ ok: true }) };
+    };
+
+    const ssrfRes = await webhookEngine.handleWorkerHttpRequest(
+      {
+        method: "POST",
+        url: "https://pureai-stripe-webhook.pureaistudio-app.workers.dev/telegram-public-bot",
+        headers: { get: (h) => (String(h).toLowerCase() === "x-telegram-bot-api-secret-token" ? "pub_tg_secret_998877" : "") },
+        text: async () => JSON.stringify({
+          message: { chat: { id: 888999 }, from: { language_code: "es" }, text: "https://127.0.0.1/internal.png" }
+        })
+      },
+      pubEnv
+    );
+    assert.strictEqual(ssrfRes.status, 200);
+    assert.strictEqual(ssrfFetched, false, "TGPUB-SSRF: Nunca debe hacer fetch a IPs privadas/loopback (127.0.0.1)");
+
+    const urlScanRes = await webhookEngine.handleWorkerHttpRequest(
+      {
+        method: "POST",
+        url: "https://pureai-stripe-webhook.pureaistudio-app.workers.dev/telegram-public-bot",
+        headers: { get: (h) => (String(h).toLowerCase() === "x-telegram-bot-api-secret-token" ? "pub_tg_secret_998877" : "") },
+        text: async () => JSON.stringify({
+          message: { chat: { id: 888999 }, from: { language_code: "es" }, text: "https://pureaistudios.com/demo-ai-c2pa-gps-sample.png" }
+        })
+      },
+      pubEnv
+    );
+    const urlScanBody = JSON.parse(urlScanRes.body);
+    assert.strictEqual(fetchedDemoUrl, true, "TGPUB-URL-01: El bot público debe descargar los primeros 64 KB de URLs HTTPS públicas válidas");
+    assert(urlScanBody.findings.length >= 5, "TGPUB-URL-02: El escaneo por URL debe detectar los 5 rastros ocultos en demo-ai-c2pa-gps-sample.png");
   } finally {
     global.fetch = prevGlobalFetch;
   }
