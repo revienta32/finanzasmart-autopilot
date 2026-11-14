@@ -250,6 +250,36 @@ const SEO_PAGES = [
     bodyHtml: `
       <p>Why does <strong>GPTZero</strong> still flag text even after manual edits? Because copy-pasting from ChatGPT carries invisible Unicode formatting bytes and predictable sentence lengths. <strong>PureAI Studio</strong> cleans both the binary character layer and the stylistic layer in 1 click.</p>
     `
+  },
+  {
+    slug: "telegram-bot-ai-photo-detector-c2pa-exif-gps.html",
+    title: "Free Telegram Bot for AI Photo Detection, C2PA & EXIF GPS Check (@PureAIScannerBot)",
+    h1: "✈️ Free Telegram C2PA, ComfyUI Prompt & EXIF GPS Scanner Bot (@PureAIScannerBot)",
+    lead: "Forward any uncompressed photo, MP4 video, or HTTPS link to @PureAIScannerBot on Telegram to inspect hidden 'Made with AI' C2PA manifests, ComfyUI workflows, and EXIF GPS coordinates in 1 second—zero files stored.",
+    calcLink: "clean-ai-studio.html?lang=en",
+    bodyHtml: `
+      <p>Want to verify whether an image, MP4 video, or public link contains hidden AI provenance or personal GPS location directly inside Telegram without opening a desktop tool? Forward the file (as a Document/File) or paste the <code>https://</code> image URL to <strong>@PureAIScannerBot</strong>.</p>
+      <ul style="margin: 1rem 0 1.5rem 1.25rem; color: #cbd5e1;">
+        <li><strong>64 KB RAM Header Scan (Zero Storage):</strong> Inspects C2PA/JUMBF manifests, XMP <code>trainedAlgorithmicMedia</code> tags, ComfyUI PNG workflows, and EXIF GPS <code>0x8825</code> in memory without storing any media.</li>
+        <li><strong>1-Tap Clean in PureAI Studio:</strong> Every bot scan returns a direct button preloading your public image URL into our 100% client-side C2PA scrubber and iPhone 16 Pro EXIF injector.</li>
+      </ul>
+      <p style="margin:1.2rem 0;"><a href="https://t.me/PureAIScannerBot" target="_blank" rel="noopener" class="cta-button" style="display:inline-block;padding:0.75rem 1.4rem;background:#38bdf8;color:#082f49;font-weight:800;border-radius:9px;text-decoration:none;">✈️ Open @PureAIScannerBot in Telegram →</a></p>
+    `
+  },
+  {
+    slug: "bot-telegram-detector-ia-c2pa-borrar-exif-gps-fotos.html",
+    title: "Bot de Telegram Gratis para Detectar Fotos IA (C2PA), Prompts PNG y GPS EXIF (@PureAIScannerBot)",
+    h1: "✈️ Bot Oficial en Telegram para Escanear C2PA, Workflows ComfyUI y Ubicación GPS EXIF (@PureAIScannerBot)",
+    lead: "Envía cualquier foto sin comprimir, vídeo MP4 o enlace HTTPS a @PureAIScannerBot en Telegram para detectar en 1 segundo etiquetas 'Creado con IA' (C2PA), prompts ocultos y coordenadas GPS con 0 archivos guardados.",
+    calcLink: "clean-ai-studio.html?lang=es",
+    bodyHtml: `
+      <p>¿Quieres comprobar directamente desde Telegram si una foto, vídeo MP4 o enlace web esconde firmas de inteligencia artificial o tu ubicación GPS real? Reenvía el archivo (como Archivo/Documento) o pega la URL pública <code>https://</code> en el chat de <strong>@PureAIScannerBot</strong>.</p>
+      <ul style="margin: 1rem 0 1.5rem 1.25rem; color: #cbd5e1;">
+        <li><strong>Escaneo en Memoria RAM (0 Archivos Guardados):</strong> Analiza únicamente los primeros 64 KB buscando cajas C2PA/JUMBF, etiquetas <code>trainedAlgorithmicMedia</code>, workflows de ComfyUI y coordenadas GPS EXIF <code>0x8825</code>.</li>
+        <li><strong>Limpieza Directa en 1 Clic:</strong> El bot te devuelve un botón directo que precarga tu URL escaneada dentro de PureAI Studio para limpiar metadatos o inyectar perfil EXIF de iPhone 16 Pro sin subir archivos.</li>
+      </ul>
+      <p style="margin:1.2rem 0;"><a href="https://t.me/PureAIScannerBot" target="_blank" rel="noopener" class="cta-button" style="display:inline-block;padding:0.75rem 1.4rem;background:#38bdf8;color:#082f49;font-weight:800;border-radius:9px;text-decoration:none;">✈️ Abrir @PureAIScannerBot en Telegram →</a></p>
+    `
   }
 ];
 
@@ -429,6 +459,7 @@ function buildSeoPageHtml(page) {
       <nav class="tabs">
         <a href="clean-ai-studio.html" class="tab-btn active" style="text-decoration:none;">🖼️ PureAI Studio</a>
         <a href="https://chromewebstore.google.com/detail/pureai-studio-%E2%80%94-c2pa-meta/pdebjlkmjdhpgiigepojdcpfbfimcgmo" target="_blank" rel="noopener" class="tab-btn" style="text-decoration:none;">🧩 ${isEsPage ? "Extensión Chrome" : "Chrome Extension"}</a>
+        <a href="https://t.me/PureAIScannerBot" target="_blank" rel="noopener" class="tab-btn" style="text-decoration:none;">✈️ @PureAIScannerBot</a>
         <a href="directorio-guias.html" class="tab-btn" style="text-decoration:none;">🗂️ ${isEsPage ? "Directorio IA" : "AI Tools Directory"}</a>
       </nav>
     </div>
@@ -507,6 +538,24 @@ async function publishTelegraphArticles(prevArticles = []) {
         { tag: "p", children: ["Elimina en 1 clic los metadatos ocultos C2PA, JUMBF y coordenadas GPS EXIF de tus fotos creadas o editadas con IA e inyecta una cabecera técnica de cámara (Apple iPhone 16 Pro, Sony A7 IV o Canon EOS R5) sin subir tus fotos a ningún servidor."] },
         { tag: "p", children: [{ tag: "a", attrs: { href: `${SITE_URL}/quitar-etiqueta-hecho-con-ia-instagram-tiktok-fotos.html` }, children: ["🖼️ Limpiar Foto C2PA / EXIF Gratis Ahora en PureAI Studio"] }] },
         { tag: "p", children: [{ tag: "a", attrs: { href: `${SITE_URL}/detectar-y-eliminar-espacios-invisibles-chatgpt-u202f.html` }, children: ["✍️ Eliminar Marcas de Agua Invisibles de ChatGPT (U+202F / U+200B)"] }] }
+      ]
+    },
+    {
+      slugKey: "Free-Telegram-Bot-AI-Photo-Detector-C2PA-EXIF-GPS",
+      title: "Free Telegram Bot to Check AI Photo Metadata (C2PA), ComfyUI Prompts & GPS (@PureAIScannerBot)",
+      nodes: [
+        { tag: "p", children: ["Forward any photo, MP4 video, or HTTPS link to @PureAIScannerBot on Telegram to scan hidden C2PA/JUMBF manifests, ComfyUI PNG workflows, and EXIF GPS coordinates (0x8825) in RAM in under 1 second—zero files stored."] },
+        { tag: "p", children: [{ tag: "a", attrs: { href: "https://t.me/PureAIScannerBot" }, children: ["✈️ Launch @PureAIScannerBot on Telegram (Free Forensic Scanner)"] }] },
+        { tag: "p", children: [{ tag: "a", attrs: { href: `${SITE_URL}/clean-ai-studio.html?lang=en&utm_source=telegraph_tgbot` }, children: ["🧹 Clean Metadata & Inject iPhone 16 Pro EXIF at PureAI Studio"] }] }
+      ]
+    },
+    {
+      slugKey: "Bot-Telegram-Gratis-Detectar-Fotos-IA-C2PA-GPS-EXIF",
+      title: "Bot de Telegram Gratis para Ver Metadatos C2PA 'Creado con IA', Prompts ComfyUI y GPS EXIF (@PureAIScannerBot)",
+      nodes: [
+        { tag: "p", children: ["Envía cualquier foto sin comprimir, vídeo MP4 o enlace web HTTPS a @PureAIScannerBot en Telegram para comprobar en 1 segundo en memoria RAM si esconde etiquetas C2PA de IA, workflows de ComfyUI o coordenadas GPS exactas (0 archivos guardados)."] },
+        { tag: "p", children: [{ tag: "a", attrs: { href: "https://t.me/PureAIScannerBot" }, children: ["✈️ Abrir @PureAIScannerBot Gratis en Telegram"] }] },
+        { tag: "p", children: [{ tag: "a", attrs: { href: `${SITE_URL}/clean-ai-studio.html?lang=es&utm_source=telegraph_tgbot` }, children: ["🧹 Limpiar C2PA e Inyectar EXIF iPhone 16 Pro en PureAI Studio"] }] }
       ]
     }
   ];

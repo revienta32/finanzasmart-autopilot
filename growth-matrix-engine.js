@@ -1159,6 +1159,7 @@ ${hreflangLinks}
       <nav class="tabs">
         <a href="clean-ai-studio.html" class="tab-btn active" style="text-decoration:none;">🖼️ PureAI Studio</a>
         <a href="https://chromewebstore.google.com/detail/pureai-studio-%E2%80%94-c2pa-meta/pdebjlkmjdhpgiigepojdcpfbfimcgmo" target="_blank" rel="noopener" class="tab-btn" style="text-decoration:none;">🧩 ${escapeXml(lp.extLabel)}</a>
+        <a href="https://t.me/PureAIScannerBot" target="_blank" rel="noopener" class="tab-btn" style="text-decoration:none;border-color:#38bdf8;color:#7dd3fc;">✈️ @PureAIScannerBot</a>
         <a href="directorio-guias.html" class="tab-btn" style="text-decoration:none;">🗂️ ${escapeXml(lp.dirLabel)}</a>
       </nav>
     </div>
@@ -1201,7 +1202,7 @@ ${hreflangLinks}
 
   <footer class="footer">
     <div class="container">
-      <p>© 2026 PureAI Studio — 100% Client-Side C2PA, EXIF, MP4 &amp; ComfyUI Privacy Suite · <a href="privacy-policy.html" style="color:#10b981;">Privacy</a> · <a href="terms.html" style="color:#10b981;">Terms</a> · <a href="embed-scanner.html" style="color:#10b981;">Free Embed Scanner</a></p>
+      <p>© 2026 PureAI Studio — 100% Client-Side C2PA, EXIF, MP4 &amp; ComfyUI Privacy Suite · <a href="privacy-policy.html" style="color:#10b981;">Privacy</a> · <a href="terms.html" style="color:#10b981;">Terms</a> · <a href="embed-scanner.html" style="color:#10b981;">Free Embed Scanner</a> · <a href="https://t.me/PureAIScannerBot" target="_blank" rel="noopener" style="color:#38bdf8;">Telegram Bot (@PureAIScannerBot)</a></p>
     </div>
   </footer>
   <script src="telemetria-soporte.js" defer></script>

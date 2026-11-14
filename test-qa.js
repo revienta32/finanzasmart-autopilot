@@ -2016,6 +2016,15 @@ assert(cleanAiHtml.includes("terms.html") && cleanAiHtml.includes("Art. 103.m TR
       JSON.stringify(capturedTgBotPayload.reply_markup).includes("ext_img=" + encodeURIComponent("https://pureaistudios.com/demo-ai-c2pa-gps-sample.png")),
       "TGPUB-URL-03: Al escanear una URL pública el botón verde debe precargar la imagen automáticamente con &ext_img="
     );
+    const tgEnSeo = fs.readFileSync(path.join(__dirname, "telegram-bot-ai-photo-detector-c2pa-exif-gps.html"), "utf8");
+    const tgEsSeo = fs.readFileSync(path.join(__dirname, "bot-telegram-detector-ia-c2pa-borrar-exif-gps-fotos.html"), "utf8");
+    const ptMatrixUpdated = fs.readFileSync(ptDetectorPath, "utf8");
+    assert(
+      tgEnSeo.includes("https://t.me/PureAIScannerBot") &&
+      tgEsSeo.includes("https://t.me/PureAIScannerBot") &&
+      ptMatrixUpdated.includes("https://t.me/PureAIScannerBot"),
+      "TGPUB-DIST-01: Las landings SEO del bot y las herramientas de la matriz deben enlazar a https://t.me/PureAIScannerBot"
+    );
   } finally {
     global.fetch = prevGlobalFetch;
   }
