@@ -1380,21 +1380,6 @@ function extractSafePublicHttpsUrl(rawText) {
 }
 
 async function handlePublicTelegramBotMessage(botToken, chatId, msg, isEs) {
-  const studioUrl = isEs
-    ? "https://pureaistudios.com/clean-ai-studio.html?lang=es&utm_source=telegram_bot"
-    : "https://pureaistudios.com/clean-ai-studio.html?lang=en&utm_source=telegram_bot";
-  const shareUrl = "https://t.me/share/url?url=" + encodeURIComponent("https://pureaistudios.com") + "&text=" + encodeURIComponent(
-    isEs
-      ? "🔎 Escáner y limpiador gratis de etiquetas 'Creado con IA' (C2PA), vídeos MP4 y GPS EXIF 100% privado:"
-      : "🔎 Free 100% local C2PA 'Made with AI', MP4 & EXIF GPS forensic scanner & cleaner:"
-  );
-  const inlineKeyboard = {
-    inline_keyboard: [
-      [{ text: isEs ? "🧹 Limpiar C2PA / Añadir EXIF iPhone 16 Pro" : "🧹 Strip C2PA / Add iPhone 16 Pro EXIF", url: studioUrl }],
-      [{ text: isEs ? "📲 Compartir Escáner en Telegram" : "📲 Share Scanner on Telegram", url: shareUrl }]
-    ]
-  };
-
   let fileId = "";
   let fileSize = 0;
   let isCompressedPhotoHint = false;
@@ -1412,6 +1397,21 @@ async function handlePublicTelegramBotMessage(botToken, chatId, msg, isEs) {
   }
 
   const directHttpsUrl = !fileId && msg && typeof msg.text === "string" ? extractSafePublicHttpsUrl(msg.text) : "";
+  const extImgParam = directHttpsUrl && directHttpsUrl.length <= 400 ? "&ext_img=" + encodeURIComponent(directHttpsUrl) : "";
+  const studioUrl = (isEs
+    ? "https://pureaistudios.com/clean-ai-studio.html?lang=es&utm_source=telegram_bot"
+    : "https://pureaistudios.com/clean-ai-studio.html?lang=en&utm_source=telegram_bot") + extImgParam;
+  const shareUrl = "https://t.me/share/url?url=" + encodeURIComponent("https://pureaistudios.com") + "&text=" + encodeURIComponent(
+    isEs
+      ? "🔎 Escáner y limpiador gratis de etiquetas 'Creado con IA' (C2PA), vídeos MP4 y GPS EXIF 100% privado:"
+      : "🔎 Free 100% local C2PA 'Made with AI', MP4 & EXIF GPS forensic scanner & cleaner:"
+  );
+  const inlineKeyboard = {
+    inline_keyboard: [
+      [{ text: isEs ? "🧹 Limpiar C2PA / Añadir EXIF iPhone 16 Pro" : "🧹 Strip C2PA / Add iPhone 16 Pro EXIF", url: studioUrl }],
+      [{ text: isEs ? "📲 Compartir Escáner en Telegram" : "📲 Share Scanner on Telegram", url: shareUrl }]
+    ]
+  };
 
   let replyText = "";
   let findings = [];

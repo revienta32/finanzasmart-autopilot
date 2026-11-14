@@ -3417,7 +3417,7 @@
             })
             .then(function (blob) {
               if (!blob || !blob.size || blob.size > MAX_IMAGE_BYTES) return;
-              blob.name = "right-click-ai-image.jpg";
+              blob.name = (imgUrl.split("?")[0].split("/").pop() || "").replace(/[^a-zA-Z0-9_.-]/g, "") || "right-click-ai-image.jpg";
               handleSelectedFiles([blob]);
             })
             .catch(function () {});

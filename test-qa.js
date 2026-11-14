@@ -2012,6 +2012,10 @@ assert(cleanAiHtml.includes("terms.html") && cleanAiHtml.includes("Art. 103.m TR
     const urlScanBody = JSON.parse(urlScanRes.body);
     assert.strictEqual(fetchedDemoUrl, true, "TGPUB-URL-01: El bot público debe descargar los primeros 64 KB de URLs HTTPS públicas válidas");
     assert(urlScanBody.findings.length >= 5, "TGPUB-URL-02: El escaneo por URL debe detectar los 5 rastros ocultos en demo-ai-c2pa-gps-sample.png");
+    assert(
+      JSON.stringify(capturedTgBotPayload.reply_markup).includes("ext_img=" + encodeURIComponent("https://pureaistudios.com/demo-ai-c2pa-gps-sample.png")),
+      "TGPUB-URL-03: Al escanear una URL pública el botón verde debe precargar la imagen automáticamente con &ext_img="
+    );
   } finally {
     global.fetch = prevGlobalFetch;
   }
