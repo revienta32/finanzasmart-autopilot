@@ -30,4 +30,5 @@
 - [Free Embeddable C2PA & EXIF Scanner Widget](https://pureaistudios.com/embed-scanner.html): Zero-upload `<iframe>` widget for blogs, Notion, and developer docs.
 - [Official RSS 2.0 Tools Feed](https://pureaistudios.com/feed.xml): Syndicated updates of all interactive privacy utilities.
 - [Chrome Web Store Extension](https://chromewebstore.google.com/detail/pureai-studio-%E2%80%94-c2pa-meta/pdebjlkmjdhpgiigepojdcpfbfimcgmo): Official Manifest V3 browser extension.
+- [Official Telegram C2PA & GPS Scanner Bot (@PureAIScannerBot)](https://t.me/PureAIScannerBot): Free instant RAM metadata scanner inside Telegram.
 - [Full Documentation for AI Assistants](https://pureaistudios.com/llms-full.txt): Detailed technical FAQ and format support matrix.
