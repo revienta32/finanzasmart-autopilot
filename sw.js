@@ -1,4 +1,4 @@
-const CACHE_NAME = "pureai-studio-v5";
+const CACHE_NAME = "pureai-studio-v6";
 const ASSETS = [
   "./",
   "./index.html",

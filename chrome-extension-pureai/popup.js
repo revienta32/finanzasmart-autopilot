@@ -238,3 +238,24 @@ btnCleanImg.addEventListener("click", () => {
     0.95
   );
 });
+
+(function localizePopupPrices() {
+  try {
+    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || "";
+    const lang = (typeof navigator !== "undefined" && navigator.language) || "";
+    const isUk = /^Europe\/(London|Belfast|Jersey|Guernsey|Isle_of_Man)$/i.test(tz) || /-GB\b/i.test(lang);
+    const isUs = !isUk && (/^(America\/(New_York|Chicago|Denver|Los_Angeles|Phoenix|Anchorage|Detroit|Indiana|Kentucky|Boise|Adak)|Pacific\/Honolulu|US\/)/i.test(tz) || (!/^es\b/i.test(lang) && /^America\//i.test(tz)));
+    const p10 = document.getElementById("ext-price-p10");
+    const p50 = document.getElementById("ext-price-p50");
+    const pyr = document.getElementById("ext-price-yr");
+    if (isUk) {
+      if (p10) p10.textContent = "£2.59";
+      if (p50) p50.textContent = "£8.59";
+      if (pyr) pyr.textContent = "£34/yr";
+    } else if (isUs) {
+      if (p10) p10.textContent = "$3.39";
+      if (p50) p50.textContent = "$11.29";
+      if (pyr) pyr.textContent = "$44/yr";
+    }
+  } catch (_) {}
+})();

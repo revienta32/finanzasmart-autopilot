@@ -707,7 +707,7 @@ assert(cleanAiHtml.includes("terms.html") && cleanAiHtml.includes("Art. 103.m TR
   const termsCurrent = fs.readFileSync(path.join(__dirname, "terms.html"), "utf8");
   assert(!privPolicyCurrent.includes("[NOMBRE COMPLETO") && !termsCurrent.includes("[NOMBRE COMPLETO"), "privacy-policy.html y terms.html no deben contener marcadores de borrador sin completar");
   const swCurrent = fs.readFileSync(path.join(__dirname, "sw.js"), "utf8");
-  assert(swCurrent.includes("pureai-studio-v5") && swCurrent.includes('e.request.mode === "navigate"'), "sw.js debe implementar caché v5 con soporte de navegación offline y revalidación");
+  assert(swCurrent.includes("pureai-studio-v6") && swCurrent.includes('e.request.mode === "navigate"'), "sw.js debe implementar caché v6 con soporte de navegación offline y revalidación");
 
   // 17e. Verificar Cuota Gratuita de 1 Foto/Vídeo Gratis (MAX_FREE_IMG_USES = 1) y 1 prueba de texto corto (<=180 palabras) en deepHumanizePro
   assert.strictEqual(paSandbox.MAX_FREE_IMG_USES, 1, "CRO: MAX_FREE_IMG_USES debe ser exactamente 1 exportación gratuita");
@@ -1800,6 +1800,20 @@ assert(cleanAiHtml.includes("terms.html") && cleanAiHtml.includes("Art. 103.m TR
   const modalPrevHtml = getPaEl("pro-modal-asset-preview").innerHTML;
   assert.strictEqual(getPaEl("pro-modal-asset-preview").style.display, "flex", "CRO-UX-03: showProModal debe mostrar la vista previa del activo bloqueado (#pro-modal-asset-preview)");
   assert(!modalPrevHtml.includes("<img src=x onerror=alert(99)>") && modalPrevHtml.includes("&lt;img src=x onerror=alert(99)&gt;"), "CRO-SEC-01: #pro-modal-asset-preview debe escapar nombres de archivo maliciosos contra DOM XSS");
+
+  // 20e. Localización dinámica de divisa (USD para EE. UU., GBP para Reino Unido, EUR para España/UE)
+  paSandbox.detectedVisitorCountry = "US";
+  paSandbox.setLang("en");
+  assert(getPaEl("pro-card-pack50").innerHTML.includes("$11.29") && getPaEl("modal-card-pack10").innerHTML.includes("$3.39") && getPaEl("modal-card-annual").innerHTML.includes("$44/yr"), "CRO-CUR-01: Visitante de EE. UU. (US) debe ver precios en USD ($3.39 / $11.29 / $44/yr)");
+
+  paSandbox.detectedVisitorCountry = "GB";
+  paSandbox.setLang("en");
+  assert(getPaEl("pro-card-pack50").innerHTML.includes("£8.59") && getPaEl("modal-card-pack10").innerHTML.includes("£2.59") && getPaEl("modal-card-annual").innerHTML.includes("£34/yr"), "CRO-CUR-02: Visitante de Reino Unido (GB) debe ver precios en GBP (£2.59 / £8.59 / £34/yr)");
+
+  paSandbox.detectedVisitorCountry = "ES";
+  paSandbox.setLang("es");
+  assert(getPaEl("pro-card-pack50").innerHTML.includes("9,90 €") && getPaEl("modal-card-pack10").innerHTML.includes("2,99 €") && getPaEl("modal-card-annual").innerHTML.includes("39 €/año"), "CRO-CUR-03: Visitante de España (ES) debe ver precios en EUR (2,99 € / 9,90 € / 39 €/año)");
+  paSandbox.detectedVisitorCountry = "";
 
   console.log("✅ QA TEST SUITE PASSED (20 SECCIONES / 270+ ASERCIONES): 100% E2E VM + Hybrid Credit Packs (2,99 € / 9,90 € / 39 €) + Atomic Credit Ledger (/consume-credit) + Anti-Incognito Quota (/check-free-quota) + CRO Paywall Asset Preview + Round-2 Adversarial Security + Pre-Incorporation Gate + Mom-Test Scorer + 5 Core Validation Tests + 90-Day Bottleneck Diagnostics + Batch Mixto Foto/MP4 + Lossless JPEG + MP4 Camera Udta + EXIF GPS 0x8825 + Pagos/Webhooks KV + CFO + Legal/AI Act + Ciberseguridad verificadas sin errores.");
 })();

@@ -1117,8 +1117,9 @@ async function handleWorkerHttpRequest(req, env, sharedStore) {
     } catch (_) {}
 
     const MAX_SERVER_FREE_USES = 1;
+    const cfCountry = String((req.cf && req.cf.country) || (req.headers && req.headers.get && req.headers.get("cf-ipcountry")) || "").trim().toUpperCase().slice(0, 2) || null;
     if (!clientIp) {
-      return { status: 200, headers, body: JSON.stringify({ ok: true, allowed: true, used: 0, limit: MAX_SERVER_FREE_USES }) };
+      return { status: 200, headers, body: JSON.stringify({ ok: true, allowed: true, used: 0, limit: MAX_SERVER_FREE_USES, country: cfCountry }) };
     }
     const monthBucket = new Date().toISOString().slice(0, 7);
     const salt = String((env && env.STRIPE_WEBHOOK_SECRET) || "pureai-freeq-salt-2026").slice(0, 24);
@@ -1148,6 +1149,7 @@ async function handleWorkerHttpRequest(req, env, sharedStore) {
           allowed: false,
           used,
           limit: MAX_SERVER_FREE_USES,
+          country: cfCountry,
           reason: "free_quota_exhausted"
         })
       };
@@ -1164,14 +1166,14 @@ async function handleWorkerHttpRequest(req, env, sharedStore) {
       return {
         status: 200,
         headers,
-        body: JSON.stringify({ ok: true, allowed: true, used: nextUsed, limit: MAX_SERVER_FREE_USES })
+        body: JSON.stringify({ ok: true, allowed: true, used: nextUsed, limit: MAX_SERVER_FREE_USES, country: cfCountry })
       };
     }
 
     return {
       status: 200,
       headers,
-      body: JSON.stringify({ ok: true, allowed: true, used, limit: MAX_SERVER_FREE_USES })
+      body: JSON.stringify({ ok: true, allowed: true, used, limit: MAX_SERVER_FREE_USES, country: cfCountry })
     };
   }
 
