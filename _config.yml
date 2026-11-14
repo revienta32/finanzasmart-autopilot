@@ -1,0 +1,9 @@
+exclude:
+  - stripe-webhook-worker.js
+  - wrangler.toml
+  - auto-doctor.js
+  - autopilot-ceo.js
+  - test-qa.js
+  - CONTEXTO_MAESTRO_PUREAI.md
+  - README.md
+  - chrome-extension-pureai

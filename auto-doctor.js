@@ -11,7 +11,9 @@
 const fs = require("fs");
 const path = require("path");
 
-const BUS_URL = "https://ntfy.sh/pureai_studio_ops_telemetry_94c2e1/json?poll=1&since=48h";
+const BUS_URL = process.env.NTFY_SECRET_TOPIC_URL
+  ? String(process.env.NTFY_SECRET_TOPIC_URL).replace(/\/+$/, "") + "/json?poll=1&since=48h"
+  : "";
 const PRIVATE_OPS_DIR = path.join(process.env.USERPROFILE || process.env.HOME || __dirname, ".gemini", "pureai-private-ops");
 try { fs.mkdirSync(PRIVATE_OPS_DIR, { recursive: true }); } catch (_) {}
 const METRICS_FILE = path.join(PRIVATE_OPS_DIR, "metricas-y-bugs.json");
@@ -733,7 +735,7 @@ function diagnoseConversionBottleneck(funnel, options = {}) {
       bottleneckCode: "BOTTLENECK_CHECKOUT_TRUST_OR_MODEL",
       primaryCause: `Abandono en Stripe Checkout (${rt.checkoutToPurchasePct}% < 15% sobre ${st.checkoutClicked} clics de compra): fricción con la suscripción recurrente o métodos de pago.`,
       doNotDo: "No descartar la demanda (el usuario ya hizo clic en comprar).",
-      recommendedAction: "Verificar Apple Pay / Google Pay activos, código FRIEND50 pre-aplicado (4,99 €) y probar un Pase de Proyecto de pago único (sin renovación mensual) para usuarios puntuales."
+      recommendedAction: "Verificar Apple Pay / Google Pay / Link activos, precios directos con IVA incluido (Pack 10 a 2,99 €, Pack 50 a 9,90 € y Anual a 39 €) y vista previa del activo en el Paywall."
     };
   }
   if (stageDay >= 60 && (st.activatedUsers || 0) >= 30 && (ret.genuineReturningUsers || 0) === 0) {
@@ -766,7 +768,11 @@ async function checkPlatformHealth(options = {}) {
   const mainHtml = fs.existsSync(path.join(__dirname, "clean-ai-studio.html"))
     ? fs.readFileSync(path.join(__dirname, "clean-ai-studio.html"), "utf8")
     : "";
-  if (!mainHtml.includes("https://buy.stripe.com/aFacN6e66fTn6DudPA00009") || !mainHtml.includes("https://buy.stripe.com/6oUfZi7HI6iN2ne26S0000e")) {
+  if (
+    !mainHtml.includes("https://buy.stripe.com/9B6cN6e669uZ4vmeTE0000f") ||
+    !mainHtml.includes("https://buy.stripe.com/3cIdRae66bD74vm6n80000g") ||
+    !mainHtml.includes("https://buy.stripe.com/eVq00k7HIfTn1jabHs0000h")
+  ) {
     alerts.push({ severity: "CRITICAL", code: "STRIPE_LINKS_BROKEN", message: "Enlaces principales de Stripe Checkout ausentes o alterados en clean-ai-studio.html" });
   }
 
@@ -855,10 +861,12 @@ async function runAutoDoctor() {
   const analyticsEvents = Array.isArray(stored.analyticsEventsHistory) ? [...stored.analyticsEventsHistory] : [];
 
   try {
-    const raw = await fetch(BUS_URL).then((r) => r.text()).catch(() => "");
+    const raw = BUS_URL ? await fetch(BUS_URL).then((r) => r.text()).catch(() => "") : "";
     const lines = raw.split("\n").filter(Boolean);
     try {
-      const kvResp = await fetch("https://pureai-stripe-webhook.pureaistudio-app.workers.dev/telemetry").then((r) => r.json());
+      const adminSecret = process.env.ADMIN_DIGEST_TOKEN || process.env.STRIPE_WEBHOOK_SECRET || "";
+      const kvHeaders = adminSecret ? { Authorization: "Bearer " + adminSecret } : {};
+      const kvResp = await fetch("https://pureai-stripe-webhook.pureaistudio-app.workers.dev/telemetry", { headers: kvHeaders }).then((r) => r.json());
       if (kvResp && Array.isArray(kvResp.events)) {
         for (const kvEv of kvResp.events) {
           if (kvEv && kvEv.id) {

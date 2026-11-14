@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="referrer" content="strict-origin-when-cross-origin" />
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self' https: data: blob:; script-src 'self' 'unsafe-inline' https://www.googletagmanager.com https://www.googleadservices.com https://googleads.g.doubleclick.net; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; media-src 'self' data: blob:; connect-src 'self' https:;" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self' https: data: blob:; script-src 'self' 'unsafe-inline' https://www.googletagmanager.com https://www.googleadservices.com https://googleads.g.doubleclick.net; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; media-src 'self' data: blob:; connect-src 'self' https:; object-src 'none'; base-uri 'self'; form-action 'self';" />
   <!-- Google tag (gtag.js) -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=AW-18550704085"></script>
   <script id="google-ads-gtag">
@@ -255,9 +255,9 @@
         "offers": {
           "@type": "AggregateOffer",
           "lowPrice": "0.00",
-          "highPrice": "78.00",
+          "highPrice": "39.00",
           "priceCurrency": "EUR",
-          "description": "Free C2PA/EXIF image scrubber (3 free photos), 9.99 EUR + VAT/mo Pro (4.99 EUR + VAT 1st month with FRIEND50), and 78.00 EUR + VAT/yr Annual Pro (39.00 EUR + VAT 1st year with FRIEND50)."
+          "description": "Free C2PA/EXIF threat scanner + 1 free clean file export, 2.99 EUR 10-File Pass (one-time, never expires), 9.90 EUR 50-File + Batch .ZIP Creator Pack (one-time), and 39.00 EUR/yr Unlimited Annual Studio Pro (VAT inclusive)."
         },
         "featureList": [
           "Remove C2PA and JUMBF Content Credentials from DALL-E, Firefly, Gemini and Midjourney images",
@@ -342,7 +342,7 @@
         <div>
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:6px;">
             <h3 style="margin:0;font-size:1.15rem;" id="ui-img-title">📸 1. Limpiar Fotos creadas con IA</h3>
-            <span id="free-img-quota-badge" style="font-size:0.75rem;background:rgba(16,185,129,0.16);border:1px solid #10b981;color:#6ee7b7;padding:4px 10px;border-radius:999px;font-weight:800;">🎁 3/3 Fotos Gratis</span>
+            <span id="free-img-quota-badge" style="font-size:0.75rem;background:rgba(16,185,129,0.16);border:1px solid #10b981;color:#6ee7b7;padding:4px 10px;border-radius:999px;font-weight:800;">🎁 1/1 Foto Gratis</span>
           </div>
 
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;gap:6px;flex-wrap:wrap;">
@@ -373,7 +373,17 @@
             <div style="color:#cbd5e1;font-size:0.82rem;" id="ui-audit-idle">✨ <strong>100% Gratis y sin registro:</strong> Sube una foto/vídeo arriba o <button type="button" onclick="loadSampleAiImage()" style="background:none;border:none;color:#00e5a3;font-weight:800;text-decoration:underline;cursor:pointer;padding:0;font-size:0.82rem;">haz clic aquí para probar con una Foto IA de ejemplo</button>.</div>
           </div>
 
-          <div style="margin:10px 0 12px;">
+          <div id="quick-exif-preset-bar" style="margin:10px 0 8px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px;background:rgba(16,185,129,0.07);border:1px solid rgba(0,229,163,0.28);border-radius:10px;padding:7px 10px;">
+            <span id="ui-quick-preset-lbl" style="font-size:0.73rem;color:#a7f3d0;font-weight:800;">⚡ 1-Click Camera &amp; Mode:</span>
+            <div style="display:flex;gap:5px;flex-wrap:wrap;">
+              <button type="button" onclick="applyCreatorPreset('iphone_agency')" style="background:rgba(0,229,163,0.18);color:#6ee7b7;border:1px solid #00e5a3;border-radius:999px;padding:4px 9px;font-size:0.71rem;font-weight:800;cursor:pointer;">📱 iPhone 16 Pro + GPS</button>
+              <button type="button" onclick="applyCreatorPreset('sony_studio')" style="background:rgba(56,189,248,0.14);color:#93c5fd;border:1px solid #38bdf8;border-radius:999px;padding:4px 9px;font-size:0.71rem;font-weight:800;cursor:pointer;">📸 Sony A7IV EXIF</button>
+              <button type="button" onclick="applyCreatorPreset('photoshop_lossless')" style="background:rgba(245,158,11,0.15);color:#fde68a;border:1px solid #f59e0b;border-radius:999px;padding:4px 9px;font-size:0.71rem;font-weight:800;cursor:pointer;">⚡ Lossless C2PA Fix</button>
+              <button type="button" onclick="applyCreatorPreset('pure_clean')" style="background:rgba(255,255,255,0.06);color:#cbd5e1;border:1px solid rgba(255,255,255,0.16);border-radius:999px;padding:4px 9px;font-size:0.71rem;font-weight:700;cursor:pointer;">🧼 Neutral Clean</button>
+            </div>
+          </div>
+
+          <div style="margin:8px 0 12px;">
             <canvas id="clean-canvas" style="display:none;"></canvas>
             <button class="pa-btn pa-btn-green" id="btn-scrub-img" onclick="scrubAndDownloadImage()" disabled style="opacity:0.5;margin-top:0;padding:14px;font-size:0.96rem;">
               ✨ Limpiar Archivo y Descargar (Gratis)
@@ -382,13 +392,7 @@
 
           <div style="margin-top:8px;background:rgba(10,6,20,0.78);border:1px solid rgba(0,229,163,0.32);border-radius:12px;padding:10px 12px;">
             <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px;margin-bottom:8px;">
-              <div style="font-size:0.78rem;color:#6ee7b7;font-weight:800;" id="ui-adv-img">⚙️ Opcional: Perfil técnico EXIF de cámara y formato (Predeterminado: Limpieza Neutra Gratis)</div>
-              <div style="display:flex;gap:5px;flex-wrap:wrap;">
-                <button type="button" onclick="applyCreatorPreset('iphone_agency')" style="background:rgba(0,229,163,0.16);color:#6ee7b7;border:1px solid #00e5a3;border-radius:999px;padding:3px 9px;font-size:0.71rem;font-weight:800;cursor:pointer;">📱 Preset Agencia (iPhone 16 Pro + GPS)</button>
-                <button type="button" onclick="applyCreatorPreset('sony_studio')" style="background:rgba(56,189,248,0.14);color:#93c5fd;border:1px solid #38bdf8;border-radius:999px;padding:3px 9px;font-size:0.71rem;font-weight:800;cursor:pointer;">📸 Preset Fotógrafo (Sony A7IV)</button>
-                <button type="button" onclick="applyCreatorPreset('photoshop_lossless')" style="background:rgba(245,158,11,0.15);color:#fde68a;border:1px solid #f59e0b;border-radius:999px;padding:3px 9px;font-size:0.71rem;font-weight:800;cursor:pointer;">⚡ Photoshop C2PA Fix (Lossless)</button>
-                <button type="button" onclick="applyCreatorPreset('pure_clean')" style="background:rgba(255,255,255,0.06);color:#cbd5e1;border:1px solid rgba(255,255,255,0.16);border-radius:999px;padding:3px 9px;font-size:0.71rem;font-weight:700;cursor:pointer;">🧼 Neutro (Gratis)</button>
-              </div>
+              <div style="font-size:0.78rem;color:#6ee7b7;font-weight:800;" id="ui-adv-img">⚙️ Opcional: Formato, modo EXIF de cámara y ciudad GPS</div>
             </div>
             <div class="pa-exif-grid">
               <div>
@@ -508,48 +512,53 @@
     <!-- SECCIÓN PRO INDEPENDIENTE Y LIMPIA DEBAJO DE LAS 2 HERRAMIENTAS -->
     <section id="pa-pro-box" style="margin-top:20px;padding:18px 20px;background:rgba(16,185,129,0.06);border:1px solid rgba(16,185,129,0.3);border-radius:16px;">
       <div id="friend-welcome-banner" style="display:none;margin-bottom:10px;padding:9px 12px;background:linear-gradient(90deg,rgba(16,185,129,0.25),rgba(59,130,246,0.25));border:1px solid #10b981;border-radius:10px;font-size:0.8rem;color:#ecfdf5;">
-        🎁 <strong>¡Invitación VIP Activada!</strong> Tienes <strong>1 Uso Pro Gratis</strong> desbloqueado hoy + Código <strong><code style="background:#064e3b;padding:2px 6px;border-radius:4px;color:#6ee7b7;">FRIEND50</code> (50% DTO 1er periodo: 4,99 € + IVA/mes o 39 € + IVA/año)</strong>.
+        🎁 <strong>¡Invitación VIP Activada!</strong> Tienes <strong>+1 Uso Pro Gratis</strong> extra desbloqueado hoy + Pases directos sin suscripción desde <strong>2,99 € (IVA incl.)</strong>.
       </div>
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;flex-wrap:wrap;gap:6px;">
-        <span id="pro-box-headline" style="font-size:0.95rem;font-weight:800;color:#6ee7b7;">💎 Pásate a PureAI Pro — Fotos Ilimitadas + Humanizador Completo + Lotes .ZIP</span>
-        <span id="pro-box-promo-pill" style="font-size:0.72rem;background:#f59e0b;color:#0b0f19;font-weight:900;padding:3px 10px;border-radius:999px;">🔥 50% DTO 1er MES / 1er AÑO (Código: FRIEND50)</span>
+        <span id="pro-box-headline" style="font-size:0.95rem;font-weight:800;color:#6ee7b7;">💎 Desbloquea PureAI Pro — Pases de Pago Único (Sin Suscripción) o Anual Ilimitado</span>
+        <span id="pro-box-promo-pill" style="font-size:0.72rem;background:#10b981;color:#022c22;font-weight:900;padding:3px 10px;border-radius:999px;">⚡ PAGO ÚNICO SIN CADUCIDAD · IVA INCLUIDO</span>
       </div>
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:8px;margin-bottom:10px;font-size:0.74rem;">
         <div id="pro-tier-free" style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:8px;padding:7px 10px;color:#cbd5e1;">
-          🟢 <strong>Plan Gratuito:</strong> <strong>3 Fotos / Vídeos Gratis</strong> (C2PA, Lossless o EXIF) + Limpieza Marcas Unicode.
+          🟢 <strong>Prueba Gratuita:</strong> Escáner C2PA Ilimitado + <strong>1 Foto / Vídeo Gratis</strong> + Limpieza Marcas Unicode.
         </div>
         <div id="pro-tier-paid" style="background:rgba(0,229,163,0.1);border:1px solid rgba(0,229,163,0.35);border-radius:8px;padding:7px 10px;color:#ecfdf5;">
-          💎 <strong>Todo Incluido en Pro:</strong> EXIF iPhone 16 Pro / Sony + GPS Ilimitado + <strong>Lotes .ZIP (Foto/MP4)</strong> + Humanizador + <strong>3 Equipos</strong>.
+          💎 <strong>Packs &amp; Pro:</strong> EXIF iPhone 16 Pro / Sony + GPS + <strong>Lotes .ZIP (Foto/MP4)</strong> + Humanizador + <strong>Hasta 4 Equipos</strong>.
         </div>
       </div>
-      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px;margin:10px 0;">
-        <a id="pro-card-monthly" href="https://buy.stripe.com/aFacN6e66fTn6DudPA00009?prefilled_promo_code=FRIEND50" target="_blank" rel="noopener" style="text-decoration:none;background:#0b0f19;border:1px solid #3b82f6;border-radius:10px;padding:13px;text-align:center;color:#e2e8f0;">
-          <div style="font-size:0.78rem;color:#93c5fd;font-weight:800;">🔥 Plan Mensual Pro (Creadores)</div>
-          <div style="font-size:1.35rem;font-weight:900;color:#fff;margin:4px 0;">4,99 € <span style="font-size:0.72rem;font-weight:600;color:#94a3b8;">+ IVA</span> <span style="font-size:0.75rem;color:#64748b;text-decoration:line-through;">9,99€</span></div>
-          <div style="font-size:0.72rem;color:#93c5fd;">1er mes con <strong>FRIEND50</strong>, luego 9,99 € + IVA/mes · Sin permanencia</div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(205px,1fr));gap:10px;margin:10px 0;">
+        <a id="pro-card-pack10" href="https://buy.stripe.com/9B6cN6e669uZ4vmeTE0000f" target="_blank" rel="noopener" style="text-decoration:none;background:#0b0f19;border:1px solid #10b981;border-radius:10px;padding:12px;text-align:center;color:#e2e8f0;">
+          <div style="font-size:0.76rem;color:#6ee7b7;font-weight:800;">⚡ Pack Puntual (10 Usos)</div>
+          <div style="font-size:1.35rem;font-weight:900;color:#fff;margin:4px 0;">2,99 € <span style="font-size:0.7rem;font-weight:600;color:#94a3b8;">IVA incl.</span></div>
+          <div style="font-size:0.71rem;color:#a7f3d0;">Pago único · 10 fotos/MP4/textos Pro · <strong>Sin caducidad</strong></div>
         </a>
-        <a id="pro-card-annual" href="https://buy.stripe.com/6oUfZi7HI6iN2ne26S0000e?prefilled_promo_code=FRIEND50" target="_blank" rel="noopener" style="text-decoration:none;background:linear-gradient(135deg,rgba(16,185,129,0.22),rgba(59,130,246,0.22));border:1px solid #10b981;border-radius:10px;padding:13px;text-align:center;color:#e2e8f0;">
-          <div style="font-size:0.78rem;color:#6ee7b7;font-weight:800;">💎 Plan Anual Pro (Ahorras 50% · Agencias)</div>
-          <div style="font-size:1.35rem;font-weight:900;color:#fff;margin:4px 0;">39 €<span style="font-size:0.75rem;font-weight:500;">/año + IVA</span> <span style="font-size:0.75rem;color:#64748b;text-decoration:line-through;">78€</span></div>
-          <div style="font-size:0.72rem;color:#a7f3d0;">1er año (Sale a <strong>3,25 €/mes</strong> + IVA), luego 78 € + IVA/año · 3 Equipos</div>
+        <a id="pro-card-pack50" href="https://buy.stripe.com/3cIdRae66bD74vm6n80000g" target="_blank" rel="noopener" style="text-decoration:none;background:linear-gradient(145deg,rgba(168,85,247,0.2),rgba(15,23,42,0.95));border:2px solid #a855f7;border-radius:10px;padding:12px;text-align:center;color:#e2e8f0;box-shadow:0 6px 18px rgba(168,85,247,0.22);">
+          <div style="font-size:0.76rem;color:#e9d5ff;font-weight:900;">🔥 Pack Creador (50 Usos + .ZIP)</div>
+          <div style="font-size:1.35rem;font-weight:900;color:#fff;margin:4px 0;">9,90 € <span style="font-size:0.7rem;font-weight:600;color:#cbd5e1;">IVA incl.</span></div>
+          <div style="font-size:0.71rem;color:#f3e8ff;">Pago único (0,19 €/archivo) + <strong>Lotes .ZIP</strong> · Sin suscripción</div>
+        </a>
+        <a id="pro-card-annual" href="https://buy.stripe.com/eVq00k7HIfTn1jabHs0000h" target="_blank" rel="noopener" style="text-decoration:none;background:linear-gradient(135deg,rgba(16,185,129,0.22),rgba(59,130,246,0.22));border:1px solid #38bdf8;border-radius:10px;padding:12px;text-align:center;color:#e2e8f0;">
+          <div style="font-size:0.76rem;color:#93c5fd;font-weight:800;">💎 Anual Ilimitado (Agencias)</div>
+          <div style="font-size:1.35rem;font-weight:900;color:#fff;margin:4px 0;">39 €<span style="font-size:0.74rem;font-weight:500;">/año IVA incl.</span></div>
+          <div style="font-size:0.71rem;color:#bae6fd;">Todo Ilimitado (Sale a <strong>3,25 €/mes</strong>) · Hasta 4 Equipos</div>
         </a>
       </div>
       <div id="pro-legal-note" style="font-size:0.71rem;color:#94a3b8;line-height:1.45;margin:6px 0 8px;">
-        ⚖️ <strong>Información precontractual:</strong> Suscripción con renovación automática (mensual: 1er mes a 4,99 € + IVA con código FRIEND50 y luego 9,99 € + IVA/mes; anual: 1er año a 39,00 € + IVA con código FRIEND50 y luego 78,00 € + IVA/año; impuestos aplicables desglosados en Stripe Checkout). Cancelación en 1 clic en cualquier momento conservando el acceso hasta fin del periodo abonado. Al contratar y activar el software de forma inmediata, consientes expresamente el inicio de la ejecución digital y reconoces la excepción al derecho de desistimiento (Art. 103.m TRLGDCU). Uso exclusivo para obras propias conforme a los <a href="terms.html" style="color:#6ee7b7;text-decoration:underline;">Términos de Servicio</a> y <a href="privacy-policy.html" style="color:#6ee7b7;text-decoration:underline;">Política de Privacidad</a>.
+        ⚖️ <strong>Información precontractual:</strong> Pases de 10 usos (2,99 € IVA incl.) y 50 usos (9,90 € IVA incl.) de pago único sin renovación automática ni caducidad. Plan Anual Ilimitado (39,00 €/año IVA incl.) con renovación anual cancelable en 1 clic en cualquier momento conservando el acceso hasta fin del periodo abonado. Activación automática inmediata al volver de Stripe sin registro ni contraseñas. Al activar el software digital de forma inmediata, consientes expresamente el inicio de la ejecución y reconoces la excepción al derecho de desistimiento (Art. 103.m TRLGDCU). Uso exclusivo para obras propias conforme a los <a href="terms.html" style="color:#6ee7b7;text-decoration:underline;">Términos de Servicio</a> y <a href="privacy-policy.html" style="color:#6ee7b7;text-decoration:underline;">Política de Privacidad</a>.
       </div>
 
       <div style="display:flex;gap:8px;align-items:center;margin-top:10px;flex-wrap:wrap;">
-        <input type="text" id="pa-pro-code" placeholder="¿Ya te suscribiste? Pega tu clave (PRO-XXXX-XXXX) o ID de sesión de Stripe (cs_live_...)" style="flex:1;min-width:220px;padding:8px 12px;background:#0b0f19;border:1px solid #2d3748;color:#fff;border-radius:8px;font-size:0.78rem;" />
+        <input type="text" id="pa-pro-code" placeholder="¿Ya compraste un Pack o Plan Anual? Pega tu clave (PRO-XXXX-XXXX) o sesión (cs_live_...)" style="flex:1;min-width:220px;padding:8px 12px;background:#0b0f19;border:1px solid #2d3748;color:#fff;border-radius:8px;font-size:0.78rem;" />
         <button id="btn-activate-pro" onclick="activatePureAiPro()" class="pa-btn pa-btn-green" style="width:auto;margin:0;padding:8px 16px;font-size:0.78rem;">Activar Pro</button>
-        <a id="lnk-manage-sub" href="https://billing.stripe.com/p/login/9B64gA5zA22x5zq3aW00000" target="_blank" rel="noopener" style="color:#94a3b8;font-size:0.74rem;text-decoration:underline;margin-left:auto;">Gestionar o cancelar suscripción</a>
+        <a id="lnk-manage-sub" href="https://billing.stripe.com/p/login/9B64gA5zA22x5zq3aW00000" target="_blank" rel="noopener" style="color:#94a3b8;font-size:0.74rem;text-decoration:underline;margin-left:auto;">Gestionar suscripción anual</a>
       </div>
 
       <details style="margin-top:10px;background:#0b0f19;border:1px solid #1e293b;border-radius:10px;padding:8px 12px;">
-        <summary style="cursor:pointer;font-size:0.76rem;color:#6ee7b7;font-weight:800;">🎁 Invita a tu equipo (+1 Uso Pro Gratis + 50% DTO con FRIEND50) o únete como Afiliado (40% comisión)</summary>
+        <summary style="cursor:pointer;font-size:0.76rem;color:#6ee7b7;font-weight:800;">🎁 Invita a un compañero (+1 Uso Pro Gratis) o únete como Afiliado (40% comisión en Stripe)</summary>
         <div style="margin-top:10px;">
           <div style="display:flex;justify-content:space-between;align-items:center;font-size:0.75rem;margin-bottom:6px;flex-wrap:wrap;gap:4px;">
-            <span style="color:#e2e8f0;font-weight:700;">Regala 1 Uso Pro Gratis + 50% DTO directo (código FRIEND50) a un compañero:</span>
-            <strong id="ref-status-badge" style="color:#6ee7b7;font-size:0.74rem;">Código directo activo: FRIEND50 (50% DTO)</strong>
+            <span style="color:#e2e8f0;font-weight:700;">Comparte PureAI Studio para regalar +1 Uso Pro Gratis a un compañero:</span>
+            <strong id="ref-status-badge" style="color:#6ee7b7;font-size:0.74rem;">Afiliados activos: 40% comisión neta</strong>
           </div>
           <div style="display:none;width:100%;height:6px;background:#1e293b;border-radius:999px;overflow:hidden;margin-bottom:8px;">
             <div id="ref-progress-bar" style="width:100%;height:100%;background:linear-gradient(90deg,#3b82f6,#10b981);"></div>
@@ -578,32 +587,46 @@
       </details>
     </section>
 
-    <!-- W3: Modal Glassmórfico Pro en lugar de alert() intrusivo -->
-    <div id="pro-modal-overlay" style="display:none;position:fixed;inset:0;background:rgba(6,4,14,0.82);backdrop-filter:blur(10px);z-index:9999;align-items:center;justify-content:center;padding:16px;" onclick="if(event.target===this)closeProModal()">
-      <div style="max-width:460px;width:100%;background:linear-gradient(165deg,#1d1436,#0e0a1d);border:1px solid rgba(168,85,247,0.45);border-radius:20px;padding:22px;box-shadow:0 25px 60px rgba(0,0,0,0.8);color:#f8fafc;position:relative;">
+    <!-- W3: Modal Glassmórfico Pro con Vista Previa de Activo y Escalera Híbrida sin Suscripción Forzosa -->
+    <div id="pro-modal-overlay" style="display:none;position:fixed;inset:0;background:rgba(6,4,14,0.84);backdrop-filter:blur(10px);z-index:9999;align-items:center;justify-content:center;padding:14px;overflow-y:auto;" onclick="if(event.target===this)closeProModal()">
+      <div style="max-width:540px;width:100%;background:linear-gradient(165deg,#1d1436,#0e0a1d);border:1px solid rgba(168,85,247,0.48);border-radius:20px;padding:20px;box-shadow:0 25px 60px rgba(0,0,0,0.85);color:#f8fafc;position:relative;">
         <button type="button" onclick="closeProModal()" style="position:absolute;top:12px;right:14px;background:none;border:none;color:#94a3b8;font-size:1.2rem;cursor:pointer;">✕</button>
-        <div style="font-size:0.75rem;color:#6ee7b7;font-weight:800;margin-bottom:4px;">💎 PUREAI STUDIO PRO</div>
-        <h3 style="margin:0 0 8px;font-size:1.2rem;" id="pro-modal-title">Desbloquea Fotos Ilimitadas, Lotes .ZIP y EXIF iPhone 16 Pro</h3>
-        <p id="pro-modal-desc" style="margin:0 0 14px;font-size:0.84rem;color:#cbd5e1;line-height:1.5;">Unlock instant unlimited access with Apple Pay, Google Pay, or Card (Cancel anytime in 1 click):</p>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;">
-          <a href="https://buy.stripe.com/aFacN6e66fTn6DudPA00009?prefilled_promo_code=FRIEND50" target="_blank" rel="noopener" style="text-decoration:none;background:rgba(0,229,163,0.18);border:2px solid #00e5a3;border-radius:12px;padding:12px;text-align:center;color:#fff;box-shadow:0 6px 20px rgba(0,229,163,0.28);">
-            <div style="font-size:0.75rem;color:#6ee7b7;font-weight:900;">🔥 Monthly Pro (-50% OFF)</div>
-            <div style="font-size:1.3rem;font-weight:900;margin:3px 0;">4,99 € <span style="font-size:0.68rem;font-weight:600;color:#cbd5e1;">(~$5.40) + VAT</span></div>
-            <div style="font-size:0.69rem;color:#a7f3d0;">1st mo w/ <strong>FRIEND50</strong> (then 9,99 €) · Instant Unlock →</div>
+        <div style="font-size:0.74rem;color:#6ee7b7;font-weight:900;letter-spacing:0.03em;margin-bottom:4px;">⚡ INSTANT AUTO-UNLOCK · NO ACCOUNT OR SUBSCRIPTION REQUIRED</div>
+        <h3 style="margin:0 0 6px;font-size:1.16rem;" id="pro-modal-title">Desbloquea EXIF iPhone 16 Pro / Sony A7IV + GPS y Lotes .ZIP</h3>
+        <p id="pro-modal-desc" style="margin:0 0 10px;font-size:0.82rem;color:#cbd5e1;line-height:1.45;">Choose a one-time credit pack (never expires) or unlimited annual studio access:</p>
+        <div id="pro-modal-asset-preview" style="display:none;align-items:center;gap:10px;margin-bottom:12px;padding:8px 11px;background:rgba(16,185,129,0.1);border:1px solid rgba(0,229,163,0.4);border-radius:11px;"></div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:9px;margin-bottom:10px;">
+          <a id="modal-card-pack10" href="https://buy.stripe.com/9B6cN6e669uZ4vmeTE0000f" target="_blank" rel="noopener" style="text-decoration:none;background:rgba(16,185,129,0.14);border:1.5px solid #10b981;border-radius:12px;padding:11px 9px;text-align:center;color:#fff;">
+            <div style="font-size:0.72rem;color:#6ee7b7;font-weight:900;">⚡ 10-File Pass</div>
+            <div style="font-size:1.25rem;font-weight:900;margin:3px 0;">€2.99 <span style="font-size:0.65rem;font-weight:600;color:#cbd5e1;">(~$3.20)</span></div>
+            <div style="font-size:0.67rem;color:#a7f3d0;">One-Time · Never Expires →</div>
           </a>
-          <a href="https://buy.stripe.com/6oUfZi7HI6iN2ne26S0000e?prefilled_promo_code=FRIEND50" target="_blank" rel="noopener" style="text-decoration:none;background:rgba(59,130,246,0.18);border:2px solid #3b82f6;border-radius:12px;padding:12px;text-align:center;color:#fff;">
-            <div style="font-size:0.75rem;color:#93c5fd;font-weight:900;">💎 Annual Pro (-50% OFF)</div>
-            <div style="font-size:1.3rem;font-weight:900;margin:3px 0;">39 €/yr <span style="font-size:0.68rem;font-weight:600;color:#cbd5e1;">(~$42) + VAT</span></div>
-            <div style="font-size:0.69rem;color:#bfdbfe;">Just <strong>3,25 €/mo</strong> (then 78 €/yr) · 3 Devices →</div>
+          <a id="modal-card-pack50" href="https://buy.stripe.com/3cIdRae66bD74vm6n80000g" target="_blank" rel="noopener" style="text-decoration:none;background:rgba(168,85,247,0.22);border:2px solid #a855f7;border-radius:12px;padding:11px 9px;text-align:center;color:#fff;box-shadow:0 6px 20px rgba(168,85,247,0.28);">
+            <div style="font-size:0.72rem;color:#f3e8ff;font-weight:900;">🔥 50 Files + .ZIP</div>
+            <div style="font-size:1.25rem;font-weight:900;margin:3px 0;">€9.90 <span style="font-size:0.65rem;font-weight:600;color:#e9d5ff;">(~$10.50)</span></div>
+            <div style="font-size:0.67rem;color:#f3e8ff;">One-Time (€0.19/file) · Best Value →</div>
+          </a>
+          <a id="modal-card-annual" href="https://buy.stripe.com/eVq00k7HIfTn1jabHs0000h" target="_blank" rel="noopener" style="text-decoration:none;background:rgba(59,130,246,0.18);border:1.5px solid #3b82f6;border-radius:12px;padding:11px 9px;text-align:center;color:#fff;">
+            <div style="font-size:0.72rem;color:#93c5fd;font-weight:900;">💎 Unlimited / Yr</div>
+            <div style="font-size:1.25rem;font-weight:900;margin:3px 0;">€39/yr <span style="font-size:0.65rem;font-weight:600;color:#cbd5e1;">(~$42)</span></div>
+            <div style="font-size:0.67rem;color:#bfdbfe;">€3.25/mo · 4 Devices →</div>
           </a>
         </div>
-        <button type="button" onclick="sharePureAiReferral('wa')" class="pa-btn pa-btn-purple" style="margin-top:0;padding:11px;font-size:0.82rem;">
-          📲 Share via WhatsApp (Get 50% OFF Code FRIEND50)
-        </button>
-        <div style="margin-top:10px;padding-top:10px;border-top:1px solid rgba(255,255,255,0.1);display:flex;gap:6px;align-items:center;">
-          <input type="email" id="modal-lead-email" placeholder="📩 Or enter email for +1 Free Pro Use + 50% OFF:" style="flex:1;padding:8px 10px;background:#0a0614;border:1px solid #4c1d95;color:#fff;border-radius:8px;font-size:0.75rem;" />
-          <button type="button" onclick="claimFreeExtraUnlockByEmail()" style="background:#00e5a3;color:#042f1e;border:none;border-radius:8px;padding:8px 11px;font-size:0.75rem;font-weight:900;cursor:pointer;white-space:nowrap;">Unlock +1 Free</button>
+        <div id="pro-modal-trust-bar" style="font-size:0.7rem;color:#a7f3d0;background:rgba(15,23,42,0.75);border:1px solid rgba(255,255,255,0.09);border-radius:8px;padding:7px 10px;text-align:center;line-height:1.4;">
+          🔒 <strong>100% Automatic Unlock</strong> upon Stripe return (no signup/password) · VAT Included · Apple Pay / Google Pay / Link / Klarna
         </div>
+        <details id="pro-modal-downsell" style="margin-top:9px;border-top:1px solid rgba(255,255,255,0.09);padding-top:7px;">
+          <summary id="pro-modal-downsell-sum" style="cursor:pointer;font-size:0.72rem;color:#94a3b8;text-align:center;list-style:none;">Need just +1 single emergency clean? Share or enter email ▾</summary>
+          <div style="margin-top:8px;">
+            <button type="button" onclick="sharePureAiReferral('wa')" class="pa-btn pa-btn-purple" style="margin-top:0;padding:9px;font-size:0.78rem;">
+              📲 Share PureAI via WhatsApp with a Colleague
+            </button>
+            <div style="margin-top:8px;display:flex;gap:6px;align-items:center;">
+              <input type="email" id="modal-lead-email" placeholder="📩 Enter email for +1 one-time free unlock:" style="flex:1;padding:7px 10px;background:#0a0614;border:1px solid #4c1d95;color:#fff;border-radius:8px;font-size:0.74rem;" />
+              <button type="button" onclick="claimFreeExtraUnlockByEmail()" style="background:#00e5a3;color:#042f1e;border:none;border-radius:8px;padding:7px 11px;font-size:0.74rem;font-weight:900;cursor:pointer;white-space:nowrap;">Unlock +1</button>
+            </div>
+          </div>
+        </details>
       </div>
     </div>
 
@@ -726,16 +749,23 @@
       const dropSubEl = document.getElementById("ui-drop-sub"); if (dropSubEl) dropSubEl.textContent = isEs ? "Limpia contenedores C2PA/JUMBF/EXIF y aplica perfiles técnicos APP1 opcionales (iPhone 16 Pro / Sony A7IV)" : "Strips C2PA/JUMBF/EXIF containers & optionally injects iPhone 16 Pro / Sony A7IV APP1 headers";
       const copyTxtBtn = document.getElementById("ui-btn-copy-txt"); if (copyTxtBtn) copyTxtBtn.textContent = isEs ? "📄 Copiar" : "📄 Copy";
       const xraySum = document.getElementById("ui-xray-summary"); if (xraySum) xraySum.textContent = isEs ? "🔎 Ver palabras y marcas de IA detectadas (Opcional)" : "🔎 View detected AI watermarks & clichés (Optional)";
-      const proHead = document.getElementById("pro-box-headline"); if (proHead) proHead.textContent = isEs ? "💎 Pásate a PureAI Pro — Fotos Ilimitadas + Humanizador Completo + Lotes .ZIP" : "💎 Upgrade to PureAI Pro — Unlimited Photos/MP4 + Batch .ZIP + Full AI Humanizer";
-      const proPill = document.getElementById("pro-box-promo-pill"); if (proPill) proPill.textContent = isEs ? "🔥 50% DTO 1er MES / 1er AÑO (Código: FRIEND50)" : "🔥 50% OFF 1st MONTH / 1st YEAR (Code: FRIEND50)";
-      const proFree = document.getElementById("pro-tier-free"); if (proFree) proFree.innerHTML = isEs ? "🟢 <strong>Plan Gratuito:</strong> <strong>3 Fotos / Vídeos Gratis</strong> (C2PA, Lossless o EXIF) + Limpieza Marcas Unicode." : "🟢 <strong>Free Starter:</strong> <strong>3 Free Photos / Videos</strong> (C2PA, Lossless or EXIF) + Invisible Unicode Scrubber.";
-      const proPaid = document.getElementById("pro-tier-paid"); if (proPaid) proPaid.innerHTML = isEs ? "💎 <strong>Todo Incluido en Pro:</strong> EXIF iPhone 16 Pro / Sony + GPS Ilimitado + <strong>Lotes .ZIP (Foto/MP4)</strong> + Humanizador + <strong>3 Equipos</strong>." : "💎 <strong>All-Access Pro:</strong> Unlimited Photos + iPhone 16 Pro / Sony EXIF + GPS + <strong>Batch .ZIP (Photo/MP4)</strong> + Deep Humanizer + <strong>3 Devices</strong>.";
-      const cardMo = document.getElementById("pro-card-monthly"); if (cardMo) cardMo.innerHTML = isEs ? '<div style="font-size:0.78rem;color:#93c5fd;font-weight:800;">🔥 Plan Mensual Pro (Creadores)</div><div style="font-size:1.35rem;font-weight:900;color:#fff;margin:4px 0;">4,99 € <span style="font-size:0.72rem;font-weight:600;color:#94a3b8;">+ IVA</span> <span style="font-size:0.75rem;color:#64748b;text-decoration:line-through;">9,99€</span></div><div style="font-size:0.72rem;color:#93c5fd;">1er mes con <strong>FRIEND50</strong>, luego 9,99 € + IVA/mes · Sin permanencia</div>' : '<div style="font-size:0.78rem;color:#93c5fd;font-weight:800;">🔥 Monthly Pro (Creators)</div><div style="font-size:1.35rem;font-weight:900;color:#fff;margin:4px 0;">€4.99 <span style="font-size:0.72rem;font-weight:600;color:#94a3b8;">(~$5.40) + VAT</span> <span style="font-size:0.75rem;color:#64748b;text-decoration:line-through;">€9.99</span></div><div style="font-size:0.72rem;color:#93c5fd;">1st month w/ <strong>FRIEND50</strong>, then €9.99/mo · Cancel in 1 click</div>';
-      const cardYr = document.getElementById("pro-card-annual"); if (cardYr) cardYr.innerHTML = isEs ? '<div style="font-size:0.78rem;color:#6ee7b7;font-weight:800;">💎 Plan Anual Pro (Ahorras 50% · Agencias)</div><div style="font-size:1.35rem;font-weight:900;color:#fff;margin:4px 0;">39 €<span style="font-size:0.75rem;font-weight:500;">/año + IVA</span> <span style="font-size:0.75rem;color:#64748b;text-decoration:line-through;">78€</span></div><div style="font-size:0.72rem;color:#a7f3d0;">1er año (Sale a <strong>3,25 €/mes</strong> + IVA), luego 78 € + IVA/año · 3 Equipos</div>' : '<div style="font-size:0.78rem;color:#6ee7b7;font-weight:800;">💎 Annual Pro (Save 50% · Agencies &amp; Power Users)</div><div style="font-size:1.35rem;font-weight:900;color:#fff;margin:4px 0;">€39<span style="font-size:0.75rem;font-weight:500;">/yr (~$42) + VAT</span> <span style="font-size:0.75rem;color:#64748b;text-decoration:line-through;">€78</span></div><div style="font-size:0.72rem;color:#a7f3d0;">1st year (Just <strong>€3.25/mo</strong>), then €78/yr · Up to 3 Devices</div>';
-      const legEl = document.getElementById("pro-legal-note"); if (legEl) legEl.innerHTML = isEs ? '⚖️ <strong>Información precontractual:</strong> Suscripción con renovación automática (mensual: 1er mes a 4,99 € + IVA con código FRIEND50 y luego 9,99 € + IVA/mes; anual: 1er año a 39,00 € + IVA con código FRIEND50 y luego 78,00 € + IVA/año; impuestos aplicables desglosados en Stripe Checkout). Cancelación en 1 clic en cualquier momento conservando el acceso hasta fin del periodo abonado. Al contratar y activar el software de forma inmediata, consientes expresamente el inicio de la ejecución digital y reconoces la excepción al derecho de desistimiento (Art. 103.m TRLGDCU). Uso exclusivo para obras propias conforme a los <a href="terms.html" style="color:#6ee7b7;text-decoration:underline;">Términos de Servicio</a> y <a href="privacy-policy.html" style="color:#6ee7b7;text-decoration:underline;">Política de Privacidad</a>.' : '⚖️ <strong>Subscription terms:</strong> Auto-renewing subscription (Monthly: €4.99 + VAT 1st month w/ code FRIEND50, then €9.99 + VAT/mo; Annual: €39.00 + VAT 1st year w/ code FRIEND50, then €78.00 + VAT/yr; applicable taxes shown at Stripe Checkout). Cancel anytime in 1 click while keeping access until period end. By activating instant digital software access, you consent to immediate execution and acknowledge the digital content withdrawal exception (Art. 103.m TRLGDCU / EU Directive). See <a href="terms.html" style="color:#6ee7b7;text-decoration:underline;">Terms of Service</a> &amp; <a href="privacy-policy.html" style="color:#6ee7b7;text-decoration:underline;">Privacy Policy</a>.';
-      const codeEl = document.getElementById("pa-pro-code"); if (codeEl) codeEl.placeholder = isEs ? "¿Ya te suscribiste? Pega tu clave (PRO-XXXX-XXXX) o ID de sesión de Stripe (cs_live_...)" : "Already subscribed? Paste your license key (PRO-XXXX-XXXX) or Stripe Session ID (cs_live_...)";
+      const qpLbl = document.getElementById("ui-quick-preset-lbl"); if (qpLbl) qpLbl.textContent = isEs ? "⚡ Preset 1-Clic:" : "⚡ 1-Click Camera & Mode:";
+      const proHead = document.getElementById("pro-box-headline"); if (proHead) proHead.textContent = isEs ? "💎 Desbloquea PureAI Pro — Pases de Pago Único (Sin Suscripción) o Anual Ilimitado" : "💎 Unlock PureAI Pro — One-Time Credit Packs (No Subscription) or Unlimited Annual";
+      const proPill = document.getElementById("pro-box-promo-pill"); if (proPill) proPill.textContent = isEs ? "⚡ PAGO ÚNICO SIN CADUCIDAD · IVA INCLUIDO" : "⚡ ONE-TIME PACKS NEVER EXPIRE · VAT INCLUDED";
+      const proFree = document.getElementById("pro-tier-free"); if (proFree) proFree.innerHTML = isEs ? "🟢 <strong>Prueba Gratuita:</strong> Escáner C2PA Ilimitado + <strong>1 Foto / Vídeo Gratis</strong> + Limpieza Marcas Unicode." : "🟢 <strong>Free Starter:</strong> Unlimited C2PA Threat Scanner + <strong>1 Free Photo / Video Export</strong> + Unicode Cleaner.";
+      const proPaid = document.getElementById("pro-tier-paid"); if (proPaid) proPaid.innerHTML = isEs ? "💎 <strong>Packs &amp; Pro:</strong> EXIF iPhone 16 Pro / Sony + GPS + <strong>Lotes .ZIP (Foto/MP4)</strong> + Humanizador + <strong>Hasta 4 Equipos</strong>." : "💎 <strong>Packs &amp; Pro:</strong> iPhone 16 Pro / Sony EXIF + GPS + <strong>Batch .ZIP (Photo/MP4)</strong> + Deep Humanizer + <strong>Up to 4 Devices</strong>.";
+      const cardP10 = document.getElementById("pro-card-pack10"); if (cardP10) cardP10.innerHTML = isEs ? '<div style="font-size:0.76rem;color:#6ee7b7;font-weight:800;">⚡ Pack Puntual (10 Usos)</div><div style="font-size:1.35rem;font-weight:900;color:#fff;margin:4px 0;">2,99 € <span style="font-size:0.7rem;font-weight:600;color:#94a3b8;">IVA incl.</span></div><div style="font-size:0.71rem;color:#a7f3d0;">Pago único · 10 fotos/MP4/textos Pro · <strong>Sin caducidad</strong></div>' : '<div style="font-size:0.76rem;color:#6ee7b7;font-weight:800;">⚡ 10-File Quick Pass</div><div style="font-size:1.35rem;font-weight:900;color:#fff;margin:4px 0;">€2.99 <span style="font-size:0.7rem;font-weight:600;color:#94a3b8;">(~$3.20) VAT incl.</span></div><div style="font-size:0.71rem;color:#a7f3d0;">One-time payment · 10 Pro exports · <strong>Never expires</strong></div>';
+      const cardP50 = document.getElementById("pro-card-pack50"); if (cardP50) cardP50.innerHTML = isEs ? '<div style="font-size:0.76rem;color:#e9d5ff;font-weight:900;">🔥 Pack Creador (50 Usos + .ZIP)</div><div style="font-size:1.35rem;font-weight:900;color:#fff;margin:4px 0;">9,90 € <span style="font-size:0.7rem;font-weight:600;color:#cbd5e1;">IVA incl.</span></div><div style="font-size:0.71rem;color:#f3e8ff;">Pago único (0,19 €/archivo) + <strong>Lotes .ZIP</strong> · Sin suscripción</div>' : '<div style="font-size:0.76rem;color:#e9d5ff;font-weight:900;">🔥 50-File Creator Pack + .ZIP</div><div style="font-size:1.35rem;font-weight:900;color:#fff;margin:4px 0;">€9.90 <span style="font-size:0.7rem;font-weight:600;color:#cbd5e1;">(~$10.50) VAT incl.</span></div><div style="font-size:0.71rem;color:#f3e8ff;">One-time (€0.19/file) + <strong>Batch .ZIP</strong> · No subscription</div>';
+      const cardYr = document.getElementById("pro-card-annual"); if (cardYr) cardYr.innerHTML = isEs ? '<div style="font-size:0.76rem;color:#93c5fd;font-weight:800;">💎 Anual Ilimitado (Agencias)</div><div style="font-size:1.35rem;font-weight:900;color:#fff;margin:4px 0;">39 €<span style="font-size:0.74rem;font-weight:500;">/año IVA incl.</span></div><div style="font-size:0.71rem;color:#bae6fd;">Todo Ilimitado (Sale a <strong>3,25 €/mes</strong>) · Hasta 4 Equipos</div>' : '<div style="font-size:0.76rem;color:#93c5fd;font-weight:800;">💎 Unlimited Annual Studio</div><div style="font-size:1.35rem;font-weight:900;color:#fff;margin:4px 0;">€39<span style="font-size:0.74rem;font-weight:500;">/yr (~$42) VAT incl.</span></div><div style="font-size:0.71rem;color:#bae6fd;">100% Unlimited (Just <strong>€3.25/mo</strong> · ~$0.11/day) · 4 Devices</div>';
+      const mCard10 = document.getElementById("modal-card-pack10"); if (mCard10) mCard10.innerHTML = isEs ? '<div style="font-size:0.72rem;color:#6ee7b7;font-weight:900;">⚡ Pack 10 Usos</div><div style="font-size:1.25rem;font-weight:900;margin:3px 0;">2,99 € <span style="font-size:0.65rem;font-weight:600;color:#cbd5e1;">IVA incl.</span></div><div style="font-size:0.67rem;color:#a7f3d0;">Pago único · Sin caducidad →</div>' : '<div style="font-size:0.72rem;color:#6ee7b7;font-weight:900;">⚡ 10-File Pass</div><div style="font-size:1.25rem;font-weight:900;margin:3px 0;">€2.99 <span style="font-size:0.65rem;font-weight:600;color:#cbd5e1;">(~$3.20)</span></div><div style="font-size:0.67rem;color:#a7f3d0;">One-Time · Never Expires →</div>';
+      const mCard50 = document.getElementById("modal-card-pack50"); if (mCard50) mCard50.innerHTML = isEs ? '<div style="font-size:0.72rem;color:#f3e8ff;font-weight:900;">🔥 50 Usos + .ZIP</div><div style="font-size:1.25rem;font-weight:900;margin:3px 0;">9,90 € <span style="font-size:0.65rem;font-weight:600;color:#e9d5ff;">IVA incl.</span></div><div style="font-size:0.67rem;color:#f3e8ff;">Pago único (0,19 €/ud) · Mejor Valor →</div>' : '<div style="font-size:0.72rem;color:#f3e8ff;font-weight:900;">🔥 50 Files + .ZIP</div><div style="font-size:1.25rem;font-weight:900;margin:3px 0;">€9.90 <span style="font-size:0.65rem;font-weight:600;color:#e9d5ff;">(~$10.50)</span></div><div style="font-size:0.67rem;color:#f3e8ff;">One-Time (€0.19/file) · Best Value →</div>';
+      const mCardYr = document.getElementById("modal-card-annual"); if (mCardYr) mCardYr.innerHTML = isEs ? '<div style="font-size:0.72rem;color:#93c5fd;font-weight:900;">💎 Anual Ilimitado</div><div style="font-size:1.25rem;font-weight:900;margin:3px 0;">39 €/año <span style="font-size:0.65rem;font-weight:600;color:#cbd5e1;">IVA incl.</span></div><div style="font-size:0.67rem;color:#bfdbfe;">3,25 €/mes · 4 Equipos →</div>' : '<div style="font-size:0.72rem;color:#93c5fd;font-weight:900;">💎 Unlimited / Yr</div><div style="font-size:1.25rem;font-weight:900;margin:3px 0;">€39/yr <span style="font-size:0.65rem;font-weight:600;color:#cbd5e1;">(~$42)</span></div><div style="font-size:0.67rem;color:#bfdbfe;">€3.25/mo · 4 Devices →</div>';
+      const mTrust = document.getElementById("pro-modal-trust-bar"); if (mTrust) mTrust.innerHTML = isEs ? '🔒 <strong>Desbloqueo Automático Instantáneo</strong> al volver de Stripe (sin cuenta ni contraseña) · IVA incluido · Apple Pay / Google Pay / Link / Klarna' : '🔒 <strong>100% Automatic Unlock</strong> upon Stripe return (no signup/password) · VAT Included · Apple Pay / Google Pay / Link / Klarna';
+      const mDownSum = document.getElementById("pro-modal-downsell-sum"); if (mDownSum) mDownSum.textContent = isEs ? "¿Solo necesitas +1 uso puntual de emergencia ahora? Comparte o deja tu email ▾" : "Need just +1 single emergency clean? Share or enter email ▾";
+      const legEl = document.getElementById("pro-legal-note"); if (legEl) legEl.innerHTML = isEs ? '⚖️ <strong>Información precontractual:</strong> Pases de 10 usos (2,99 € IVA incl.) y 50 usos (9,90 € IVA incl.) de pago único sin renovación automática ni caducidad. Plan Anual Ilimitado (39,00 €/año IVA incl.) con renovación anual cancelable en 1 clic en cualquier momento conservando el acceso hasta fin del periodo abonado. Activación automática inmediata al volver de Stripe sin registro ni contraseñas. Al activar el software digital de forma inmediata, consientes expresamente el inicio de la ejecución y reconoces la excepción al derecho de desistimiento (Art. 103.m TRLGDCU). Uso exclusivo para obras propias conforme a los <a href="terms.html" style="color:#6ee7b7;text-decoration:underline;">Términos de Servicio</a> y <a href="privacy-policy.html" style="color:#6ee7b7;text-decoration:underline;">Política de Privacidad</a>.' : '⚖️ <strong>Purchase terms:</strong> 10-File (€2.99 VAT incl.) and 50-File (€9.90 VAT incl.) Credit Packs are one-time payments with zero recurring charges and never expire. Unlimited Annual Studio (€39.00/yr VAT incl.) renews yearly and can be canceled anytime in 1 click while keeping access until period end. Instant automatic unlock upon checkout return (no account needed). By activating instant digital software access, you consent to immediate execution and acknowledge the digital content withdrawal exception (Art. 103.m TRLGDCU / EU Directive). See <a href="terms.html" style="color:#6ee7b7;text-decoration:underline;">Terms of Service</a> &amp; <a href="privacy-policy.html" style="color:#6ee7b7;text-decoration:underline;">Privacy Policy</a>.';
+      const codeEl = document.getElementById("pa-pro-code"); if (codeEl) codeEl.placeholder = isEs ? "¿Ya compraste un Pack o Plan Anual? Pega tu clave (PRO-XXXX-XXXX) o sesión (cs_live_...)" : "Already purchased a Pack or Annual Plan? Paste your key (PRO-XXXX-XXXX) or session (cs_live_...)";
       const actBtn = document.getElementById("btn-activate-pro"); if (actBtn) actBtn.textContent = isEs ? "Activar Pro" : "Activate Pro";
-      const mngLnk = document.getElementById("lnk-manage-sub"); if (mngLnk) mngLnk.textContent = isEs ? "Gestionar o cancelar suscripción" : "Manage or cancel subscription";
+      const mngLnk = document.getElementById("lnk-manage-sub"); if (mngLnk) mngLnk.textContent = isEs ? "Gestionar suscripción anual" : "Manage annual subscription";
       if (typeof updateFreeImgQuotaUi === "function") updateFreeImgQuotaUi();
       const cfg = LANGS[l] || LANGS.en;
       ["en", "es", "de", "fr", "pt"].forEach((k) => {
@@ -799,7 +829,11 @@
         if (now <= (Number(subRecord.checkoutGraceUntil) || 0)) {
           return { hasAccess: true, effectiveState: SUBSCRIPTION_STATES.ACTIVE, reason: "checkout_webhook_propagation_grace" };
         }
+        try { localStorage.setItem("pureai_unverified_grace_abused", "1"); } catch (_) {}
         return { hasAccess: false, effectiveState: SUBSCRIPTION_STATES.PENDING, reason: "checkout_grace_expired_unverified" };
+      }
+      if (subRecord.unlimited === false && typeof subRecord.creditsRemaining === "number" && subRecord.creditsRemaining <= 0) {
+        return { hasAccess: false, effectiveState: SUBSCRIPTION_STATES.EXPIRED, reason: "credits_exhausted" };
       }
       var st = subRecord.status;
       var exp = Number(subRecord.expiresAt) || 0;
@@ -872,13 +906,29 @@
 
     function isValidProLicenseCode(rawCode) {
       var c = String(rawCode || "").trim();
-      if (/^cs_(live|test)_[a-zA-Z0-9_]{20,}$/.test(c)) return true;
+      if (/^cs_live_[a-zA-Z0-9_]{20,}$/.test(c)) return true;
       if (/^(sub|pi|cus)_[a-zA-Z0-9]{14,}$/.test(c)) return true;
       var m = c.toUpperCase().match(/^PRO-([A-Z2-9]{4})-([A-Z2-9]{4})$/);
       if (m) {
         return computeKeyChecksumBlock(m[1]) === m[2];
       }
       return false;
+    }
+
+    function getOrCreateLocalInstallId() {
+      try {
+        var existingId = localStorage.getItem("pureai_install_id");
+        if (existingId && /^[a-zA-Z0-9_-]{12,48}$/.test(existingId)) return existingId;
+        var alphabet = "abcdefghjkmnpqrstuvwxyz23456789";
+        var id = "inst_";
+        for (var i = 0; i < 20; i++) {
+          id += alphabet.charAt(Math.floor(Math.random() * alphabet.length));
+        }
+        localStorage.setItem("pureai_install_id", id);
+        return id;
+      } catch (_) {
+        return "";
+      }
     }
 
     function deriveProKeyFromSession(seedId) {
@@ -923,8 +973,10 @@
       }
       var baseEndpoint = customEndpoint || (typeof window !== "undefined" && window.PUREAI_LICENSE_VERIFY_URL) || "https://pureai-stripe-webhook.pureaistudio-app.workers.dev/verify-license";
       var sep = baseEndpoint.indexOf("?") === -1 ? "?" : "&";
+      var installId = getOrCreateLocalInstallId();
+      var didParam = installId ? ("&did=" + encodeURIComponent(installId)) : "";
       try {
-        var res = await fetch(baseEndpoint + sep + "code=" + encodeURIComponent(code), {
+        var res = await fetch(baseEndpoint + sep + "code=" + encodeURIComponent(code) + didParam, {
           method: "GET",
           headers: { Accept: "application/json" }
         });
@@ -934,11 +986,18 @@
         }
         var data = typeof res.json === "function" ? await res.json() : JSON.parse(res.body || "{}");
         if (res.status === 200 && data && data.valid === true) {
+          try {
+            localStorage.removeItem("pureai_unverified_grace_abused");
+            localStorage.removeItem("pureai_grace_uses");
+          } catch (_) {}
           var srvRec = {
             key: data.proKey || code,
             stripeSessionId: code.indexOf("cs_") === 0 ? code : undefined,
             status: data.status || SUBSCRIPTION_STATES.ACTIVE,
             planInterval: data.planInterval || "month",
+            planType: data.planType || (data.planInterval === "year" ? "annual_unlimited" : "monthly_unlimited"),
+            unlimited: data.unlimited !== false,
+            creditsRemaining: typeof data.creditsRemaining === "number" ? data.creditsRemaining : null,
             activatedAt: Date.now(),
             expiresAt: data.expiresAt || (Date.now() + 32 * 24 * 3600 * 1000),
             graceEndsAt: data.graceEndsAt || (Date.now() + 35 * 24 * 3600 * 1000),
@@ -947,11 +1006,19 @@
             lastEventTs: Math.floor(Date.now() / 1000)
           };
           saveSubscriptionRecord(srvRec);
+          try {
+            var convKey = "pureai_ads_conv_" + (srvRec.stripeSessionId || srvRec.key);
+            if (!localStorage.getItem(convKey) && typeof window !== "undefined" && typeof window.gtag === "function") {
+              localStorage.setItem(convKey, "1");
+              window.gtag("event", "conversion", { send_to: "AW-18550704085", transaction_id: srvRec.stripeSessionId || srvRec.key });
+            }
+          } catch (_) {}
           return { checked: true, valid: true, verifiedByServer: true, record: srvRec };
         }
-        if (res.status === 404 || (data && data.valid === false)) {
+        if (res.status === 404 || res.status === 403 || (data && data.valid === false)) {
           var existingRec = loadStoredSubscriptionRecord();
           var isRecentCheckoutGrace =
+            res.status !== 403 &&
             !customEndpoint &&
             code.indexOf("cs_") === 0 &&
             existingRec &&
@@ -1010,19 +1077,33 @@
     }
 
     // Inicializar estado de suscripción desde caché local y re-validar asíncronamente contra el servidor (/verify-license)
-    (function initSubscriptionLifecycle() {
+    function revalidateStoredSubscriptionState() {
       var rec = loadStoredSubscriptionRecord();
-      if (rec) {
-        var check = evaluateSubscriptionAccess(rec, Date.now());
-        isPureAiPro = check.hasAccess;
-        var verifyTarget = rec.stripeSessionId || rec.key;
-        if (verifyTarget) {
-          verifyLicenseWithServer(verifyTarget).catch(function () {});
-        }
-      } else {
+      if (!rec) {
         isPureAiPro = false;
         try { localStorage.removeItem("pureai_studio_pro"); } catch (_) {}
+        return false;
       }
+      var verifyTarget = String(rec.stripeSessionId || rec.key || "").trim();
+      if (!verifyTarget || !isValidProLicenseCode(verifyTarget)) {
+        isPureAiPro = false;
+        try {
+          localStorage.removeItem("pureai_sub_record_v2");
+          localStorage.removeItem("pureai_studio_pro");
+        } catch (_) {}
+        return false;
+      }
+      var check = evaluateSubscriptionAccess(rec, Date.now());
+      isPureAiPro = check.hasAccess;
+      if (!isPureAiPro) {
+        try { localStorage.removeItem("pureai_studio_pro"); } catch (_) {}
+      }
+      verifyLicenseWithServer(verifyTarget).catch(function () {});
+      return isPureAiPro;
+    }
+
+    (function initSubscriptionLifecycle() {
+      revalidateStoredSubscriptionState();
     })();
 
     var loadedIsVideo = false;
@@ -1033,13 +1114,61 @@
       return t.indexOf("video/") === 0 || /\.(mp4|mov|webm|m4v)$/.test(n);
     }
 
-    function handleSelectedFiles(fileList) {
-      const files = Array.from(fileList || []);
-      if (!files.length) return;
-      if (files.length > 1 && !isPureAiPro) {
-        showProModal("🔒 Bulk Batch Mode (" + files.length + " files selected — photos & .MP4 videos) requires PureAI Pro (🔥 4,99 € 1er mes con código FRIEND50 o 39 €/año Plan Anual Agencias). Loading the first file in Free Mode.", "img_batch_zip");
+    var MAX_BATCH_FILES = 100;
+    function consumeServerProCredits(count, opTag) {
+      var rec = loadStoredSubscriptionRecord();
+      if (!rec || rec.unlimited !== false || typeof rec.creditsRemaining !== "number") return true;
+      var deduct = Math.max(1, Math.min(100, Math.trunc(Number(count) || 1)));
+      if (rec.creditsRemaining < deduct) return false;
+      rec.creditsRemaining = Math.max(0, rec.creditsRemaining - deduct);
+      if (rec.creditsRemaining <= 0) {
+        rec.status = SUBSCRIPTION_STATES.EXPIRED;
       }
-      batchQueue = isPureAiPro ? files : [files[0]];
+      saveSubscriptionRecord(rec);
+      var targetCode = String(rec.stripeSessionId || rec.key || "").trim();
+      if (targetCode && typeof fetch === "function") {
+        var opId = (opTag || "op") + "_" + Date.now() + "_" + Math.random().toString(36).slice(2, 7);
+        fetch("https://pureai-stripe-webhook.pureaistudio-app.workers.dev/consume-credit", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Accept: "application/json" },
+          body: JSON.stringify({ code: targetCode, count: deduct, opId: opId })
+        })
+          .then(function (r) { return r.json().then(function (d) { return { s: r.status, d: d }; }); })
+          .then(function (x) {
+            if (x && x.d && typeof x.d.creditsRemaining === "number") {
+              var cur = loadStoredSubscriptionRecord();
+              if (cur && cur.unlimited === false) {
+                cur.creditsRemaining = x.d.creditsRemaining;
+                if (cur.creditsRemaining <= 0) cur.status = SUBSCRIPTION_STATES.EXPIRED;
+                saveSubscriptionRecord(cur);
+              }
+            }
+          })
+          .catch(function () {});
+      }
+      return true;
+    }
+    function hasServerVerifiedBatchAccess() {
+      if (!isPureAiPro) return false;
+      var rec = loadStoredSubscriptionRecord();
+      if (!rec) return true;
+      if (rec.verifiedByServer !== true) return false;
+      if (rec.unlimited === false && typeof rec.creditsRemaining === "number" && rec.creditsRemaining < 2) return false;
+      return true;
+    }
+    function handleSelectedFiles(fileList) {
+      const files = Array.from(fileList || []).slice(0, MAX_BATCH_FILES);
+      if (!files.length) return;
+      const canUseBatch = hasServerVerifiedBatchAccess();
+      if (files.length > 1 && !canUseBatch) {
+        var pendingRec = loadStoredSubscriptionRecord();
+        if (pendingRec && pendingRec.verifiedByServer === "CHECKOUT_GRACE" && pendingRec.stripeSessionId) {
+          verifyLicenseWithServer(pendingRec.stripeSessionId).catch(function () {});
+        }
+        batchQueue = files;
+        showProModal(currentUiLang === "es" ? ("🔒 Modo Lote .ZIP (" + files.length + " archivos seleccionados — fotos y vídeos .MP4) disponible desde 🔥 9,90 € (Pack 50 Usos + .ZIP, pago único) o 39 €/año Ilimitado. Cargando el 1er archivo en vista previa.") : ("🔒 Bulk Batch .ZIP Mode (" + files.length + " files selected — photos & .MP4 videos) unlocks with the 🔥 €9.90 50-File Creator Pack (one-time) or €39/yr Unlimited Studio. Loading the 1st file in preview."), "img_batch_zip");
+      }
+      batchQueue = canUseBatch ? files : [files[0]];
       if (isVideoFile(files[0])) {
         inspectVideoFile(files[0]);
       } else {
@@ -1057,6 +1186,8 @@
     // P1: Escáner y limpiador de contenedores de vídeo corto (.MP4 / .MOV — Sora, Runway, Kling, HeyGen, Pika)
     var MAX_VIDEO_BYTES = 150 * 1024 * 1024;
     var MAX_IMAGE_BYTES = 50 * 1024 * 1024;
+    var MAX_CANVAS_SIDE = 16384;
+    var MAX_CANVAS_PIXELS = 67108864;
     async function inspectVideoFile(file) {
       if (!file || !file.size || file.size <= 0 || file.size > MAX_VIDEO_BYTES) {
         var errLogV = document.getElementById("img-audit-log");
@@ -1319,6 +1450,17 @@
 
       const img = new Image();
       img.onload = () => {
+        var nw = Number(img.naturalWidth) || 0;
+        var nh = Number(img.naturalHeight) || 0;
+        if (nw > MAX_CANVAS_SIDE || nh > MAX_CANVAS_SIDE || (nw * nh) > MAX_CANVAS_PIXELS) {
+          if (objUrl && URL.revokeObjectURL) URL.revokeObjectURL(objUrl);
+          loadedImgElement = null;
+          var btnErr = document.getElementById("btn-scrub-img");
+          if (btnErr) btnErr.disabled = true;
+          var logErr = document.getElementById("img-audit-log");
+          if (logErr) logErr.innerHTML = '<span class="threat-badge-red">⚠️ Image pixel dimensions exceed local browser safety limit (max 16384px / 67 MP).</span>';
+          return;
+        }
         loadedImgElement = img;
         const btn = document.getElementById("btn-scrub-img");
         btn.disabled = false;
@@ -1357,14 +1499,32 @@
       return (c ^ -1) >>> 0;
     }
 
+    function sanitizeZipEntryFilename(rawName, index) {
+      var base = String(rawName || "").replace(/[\x00-\x1f\\\/]+/g, "_").replace(/\.\.+/g, "_").replace(/^\.+/, "").trim();
+      if (!base) base = "clean-file-" + (Number(index) + 1) + ".jpg";
+      if (base.length > 120) {
+        var extMatch = base.match(/(\.[a-zA-Z0-9]{1,8})$/);
+        var extPart = extMatch ? extMatch[1] : "";
+        base = base.slice(0, 120 - extPart.length) + extPart;
+      }
+      return base;
+    }
+
     function createZipBlob(files) {
       const encoder = new TextEncoder();
       const localParts = [];
       const centralParts = [];
       let offset = 0;
+      const usedNames = new Set();
 
-      for (const f of files) {
-        const nameBytes = encoder.encode(f.name);
+      for (let idx = 0; idx < files.length; idx++) {
+        const f = files[idx];
+        let safeName = sanitizeZipEntryFilename(f && f.name, idx);
+        if (usedNames.has(safeName.toLowerCase())) {
+          safeName = safeName.replace(/(\.[^.]+)?$/, "_" + (idx + 1) + "$1");
+        }
+        usedNames.add(safeName.toLowerCase());
+        const nameBytes = encoder.encode(safeName);
         const data = f.bytes;
         const crc = crc32(data);
 
@@ -1591,6 +1751,11 @@
       const canvas = document.getElementById("clean-canvas");
       const w = imgEl.naturalWidth || 512;
       const h = imgEl.naturalHeight || 512;
+      if (w > MAX_CANVAS_SIDE || h > MAX_CANVAS_SIDE || (w * h) > MAX_CANVAS_PIXELS) {
+        var logOversize = document.getElementById("img-audit-log");
+        if (logOversize) logOversize.innerHTML = '<span class="threat-badge-red">⚠️ Image pixel dimensions exceed local browser safety limit (max 16384px / 67 MP).</span>';
+        return;
+      }
       canvas.width = w;
       canvas.height = h;
       const ctx = canvas.getContext("2d");
@@ -1706,18 +1871,17 @@
       return iframeCode;
     }
 
-    // A4: Captura de Email en el Paywall Suave para recuperar carritos abandonados (+1 Uso Gratis)
+    // A4: Captura de Email en el Downsell Colapsado para desbloquear +1 Uso Gratis único no acumulable
     function claimFreeExtraUnlockByEmail() {
       var emEl = document.getElementById("modal-lead-email");
       var email = (emEl && emEl.value ? emEl.value.trim() : "");
-      if (!email || email.indexOf("@") === -1 || email.indexOf(".") === -1) {
-        alert("Introduce un email válido para enviarte tu cupón del 50% (FRIEND50) y desbloquear +1 uso gratis.");
+      if (!email || email.length > 160 || !/^[^\s@]+@[^\s@]+\.[a-zA-Z]{2,}$/.test(email)) {
+        alert(currentUiLang === "es" ? "Introduce un email válido para desbloquear +1 uso puntual gratuito." : "Please enter a valid email address to unlock +1 one-time free export.");
         return false;
       }
-      if (!localStorage.getItem("pureai_email_bonus_claimed")) {
+      if (!localStorage.getItem("pureai_email_bonus_claimed") && !localStorage.getItem("pureai_promo_extra_credit_claimed")) {
         localStorage.setItem("pureai_email_bonus_claimed", "1");
-        usedImgCredits = Math.max(0, usedImgCredits - 1);
-        persistImgQuota(usedImgCredits);
+        localStorage.setItem("pureai_promo_extra_credit_claimed", "1");
         freeProCredits = Math.max(freeProCredits, 1);
         localStorage.setItem("pureai_free_pro_credits", String(freeProCredits));
       }
@@ -1745,57 +1909,89 @@
       }
     }
 
-    // Control de cuota local en el navegador (3 imágenes de demostración sin fingerprinting de hardware ni Canvas)
-    var MAX_FREE_IMG_USES = 3;
+    // Control de cuota gratuita (1 exportación gratuita verificable + escáner C2PA ilimitado + sincronización anti-Incógnito por hash efímero)
+    var MAX_FREE_IMG_USES = 1;
     function computeDeviceFingerprint() {
       return "local";
     }
 
     var deviceFp = computeDeviceFingerprint();
     var quotaStorageKey = "pureai_img_used";
-    var usedImgCredits = parseInt(localStorage.getItem("pureai_img_used") || "0", 10) || 0;
+    var usedImgCredits = Math.max(0, parseInt(localStorage.getItem("pureai_img_used") || "0", 10) || 0);
+
+    function syncServerFreeQuota(consumeNow) {
+      if (isPureAiPro || typeof fetch !== "function") return;
+      var qEndpoint = (typeof window !== "undefined" && window.PUREAI_FREE_QUOTA_URL) || "https://pureai-stripe-webhook.pureaistudio-app.workers.dev/check-free-quota";
+      fetch(qEndpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Accept: "application/json" },
+        body: JSON.stringify({ consume: Boolean(consumeNow) })
+      })
+        .then(function (r) { return r && typeof r.json === "function" ? r.json() : null; })
+        .then(function (d) {
+          if (d && d.ok === true && d.allowed === false && !isPureAiPro && usedImgCredits < MAX_FREE_IMG_USES) {
+            persistImgQuota(MAX_FREE_IMG_USES);
+          }
+        })
+        .catch(function () {});
+    }
 
     function updateFreeImgQuotaUi() {
       var badge = document.getElementById("free-img-quota-badge");
       if (!badge) return;
       var isEn = currentUiLang === "en";
       if (isPureAiPro) {
-        badge.textContent = isEn ? "💎 PureAI Pro Active · Unlimited" : "💎 PureAI Pro Activo · Ilimitado";
+        var activeRec = loadStoredSubscriptionRecord();
+        if (activeRec && activeRec.unlimited === false && typeof activeRec.creditsRemaining === "number") {
+          badge.textContent = isEn
+            ? ("💎 Pro · " + activeRec.creditsRemaining + " Credits Left")
+            : ("💎 Pro · " + activeRec.creditsRemaining + " Usos Restantes");
+        } else {
+          badge.textContent = isEn ? "💎 PureAI Pro Active · Unlimited" : "💎 PureAI Pro Activo · Ilimitado";
+        }
         badge.style.borderColor = "#3b82f6";
         badge.style.color = "#93c5fd";
         return;
       }
       var rem = Math.max(0, MAX_FREE_IMG_USES - usedImgCredits);
       if (rem > 0) {
-        badge.textContent = isEn ? ("🎁 " + rem + "/" + MAX_FREE_IMG_USES + " Free Photos") : ("🎁 " + rem + "/" + MAX_FREE_IMG_USES + " Fotos Gratis");
+        badge.textContent = isEn
+          ? ("🎁 " + rem + "/" + MAX_FREE_IMG_USES + " Free Export")
+          : ("🎁 " + rem + "/" + MAX_FREE_IMG_USES + " Foto Gratis");
         badge.style.borderColor = "#10b981";
         badge.style.color = "#6ee7b7";
       } else {
-        badge.textContent = isEn ? ("🔒 0/" + MAX_FREE_IMG_USES + " Free · Unlock Pro") : ("🔒 0/" + MAX_FREE_IMG_USES + " Gratis · Activa Pro");
+        badge.textContent = isEn
+          ? ("🔒 0/" + MAX_FREE_IMG_USES + " Free · Unlock Pack")
+          : ("🔒 0/" + MAX_FREE_IMG_USES + " Gratis · Activa Pack");
         badge.style.borderColor = "#f59e0b";
         badge.style.color = "#fcd34d";
       }
     }
 
     var lastQuotaChargedFileSig = "";
+    var lastQuotaChargedFileRef = null;
     var lastPaywallTriggerTool = "direct_pricing_box";
 
     function persistImgQuota(val) {
-      usedImgCredits = val;
+      var safeVal = Math.max(0, Number(val) || 0);
+      usedImgCredits = safeVal;
       lastQuotaChargedFileSig = "";
+      lastQuotaChargedFileRef = null;
       try {
-        localStorage.setItem("pureai_img_used", String(val));
+        localStorage.setItem("pureai_img_used", String(safeVal));
       } catch (_) {}
-      /* PRIV-01: Sincronización de cuota mantenida 100% en localStorage sin fingerprinting ni evasión de borrado */
       updateFreeImgQuotaUi();
     }
 
     function restoreImgQuotaFromAllLayers() {
       try {
-        usedImgCredits = parseInt(localStorage.getItem("pureai_img_used") || "0", 10) || 0;
-        /* APP-02: Eliminado polling público de ntfy.sh desde clientes para proteger la privacidad de eventos */
+        usedImgCredits = Math.max(0, parseInt(localStorage.getItem("pureai_img_used") || "0", 10) || 0);
       } catch (_) {}
       updateFreeImgQuotaUi();
+      if (!isPureAiPro && usedImgCredits < MAX_FREE_IMG_USES) {
+        syncServerFreeQuota(false);
+      }
     }
     restoreImgQuotaFromAllLayers();
 
@@ -1810,16 +2006,49 @@
       }
       if (typeof document !== "undefined" && typeof document.getElementById === "function") {
         var titleEl = document.getElementById("pro-modal-title");
+        var isEnModal = currentUiLang === "en";
         if (titleEl) {
-          var isEnModal = currentUiLang === "en";
-          if (resolvedTrigger === "img_batch_zip") titleEl.textContent = isEnModal ? "📦 Unlock Unlimited Mixed Batch .ZIP (Photos + .MP4)" : "📦 Desbloquea Lotes .ZIP Mixtos (Fotos + .MP4) Ilimitados";
-          else if (resolvedTrigger === "video_c2pa_scrubber") titleEl.textContent = isEnModal ? "🎬 Unlock Unlimited .MP4/.MOV Video Scrubber + Camera Header" : "🎬 Desbloquea Limpieza de Vídeos .MP4/.MOV + Firma Cámara";
-          else if (resolvedTrigger === "txt_deep_humanizer") titleEl.textContent = currentUiLang === "es" ? "✍️ Desbloquea Humanizador Profundo y Documentos .DOCX" : "✍️ Unlock Unlimited 100% AI Text Humanizer & .DOCX Upload";
-          else titleEl.textContent = isEnModal ? "📸 Unlock Unlimited Photos, iPhone 16 Pro / Sony EXIF + GPS & Batch .ZIP" : "📸 Desbloquea EXIF iPhone 16 Pro / Sony A7IV + GPS y Lotes .ZIP";
+          if (resolvedTrigger === "img_batch_zip") titleEl.textContent = isEnModal ? "📦 Unlock Mixed Batch .ZIP (Photos + .MP4)" : "📦 Desbloquea Lotes .ZIP Mixtos (Fotos + .MP4)";
+          else if (resolvedTrigger === "video_c2pa_scrubber") titleEl.textContent = isEnModal ? "🎬 Unlock .MP4/.MOV Video Scrubber + Camera Header" : "🎬 Desbloquea Limpieza de Vídeos .MP4/.MOV + Firma Cámara";
+          else if (resolvedTrigger === "txt_deep_humanizer") titleEl.textContent = currentUiLang === "es" ? "✍️ Desbloquea Humanizador Profundo y Documentos .DOCX" : "✍️ Unlock 100% AI Text Humanizer & .DOCX Upload";
+          else titleEl.textContent = isEnModal ? "📸 Unlock Clean Export, iPhone 16 Pro / Sony EXIF + GPS" : "📸 Desbloquea Exportación Limpia, EXIF iPhone 16 Pro / Sony + GPS";
         }
         var descEl = document.getElementById("pro-modal-desc");
         if (descEl && msg) {
           descEl.textContent = msg;
+        }
+        var prevBox = document.getElementById("pro-modal-asset-preview");
+        if (prevBox) {
+          var hasBatch = batchQueue && batchQueue.length > 1 && resolvedTrigger === "img_batch_zip";
+          var rawAssetName = hasBatch
+            ? (batchQueue.length + (currentUiLang === "es" ? " archivos listos para lote .ZIP" : " files queued for clean .ZIP export"))
+            : (loadedImgFile && loadedImgFile.name ? String(loadedImgFile.name) : "");
+          if (rawAssetName && resolvedTrigger !== "txt_deep_humanizer") {
+            var thumbEl = document.getElementById("img-preview-thumb");
+            var thumbSrc = (thumbEl && thumbEl.src && /^(data:image\/|blob:)/.test(String(thumbEl.src)))
+              ? String(thumbEl.src)
+              : (loadedImgFile && loadedImgFile._dataUrl && /^data:image\//.test(String(loadedImgFile._dataUrl)) ? String(loadedImgFile._dataUrl) : "");
+            var thumbTag = thumbSrc
+              ? '<img src="' + escapeHtml(thumbSrc) + '" alt="" style="width:42px;height:42px;object-fit:cover;border-radius:8px;filter:blur(4px);border:1px solid rgba(0,229,163,0.45);flex-shrink:0;" />'
+              : '<div style="width:42px;height:42px;border-radius:8px;background:rgba(0,229,163,0.16);border:1px solid rgba(0,229,163,0.45);display:flex;align-items:center;justify-content:center;font-size:1.2rem;flex-shrink:0;">🔒</div>';
+            var readyTxt = currentUiLang === "es"
+              ? "✅ Contenedor verificado en local · Elige un Pack (sin suscripción) para descargar al instante"
+              : "✅ Verified locally · Pick a One-Time Pack below for instant auto-unlock";
+            prevBox.style.display = "flex";
+            prevBox.innerHTML =
+              thumbTag +
+              '<div style="min-width:0;flex:1;">' +
+              '<div style="font-size:0.79rem;font-weight:800;color:#f8fafc;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + escapeHtml(rawAssetName) + '</div>' +
+              '<div style="font-size:0.7rem;color:#6ee7b7;margin-top:2px;">' + readyTxt + '</div>' +
+              '</div>';
+          } else {
+            prevBox.style.display = "none";
+            prevBox.innerHTML = "";
+          }
+        }
+        var downEl = document.getElementById("pro-modal-downsell");
+        if (downEl && downEl.open) {
+          downEl.open = false;
         }
         var modal = document.getElementById("pro-modal-overlay");
         if (modal) {
@@ -1896,15 +2125,26 @@
         } else {
           await new Promise(function (resolve) {
             var im = new Image();
+            var batchObjUrl = URL.createObjectURL(f);
             im.onload = function () {
+              if (URL.revokeObjectURL) URL.revokeObjectURL(batchObjUrl);
+              var bw = Number(im.naturalWidth) || 0;
+              var bh = Number(im.naturalHeight) || 0;
+              if (bw > MAX_CANVAS_SIDE || bh > MAX_CANVAS_SIDE || (bw * bh) > MAX_CANVAS_PIXELS) {
+                resolve();
+                return;
+              }
               scrubSingleImageToBlob(im, f.name, defense, mime, ext, async function (cleanName, blob) {
                 var ab = blob._bytes ? blob._bytes : new Uint8Array(await blob.arrayBuffer());
                 zipEntries.push({ name: cleanName, bytes: ab });
                 resolve();
               });
             };
-            im.onerror = function () { resolve(); };
-            im.src = URL.createObjectURL(f);
+            im.onerror = function () {
+              if (URL.revokeObjectURL) URL.revokeObjectURL(batchObjUrl);
+              resolve();
+            };
+            im.src = batchObjUrl;
           });
         }
       }
@@ -1924,27 +2164,67 @@
       }
     }
 
+    var MAX_UNVERIFIED_GRACE_USES = 3;
     function scrubAndDownloadImage() {
       if (!loadedImgElement || !loadedImgFile) return;
+      try {
+        var storedUsed = Math.max(0, parseInt(localStorage.getItem("pureai_img_used") || "0", 10) || 0);
+        usedImgCredits = Math.max(0, usedImgCredits, storedUsed);
+      } catch (_) {}
+      freeProCredits = Math.max(0, Math.min(1, Number(freeProCredits) || 0));
+      var curRec = null;
+      if (isPureAiPro) {
+        curRec = loadStoredSubscriptionRecord();
+        if (curRec && !evaluateSubscriptionAccess(curRec, Date.now()).hasAccess) {
+          isPureAiPro = false;
+          try { localStorage.removeItem("pureai_studio_pro"); } catch (_) {}
+          updateFreeImgQuotaUi();
+        } else if (curRec && curRec.verifiedByServer === "CHECKOUT_GRACE") {
+          var graceUses = 0;
+          try { graceUses = Math.max(0, parseInt(localStorage.getItem("pureai_grace_uses") || "0", 10) || 0); } catch (_) {}
+          if (graceUses >= MAX_UNVERIFIED_GRACE_USES) {
+            if (curRec.stripeSessionId) verifyLicenseWithServer(curRec.stripeSessionId).catch(function () {});
+            showProModal(currentUiLang === "es" ? "⏳ Confirmando tu pago en Stripe Checkout... Espera unos segundos a que el servidor verifique tu sesión para desbloquear limpiezas ilimitadas." : "⏳ Confirming your Stripe Checkout payment with the server... Please wait a few seconds for unlimited Pro access.", "img_c2pa_scrubber");
+            return;
+          }
+          try { localStorage.setItem("pureai_grace_uses", String(graceUses + 1)); } catch (_) {}
+        }
+      }
       const defense = document.getElementById("img-defense").value;
       const cityEl = document.getElementById("img-gps-city");
       const cityVal = (cityEl && cityEl.value) || "none";
       const isAdvancedProImgMode = Boolean(CAMERA_PROFILES[defense]) || defense === "synthid" || cityVal !== "none" || loadedIsVideo;
-      const isDemoSample = loadedImgFile.name === "dalle3-instagram-sample.jpg";
+      const isDemoSample = Boolean(loadedImgFile && loadedImgFile._isTrustedBuiltInDemo === true);
       const currentFileSig = ((loadedImgFile && loadedImgFile.name) || "") + ":" + ((loadedImgFile && loadedImgFile.size) || 0);
-      const isReTestingSameFile = Boolean(currentFileSig && currentFileSig === lastQuotaChargedFileSig);
+      const isReTestingSameFile = Boolean(loadedImgFile && loadedImgFile === lastQuotaChargedFileRef);
+      const isBatchExport = hasServerVerifiedBatchAccess() && batchQueue.length > 1;
+      if (isBatchExport && curRec && curRec.unlimited === false && typeof curRec.creditsRemaining === "number" && batchQueue.length > curRec.creditsRemaining) {
+        showProModal(currentUiLang === "es" ? ("🔒 Tu lote tiene " + batchQueue.length + " archivos pero te quedan " + curRec.creditsRemaining + " créditos Pro. Recarga con un Pack de 50 Usos (9,90 € pago único) o pásate al Plan Anual Ilimitado (39 €/año).") : ("🔒 Your batch has " + batchQueue.length + " files, which exceeds your " + curRec.creditsRemaining + " remaining credits. Top up with a 50-File Pack (€9.90 one-time) or Unlimited Annual (€39/yr)."), "img_batch_zip");
+        return;
+      }
       if (!isPureAiPro && !isDemoSample && !isReTestingSameFile && usedImgCredits >= MAX_FREE_IMG_USES) {
         if (freeProCredits > 0) {
           freeProCredits--;
           try { localStorage.setItem("pureai_free_pro_credits", String(freeProCredits)); } catch (_) {}
           lastQuotaChargedFileSig = currentFileSig;
+          lastQuotaChargedFileRef = loadedImgFile;
         } else {
-          showProModal(currentUiLang === "es" ? ("🔒 Has agotado tus " + MAX_FREE_IMG_USES + "/" + MAX_FREE_IMG_USES + " limpiezas gratuitas de Fotos y Vídeos. Desbloquea Fotos Ilimitadas, EXIF iPhone 16 Pro / Sony A7IV + GPS, Vídeos .MP4 y Lotes .ZIP desde 🔥 4,99 € (1er mes con FRIEND50) o 39 €/año.") : ("🔒 You've used all " + MAX_FREE_IMG_USES + "/" + MAX_FREE_IMG_USES + " free photo/video cleans. Unlock Unlimited Photos, Batch .ZIP, .MP4 Video Scrubber & iPhone 16 Pro / Sony A7IV EXIF + GPS from 🔥 €4.99 (~$5.40, 1st mo w/ FRIEND50) or €39/yr (~$42)."), loadedIsVideo ? "video_c2pa_scrubber" : (isAdvancedProImgMode ? "img_exif_pro_mode" : "img_c2pa_scrubber"));
+          showProModal(currentUiLang === "es" ? ("🔒 Ya utilizaste tu exportación gratuita (" + MAX_FREE_IMG_USES + "/" + MAX_FREE_IMG_USES + "). Desbloquea al instante sin suscripción desde ⚡ 2,99 € (10 Usos, nunca caducan), 🔥 9,90 € (50 Usos + Lotes .ZIP) o 💎 39 €/año Ilimitado.") : ("🔒 You've used your " + MAX_FREE_IMG_USES + "/" + MAX_FREE_IMG_USES + " free export. Unlock instant access with zero subscription from ⚡ €2.99 (10-File Pass, never expires), 🔥 €9.90 (50 Files + Batch .ZIP), or 💎 €39/yr Unlimited."), loadedIsVideo ? "video_c2pa_scrubber" : (isAdvancedProImgMode ? "img_exif_pro_mode" : "img_c2pa_scrubber"));
           return;
         }
       } else if (!isPureAiPro && !isDemoSample && !isReTestingSameFile) {
         persistImgQuota(usedImgCredits + 1);
+        syncServerFreeQuota(true);
         lastQuotaChargedFileSig = currentFileSig;
+        lastQuotaChargedFileRef = loadedImgFile;
+      } else if (isPureAiPro && curRec && curRec.unlimited === false && !isDemoSample && (!isReTestingSameFile || isBatchExport)) {
+        const neededCredits = isBatchExport ? batchQueue.length : 1;
+        if (!consumeServerProCredits(neededCredits, isBatchExport ? "batch" : "img")) {
+          showProModal(currentUiLang === "es" ? "🔒 Has agotado los créditos de tu Pack. Elige otro Pack de 10 Usos (2,99 €), 50 Usos (9,90 €) o pásate al Anual Ilimitado (39 €/año)." : "🔒 Your Credit Pack is exhausted. Grab another 10-File Pass (€2.99), 50-File Pack (€9.90), or upgrade to Unlimited Annual (€39/yr).", "img_c2pa_scrubber");
+          return;
+        }
+        lastQuotaChargedFileSig = currentFileSig;
+        lastQuotaChargedFileRef = loadedImgFile;
       }
       sessionCleanCount++;
       saveCurrentCreatorWorkflow();
@@ -1952,7 +2232,7 @@
         window.sendPureAiAnalyticsEvent({
           type: "app_action",
           event_name: "tool_completed",
-          tool_id: (isPureAiPro && batchQueue.length > 1) ? "img_batch_zip" : (loadedIsVideo ? "video_c2pa_scrubber" : "img_c2pa_scrubber"),
+          tool_id: (hasServerVerifiedBatchAccess() && batchQueue.length > 1) ? "img_batch_zip" : (loadedIsVideo ? "video_c2pa_scrubber" : "img_c2pa_scrubber"),
           defense_mode: defense,
           has_gps: cityVal !== "none",
           restored_saved_preset: restoredSavedPreset,
@@ -1969,7 +2249,7 @@
       const ext = mime === "image/png" ? "png" : mime === "image/webp" ? "webp" : "jpg";
 
       // Procesamiento por lotes .ZIP unificado (soporta mezcla de fotos .JPG/.PNG/.WEBP y vídeos .MP4/.MOV)
-      if (isPureAiPro && batchQueue.length > 1) {
+      if (isBatchExport) {
         setScrubButtonBusy(true);
         processMixedBatchToZipEntries(batchQueue, defense, mime, ext, cityVal).then(function (zipEntries) {
           setScrubButtonBusy(false);
@@ -2172,9 +2452,47 @@
         .replace(/&#x2014;|&#8212;/gi, "—");
     }
 
-    // Lector Client-Side de archivos .TXT, .MD y .DOCX (extracción XML de Word con soporte de Data Descriptors)
+    // Lector Client-Side de archivos .TXT, .MD y .DOCX (extracción XML de Word con límite anti-Zip-Bomb)
+    var MAX_DOC_BYTES = 25 * 1024 * 1024;
+    var MAX_DOC_UNCOMPRESSED_BYTES = 10 * 1024 * 1024;
+    async function readStreamCappedText(readable, maxBytes) {
+      if (!readable || typeof readable.getReader !== "function") {
+        var fallbackTxt = await new Response(readable).text();
+        if (fallbackTxt.length > maxBytes) throw new Error("Decompressed document exceeds 10 MB safety limit");
+        return fallbackTxt;
+      }
+      var reader = readable.getReader();
+      var chunks = [];
+      var total = 0;
+      while (true) {
+        var step = await reader.read();
+        if (step.done) break;
+        var val = step.value;
+        if (val) {
+          total += val.byteLength;
+          if (total > maxBytes) {
+            try { await reader.cancel(); } catch (_) {}
+            throw new Error("Decompressed document exceeds 10 MB safety limit");
+          }
+          chunks.push(val);
+        }
+      }
+      var merged = new Uint8Array(total);
+      var off = 0;
+      for (var cIdx = 0; cIdx < chunks.length; cIdx++) {
+        merged.set(chunks[cIdx], off);
+        off += chunks[cIdx].byteLength;
+      }
+      return new TextDecoder("utf-8", { fatal: false }).decode(merged);
+    }
+
     async function loadDocFile(file) {
       try {
+        if (!file || !file.size || file.size <= 0 || file.size > MAX_DOC_BYTES) {
+          var docLogErr = document.getElementById("txt-audit-log");
+          if (docLogErr) docLogErr.innerHTML = `<span class="threat-badge-red">⚠️ Archivo de documento inválido o demasiado grande (máximo 25 MB).</span>`;
+          return false;
+        }
         const name = (file.name || "").toLowerCase();
         if (name.endsWith(".docx")) {
           const buf = await file.arrayBuffer();
@@ -2185,15 +2503,16 @@
             const extracted = decodeBasicXmlEntities(xmlMatches.map((m) => m.replace(/<[^>]+>/g, "")).join(" "));
             document.getElementById("txt-input").value = extracted;
             analyzeText();
-            return;
+            return true;
           }
-          // Si el .docx está comprimido con Deflate, usar DecompressionStream sobre la entrada word/document.xml
+          // Si el .docx está comprimido con Deflate, usar DecompressionStream con tope de memoria sobre word/document.xml
           if (typeof DecompressionStream !== "undefined") {
             const dv = new DataView(buf);
             let pos = 0;
             while (pos + 30 < bytes.length && dv.getUint32(pos, true) === 0x04034b50) {
               const compMethod = dv.getUint16(pos + 8, true);
               let compSize = dv.getUint32(pos + 18, true);
+              const uncompHint = dv.getUint32(pos + 22, true);
               const fnLen = dv.getUint16(pos + 26, true);
               const extraLen = dv.getUint16(pos + 28, true);
               const entryName = new TextDecoder().decode(bytes.slice(pos + 30, pos + 30 + fnLen));
@@ -2209,32 +2528,38 @@
                 compSize = Math.max(0, nextSig - dataStart);
               }
               if (entryName === "word/document.xml" && compMethod === 8 && compSize > 0) {
+                if (uncompHint > MAX_DOC_UNCOMPRESSED_BYTES) {
+                  throw new Error("Compressed XML header exceeds 10 MB safety limit");
+                }
                 const slice = bytes.slice(dataStart, dataStart + compSize);
                 const ds = new DecompressionStream("deflate-raw");
                 const writer = ds.writable.getWriter();
                 writer.write(slice);
                 writer.close();
-                const xmlStr = await new Response(ds.readable).text();
+                const xmlStr = await readStreamCappedText(ds.readable, MAX_DOC_UNCOMPRESSED_BYTES);
                 const paragraphs = xmlStr.split(/<\/w:p>/i).map((p) =>
                   decodeBasicXmlEntities((p.match(/<w:t[^>]*>([^<]+)<\/w:t>/g) || []).map((t) => t.replace(/<[^>]+>/g, "")).join(""))
                 ).filter(Boolean).join("\n\n");
                 if (paragraphs) {
                   document.getElementById("txt-input").value = paragraphs;
                   analyzeText();
-                  return;
+                  return true;
                 }
               }
               pos = dataStart + Math.max(1, compSize);
             }
           }
           document.getElementById("txt-audit-log").innerHTML = `<span class="threat-badge-red">⚠️ No se pudo extraer texto legible del archivo .DOCX. Copia y pega el texto directamente en el recuadro.</span>`;
-          return;
+          return false;
         }
-        const text = await file.text();
+        const text = (await file.text()).slice(0, MAX_DOC_UNCOMPRESSED_BYTES);
         document.getElementById("txt-input").value = text;
         analyzeText();
+        return true;
       } catch (e) {
-        alert("Could not read document file: " + e.message);
+        var docErrEl = document.getElementById("txt-audit-log");
+        if (docErrEl) docErrEl.innerHTML = `<span class="threat-badge-red">⚠️ Documento rechazado por límite de seguridad: ${escapeHtml(e && e.message ? e.message : "Error de lectura")}</span>`;
+        return false;
       }
     }
 
@@ -2389,17 +2714,33 @@
       }
     }
 
-    var freeProCredits = parseInt(localStorage.getItem("pureai_free_pro_credits") || "0", 10);
-    var refFriendsCount = parseInt(localStorage.getItem("pureai_ref_friends") || "0", 10);
+    function readClampedPromoCredits() {
+      try {
+        var hasClaim = Boolean(
+          localStorage.getItem("pureai_promo_extra_credit_claimed") ||
+          localStorage.getItem("pureai_email_bonus_claimed") ||
+          localStorage.getItem("pureai_ref_bonus_claimed")
+        );
+        if (!hasClaim) return 0;
+        var rawFree = parseInt(localStorage.getItem("pureai_free_pro_credits") || "0", 10) || 0;
+        return Math.max(0, Math.min(1, rawFree));
+      } catch (_) {
+        return 0;
+      }
+    }
+    var freeProCredits = readClampedPromoCredits();
+    var refFriendsCount = Math.max(0, parseInt(localStorage.getItem("pureai_ref_friends") || "0", 10) || 0);
 
     function updateReferralUi() {
       var badge = document.getElementById("ref-status-badge");
       var box = document.getElementById("ref-reward-box");
       if (!badge) return;
-      badge.textContent = "Código directo activo: FRIEND50 (50% DTO)";
+      badge.textContent = currentUiLang === "es" ? "Afiliados activos: 40% comisión neta" : "Active Affiliate Program: 40% net commission";
       if (refFriendsCount >= 1 && box) {
         box.style.display = "block";
-        box.innerHTML = "✅ Enlace de invitación compartido. Usa el código <strong style='background:#10b981;color:#022c22;padding:2px 8px;border-radius:5px;'>FRIEND50</strong> en Stripe Checkout para aplicar tu <strong>50% DTO directo (4,99 €)</strong>.";
+        box.innerHTML = currentUiLang === "es"
+          ? "✅ Enlace de invitación copiado/compartido. Tu compañero recibirá <strong>+1 Uso Pro Gratis</strong> al abrirlo."
+          : "✅ Invite link shared! Your colleague gets <strong>+1 Free Pro Export</strong> automatically upon opening it.";
       }
     }
 
@@ -2407,11 +2748,13 @@
       var myRefId = localStorage.getItem("pureai_my_ref") || ("vip" + Math.floor(1000 + Math.random() * 9000));
       localStorage.setItem("pureai_my_ref", myRefId);
       var shareUrl = "https://pureaistudios.com/clean-ai-studio.html?ref=" + myRefId;
-      var msg = "🛡️ Te regalo 1 Uso Pro GRATIS + 50% de descuento (código FRIEND50: 4,99 €) en PureAI Studio para borrar etiquetas C2PA 'Hecho con IA' en fotos y huellas de ChatGPT: " + shareUrl;
+      var msg = currentUiLang === "es"
+        ? ("🛡️ Te regalo +1 Uso Pro GRATIS en PureAI Studio para borrar etiquetas C2PA 'Hecho con IA' en fotos/MP4 y marcas invisibles de ChatGPT (100% privado en navegador): " + shareUrl)
+        : ("🛡️ Here's +1 FREE Pro export on PureAI Studio to strip 'Made with AI' C2PA metadata & invisible ChatGPT watermarks locally in your browser: " + shareUrl);
       if ((channel === "wa" || channel === "whatsapp") && typeof window !== "undefined" && window.open) {
-        window.open("https://api.whatsapp.com/send?text=" + encodeURIComponent(msg), "_blank");
+        window.open("https://api.whatsapp.com/send?text=" + encodeURIComponent(msg), "_blank", "noopener,noreferrer");
       } else if ((channel === "tg" || channel === "telegram") && typeof window !== "undefined" && window.open) {
-        window.open("https://t.me/share/url?url=" + encodeURIComponent(shareUrl) + "&text=" + encodeURIComponent(msg), "_blank");
+        window.open("https://t.me/share/url?url=" + encodeURIComponent(shareUrl) + "&text=" + encodeURIComponent(msg), "_blank", "noopener,noreferrer");
       } else if (navigator.clipboard) {
         navigator.clipboard.writeText(shareUrl).catch(function () {});
       }
@@ -2527,24 +2870,51 @@
     }
 
     var MAX_FREE_SHORT_WORDS = 180;
+    var MAX_FREE_SHORT_CHARS = 1500;
     function deepHumanizePro() {
       let txt = document.getElementById("txt-input").value;
-      if (!txt.trim()) return;
-      const wordCount = txt.trim().split(/\s+/).filter(Boolean).length;
+      const trimmedTxt = txt.trim();
+      if (!trimmedTxt) return;
+      if (isPureAiPro) {
+        var curTxtRec = loadStoredSubscriptionRecord();
+        if (curTxtRec && !evaluateSubscriptionAccess(curTxtRec, Date.now()).hasAccess) {
+          isPureAiPro = false;
+          try { localStorage.removeItem("pureai_studio_pro"); } catch (_) {}
+          updateFreeImgQuotaUi();
+        } else if (curTxtRec && curTxtRec.verifiedByServer === "CHECKOUT_GRACE") {
+          var txtGraceUses = 0;
+          try { txtGraceUses = Math.max(0, parseInt(localStorage.getItem("pureai_grace_uses") || "0", 10) || 0); } catch (_) {}
+          if (txtGraceUses >= MAX_UNVERIFIED_GRACE_USES) {
+            if (curTxtRec.stripeSessionId) verifyLicenseWithServer(curTxtRec.stripeSessionId).catch(function () {});
+            showProModal(currentUiLang === "es" ? "⏳ Confirmando tu pago en Stripe Checkout... Espera unos segundos a que el servidor verifique tu sesión." : "⏳ Confirming your Stripe Checkout payment with the server... Please wait a few seconds.", "txt_deep_humanizer");
+            return;
+          }
+          try { localStorage.setItem("pureai_grace_uses", String(txtGraceUses + 1)); } catch (_) {}
+        }
+      }
+      freeProCredits = Math.max(0, Math.min(1, Number(freeProCredits) || 0));
+      const wordCount = trimmedTxt.split(/[\s\u200B-\u200D\uFEFF\u202F\u00A0\u2060\u180E—–]+/).filter(Boolean).length;
+      const withinShortLimit = wordCount <= MAX_FREE_SHORT_WORDS && trimmedTxt.length <= MAX_FREE_SHORT_CHARS;
       const shortTrialUsed = localStorage.getItem("pureai_plg_short_txt_tried") === "1";
       if (!isPureAiPro && freeProCredits <= 0) {
-        if (wordCount <= MAX_FREE_SHORT_WORDS && !shortTrialUsed) {
+        if (withinShortLimit && !shortTrialUsed) {
           try {
             localStorage.setItem("pureai_plg_short_txt_tried", "1");
           } catch (_) {}
         } else {
-          showProModal(currentUiLang === "es" ? ("🔒 Vista previa gratuita completada (o texto largo de " + wordCount + " palabras > " + MAX_FREE_SHORT_WORDS + " máx. gratis). Desbloquea el Humanizador Profundo Ilimitado para ensayos completos y archivos Word (.DOCX) con PureAI Studio Pro (🔥 4,99 € 1er mes con código FRIEND50 o 39 €/año Plan Anual).") : ("🔒 Free preview used (or long text of " + wordCount + " words > " + MAX_FREE_SHORT_WORDS + " free limit). Unlock Unlimited 100% Academic & Pro AI Humanizer for full essays and Word (.DOCX) files with PureAI Pro (🔥 €4.99 1st month with code FRIEND50 or €39/yr Annual Plan — or enter your email below for +1 Free Pro Use)."), "txt_deep_humanizer");
+          showProModal(currentUiLang === "es" ? ("🔒 Vista previa gratuita completada (o texto largo de " + wordCount + " palabras / " + trimmedTxt.length + " caracteres > " + MAX_FREE_SHORT_WORDS + " máx. gratis). Desbloquea el Humanizador Profundo y archivos Word (.DOCX) desde ⚡ 2,99 € (Pack 10 Usos, sin suscripción), 🔥 9,90 € (50 Usos) o 💎 39 €/año Ilimitado.") : ("🔒 Free preview used (or long text of " + wordCount + " words / " + trimmedTxt.length + " chars > " + MAX_FREE_SHORT_WORDS + " free limit). Unlock the Deep AI Humanizer & Word (.DOCX) upload from ⚡ €2.99 (10-File Pass, no subscription), 🔥 €9.90 (50 Files), or 💎 €39/yr Unlimited."), "txt_deep_humanizer");
           return;
         }
       } else if (!isPureAiPro && freeProCredits > 0) {
         freeProCredits--;
         localStorage.setItem("pureai_free_pro_credits", String(freeProCredits));
         updateReferralUi();
+      } else if (isPureAiPro) {
+        var txtPackCheck = loadStoredSubscriptionRecord();
+        if (txtPackCheck && txtPackCheck.unlimited === false && !consumeServerProCredits(1, "txt")) {
+          showProModal(currentUiLang === "es" ? "🔒 Has agotado los créditos de tu Pack. Recarga con otro Pack de 10 Usos (2,99 €), 50 Usos (9,90 €) o pásate al Anual Ilimitado (39 €/año)." : "🔒 Your Credit Pack is exhausted. Top up with a 10-File Pass (€2.99), 50-File Pack (€9.90), or upgrade to Unlimited Annual (€39/yr).", "txt_deep_humanizer");
+          return;
+        }
       }
       txt = txt
         .replace(/[\u200B-\u200D\uFEFF\u2060\u180E]/g, "")
@@ -2574,9 +2944,10 @@
     }
 
     // Verificación segura del retorno de compra desde Stripe (?session_id=cs_live_...) con idempotencia y verificación server-side (/verify-license)
+    var CHECKOUT_GRACE_WINDOW_MS = 60 * 1000;
     function processStripeCheckoutReturn(searchQuery) {
       var q = typeof searchQuery === "string" ? searchQuery : (location.search || "");
-      var sessMatch = q.match(/[?&]session_id=(cs_(?:live|test)_[a-zA-Z0-9_]{20,})/);
+      var sessMatch = q.match(/[?&]session_id=(cs_live_[a-zA-Z0-9_]{20,})/);
       if (!sessMatch || !sessMatch[1]) {
         return { activated: false, reason: "missing_or_invalid_session_id" };
       }
@@ -2585,15 +2956,22 @@
       if (localStorage.getItem(processedKey)) {
         return { activated: true, duplicate: true, sessionId: sessionId };
       }
+      var prevGraceAbused = false;
+      try { prevGraceAbused = localStorage.getItem("pureai_unverified_grace_abused") === "1"; } catch (_) {}
+      var existingGraceRec = loadStoredSubscriptionRecord();
+      if (existingGraceRec && existingGraceRec.verifiedByServer === "CHECKOUT_GRACE" && existingGraceRec.stripeSessionId !== sessionId) {
+        prevGraceAbused = true;
+        try { localStorage.setItem("pureai_unverified_grace_abused", "1"); } catch (_) {}
+      }
       localStorage.setItem(processedKey, "1");
       var now = Date.now();
       var myProKey = generateMultiDeviceProKey(sessionId);
       saveSubscriptionRecord({
         key: myProKey,
         stripeSessionId: sessionId,
-        status: SUBSCRIPTION_STATES.ACTIVE,
-        verifiedByServer: "CHECKOUT_GRACE",
-        checkoutGraceUntil: now + 15 * 60 * 1000,
+        status: prevGraceAbused ? SUBSCRIPTION_STATES.PENDING : SUBSCRIPTION_STATES.ACTIVE,
+        verifiedByServer: prevGraceAbused ? false : "CHECKOUT_GRACE",
+        checkoutGraceUntil: prevGraceAbused ? 0 : (now + CHECKOUT_GRACE_WINDOW_MS),
         activatedAt: now,
         expiresAt: now + 32 * 24 * 3600 * 1000,
         graceEndsAt: now + 35 * 24 * 3600 * 1000,
@@ -2601,12 +2979,28 @@
       });
       if (typeof verifyLicenseWithServer === "function") {
         verifyLicenseWithServer(sessionId).catch(function () {});
+        if (typeof setTimeout === "function") {
+          setTimeout(function () {
+            var cur = loadStoredSubscriptionRecord();
+            if (cur && cur.verifiedByServer === "CHECKOUT_GRACE" && cur.stripeSessionId === sessionId) {
+              verifyLicenseWithServer(sessionId).catch(function () {});
+            }
+          }, 5000);
+          setTimeout(function () {
+            var cur = loadStoredSubscriptionRecord();
+            if (cur && cur.verifiedByServer === "CHECKOUT_GRACE" && cur.stripeSessionId === sessionId) {
+              verifyLicenseWithServer(sessionId).catch(function () {});
+            }
+          }, 15000);
+          setTimeout(function () {
+            revalidateStoredSubscriptionState();
+          }, CHECKOUT_GRACE_WINDOW_MS + 1500);
+        }
       }
       var codeInp = document.getElementById("pa-pro-code");
       if (codeInp && !codeInp.value) codeInp.value = myProKey;
       if (typeof history !== "undefined" && history.replaceState && typeof location !== "undefined") {
         var cleanSearchUrl = (location.pathname || "/") + (location.search || "").replace(/[?&]session_id=[^&]+/g, "").replace(/^&/, "?");
-        if (typeof window !== "undefined" && typeof window.gtag === "function") { window.gtag("event", "conversion", { send_to: "AW-18550704085", transaction_id: sessionId }); }
         if (typeof setTimeout === "function") { setTimeout(function () { history.replaceState(null, "", cleanSearchUrl); }, 4000); } else { history.replaceState(null, "", cleanSearchUrl); }
       }
 
@@ -2618,7 +3012,7 @@
       }
       if (typeof window !== "undefined" && typeof window.sendPureAiAnalyticsEvent === "function") {
         window.sendPureAiAnalyticsEvent({
-          type: "sale_verified_session",
+          type: "checkout_return_client",
           partner: soldAff,
           maskedSession: maskSensitiveTelemetryValue(sessionId),
           maskedProKey: maskSensitiveTelemetryValue(myProKey),
@@ -2626,19 +3020,30 @@
           commissionRate: soldAff === "self_referral_blocked" ? 0 : 0.40
         });
       }
-      return { activated: true, duplicate: false, sessionId: sessionId, partner: soldAff };
+      return { activated: !prevGraceAbused, duplicate: false, pendingServerVerification: prevGraceAbused, sessionId: sessionId, partner: soldAff };
     }
     function syncProStatusOnWindowFocus() {
-      var rec = loadStoredSubscriptionRecord();
-      if (!rec) return false;
-      var check = evaluateSubscriptionAccess(rec, Date.now());
-      isPureAiPro = check.hasAccess;
+      var active = revalidateStoredSubscriptionState();
       updateFreeImgQuotaUi();
-      if (isPureAiPro) closeProModal();
-      return isPureAiPro;
+      if (active) closeProModal();
+      return active;
     }
     if (typeof window !== "undefined" && typeof window.addEventListener === "function") {
       window.addEventListener("focus", syncProStatusOnWindowFocus);
+      window.addEventListener("storage", function (ev) {
+        try {
+          if (!ev || !ev.key || ev.key === "pureai_img_used") {
+            usedImgCredits = Math.max(0, parseInt(localStorage.getItem("pureai_img_used") || "0", 10) || 0);
+          }
+          if (!ev || !ev.key || ev.key === "pureai_free_pro_credits") {
+            freeProCredits = readClampedPromoCredits();
+          }
+          if (!ev || !ev.key || ev.key === "pureai_sub_record_v2" || ev.key === "pureai_studio_pro") {
+            revalidateStoredSubscriptionState();
+          }
+          updateFreeImgQuotaUi();
+        } catch (_) {}
+      });
     }
 
     processStripeCheckoutReturn(location.search);
@@ -2655,13 +3060,19 @@
       var sf = document.getElementById("pa-seo-footer");
       if (sf) sf.style.display = "none";
     }
-    if (location.search.includes("ref=")) {
-      var fwBanner = document.getElementById("friend-welcome-banner");
-      if (fwBanner) fwBanner.style.display = "block";
-      if (!localStorage.getItem("pureai_friend_gift_claimed")) {
-        freeProCredits = Math.max(freeProCredits, 1);
-        localStorage.setItem("pureai_free_pro_credits", String(freeProCredits));
-        localStorage.setItem("pureai_friend_gift_claimed", "true");
+    var incomingRefMatch = (location.search || "").match(/[?&]ref=([a-zA-Z0-9_.-]{3,36})/);
+    if (incomingRefMatch && incomingRefMatch[1]) {
+      var incomingRefCode = incomingRefMatch[1];
+      var ownRefCode = localStorage.getItem("pureai_my_ref") || "";
+      if (!ownRefCode || incomingRefCode.toLowerCase() !== ownRefCode.toLowerCase()) {
+        var fwBanner = document.getElementById("friend-welcome-banner");
+        if (fwBanner) fwBanner.style.display = "block";
+        if (!localStorage.getItem("pureai_friend_gift_claimed") && !localStorage.getItem("pureai_promo_extra_credit_claimed")) {
+          freeProCredits = Math.max(freeProCredits, 1);
+          localStorage.setItem("pureai_free_pro_credits", String(freeProCredits));
+          localStorage.setItem("pureai_friend_gift_claimed", "true");
+          localStorage.setItem("pureai_promo_extra_credit_claimed", "1");
+        }
       }
     }
     function generatePartnerAffiliateLink() {
@@ -2743,6 +3154,7 @@
         size: 184320,
         type: "image/jpeg",
         _dataUrl: dataUrl,
+        _isTrustedBuiltInDemo: true,
         arrayBuffer: function () { return Promise.resolve(rawBytes.buffer); }
       };
       batchQueue = [sampleFile];
@@ -2789,11 +3201,36 @@
       switchMobileToolTab("text");
     }
 
+    function isSafeExternalImageUrl(imgUrl) {
+      if (!imgUrl || typeof imgUrl !== "string" || imgUrl.length > 2048) return false;
+      if (!/^https:\/\//i.test(imgUrl)) return false;
+      var h = "";
+      if (typeof URL === "function") {
+        try {
+          var u = new URL(imgUrl);
+          if (u.protocol !== "https:" || u.username || u.password) return false;
+          h = (u.hostname || "").toLowerCase();
+        } catch (_) {
+          return false;
+        }
+      } else {
+        var authMatch = imgUrl.match(/^https:\/\/([^\/?#]+)/i);
+        if (!authMatch || !authMatch[1]) return false;
+        var authority = authMatch[1];
+        if (authority.indexOf("@") !== -1 || authority.indexOf("[") === 0) return false;
+        h = authority.split(":")[0].toLowerCase();
+      }
+      if (!h || h === "localhost" || /\.(local|localhost|internal|arpa|home|lan)$/i.test(h)) return false;
+      if (h.indexOf("[") === 0 || h.indexOf(":") !== -1) return false;
+      if (/^(127\.|0\.|10\.|192\.168\.|169\.254\.|100\.(6[4-9]|[7-9]\d|1[01]\d|12[0-7])\.|172\.(1[6-9]|2\d|3[01])\.)/.test(h)) return false;
+      return true;
+    }
+
     (function handleExtensionContextMenuParams() {
       var extTxtMatch = location.search.match(/[?&]ext_txt=([^&]+)/);
       if (extTxtMatch && extTxtMatch[1]) {
         try {
-          var decodedTxt = decodeURIComponent(extTxtMatch[1]);
+          var decodedTxt = decodeURIComponent(extTxtMatch[1]).slice(0, 200000);
           var ti = document.getElementById("txt-input");
           if (ti) {
             ti.value = decodedTxt;
@@ -2806,15 +3243,19 @@
       if (extImgMatch && extImgMatch[1] && typeof fetch === "function") {
         try {
           var imgUrl = decodeURIComponent(extImgMatch[1]);
-          if (!/^https:\/\//i.test(imgUrl) || /^https:\/\/(localhost|127\.|0\.0\.0\.0|10\.|192\.168\.)/i.test(imgUrl)) return;
-          fetch(imgUrl)
+          if (!isSafeExternalImageUrl(imgUrl)) return;
+          fetch(imgUrl, { credentials: "omit", referrerPolicy: "no-referrer", redirect: "error" })
             .then(function (r) {
               if (!r.ok) throw new Error("HTTP error");
+              if (r.redirected || (r.url && !isSafeExternalImageUrl(r.url))) throw new Error("Unsafe redirect");
               var ct = (r.headers && r.headers.get && r.headers.get("content-type")) || "image/jpeg";
               if (!/^image\//i.test(ct)) throw new Error("Invalid content-type");
+              var cl = parseInt((r.headers && r.headers.get && r.headers.get("content-length")) || "0", 10) || 0;
+              if (cl > MAX_IMAGE_BYTES) throw new Error("Oversized remote image");
               return r.blob();
             })
             .then(function (blob) {
+              if (!blob || !blob.size || blob.size > MAX_IMAGE_BYTES) return;
               blob.name = "right-click-ai-image.jpg";
               handleSelectedFiles([blob]);
             })

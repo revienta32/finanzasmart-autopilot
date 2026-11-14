@@ -35,7 +35,7 @@
   function isValidProLicenseCode(rawCode) {
     const code = String(rawCode || "").trim();
     if (!code) return false;
-    if (/^cs_(live|test)_[a-zA-Z0-9]{20,}$/.test(code)) return true;
+    if (/^cs_live_[a-zA-Z0-9_]{20,}$/.test(code)) return true;
     if (/^(sub|pi|cus)_[a-zA-Z0-9]{14,}$/.test(code)) return true;
     const proMatch = code.toUpperCase().match(/^PRO-([A-Z2-9]{4})-([A-Z2-9]{4})$/);
     if (proMatch) {
@@ -48,26 +48,138 @@
     return "pureai_ext_uses_" + new Date().toISOString().slice(0, 10);
   }
 
-  let cachedExtPro = localStorage.getItem("pureai_ext_pro") === "true";
+  let cachedLicenseRecord = null;
+  let cachedDailyUses = 0;
+  try {
+    localStorage.removeItem("pureai_ext_pro");
+    cachedDailyUses = Math.max(0, parseInt(localStorage.getItem(getTodayKey()) || "0", 10) || 0);
+  } catch (_) {}
+
+  function getOrCreateFallbackDid() {
+    try {
+      const existing = localStorage.getItem("pureai_ext_fallback_did");
+      if (existing && /^[a-zA-Z0-9_-]{12,48}$/.test(existing)) return existing;
+      const alphabet = "abcdefghjkmnpqrstuvwxyz23456789";
+      let id = "extfb_";
+      for (let i = 0; i < 18; i++) id += alphabet.charAt(Math.floor(Math.random() * alphabet.length));
+      localStorage.setItem("pureai_ext_fallback_did", id);
+      return id;
+    } catch (_) {
+      return "extfb_volatile_device01";
+    }
+  }
+
+  function verifyLicenseFailClosed(code) {
+    const cleanCode = String(code || "").trim();
+    if (!isValidProLicenseCode(cleanCode)) {
+      return Promise.resolve({ valid: false, reason: "invalid_format" });
+    }
+    if (typeof chrome !== "undefined" && chrome.runtime && typeof chrome.runtime.sendMessage === "function") {
+      return new Promise((resolve) => {
+        try {
+          chrome.runtime.sendMessage({ type: "VERIFY_PUREAI_LICENSE", code: cleanCode }, (resp) => {
+            if (chrome.runtime.lastError || !resp) {
+              resolve({ valid: false, reason: "runtime_error" });
+              return;
+            }
+            if (resp.valid === true && resp.record) {
+              cachedLicenseRecord = resp.record;
+              resolve({ valid: true, record: resp.record });
+            } else {
+              if (resp.ok === true && resp.valid === false) cachedLicenseRecord = null;
+              resolve({ valid: false, reason: resp.reason || "revoked_or_not_found" });
+            }
+          });
+        } catch (_) {
+          resolve({ valid: false, reason: "send_message_failed" });
+        }
+      });
+    }
+    if (typeof fetch !== "function") {
+      return Promise.resolve({ valid: false, reason: "no_fetch" });
+    }
+    const fbDid = getOrCreateFallbackDid();
+    return fetch("https://pureai-stripe-webhook.pureaistudio-app.workers.dev/verify-license?code=" + encodeURIComponent(cleanCode) + "&did=" + encodeURIComponent(fbDid), {
+      method: "GET",
+      headers: { Accept: "application/json" }
+    })
+      .then(async (resp) => {
+        const data = await resp.json().catch(() => ({}));
+        if (resp.status === 200 && data && data.valid === true) {
+          const rec = {
+            valid: true,
+            key: data.proKey || cleanCode,
+            expiresAt: data.expiresAt || (Date.now() + 32 * 24 * 3600 * 1000)
+          };
+          cachedLicenseRecord = rec;
+          return { valid: true, record: rec };
+        }
+        cachedLicenseRecord = null;
+        return { valid: false, reason: (data && data.reason) || "invalid_license" };
+      })
+      .catch(() => ({ valid: false, reason: "network_error" }));
+  }
+
   if (typeof chrome !== "undefined" && chrome.storage && chrome.storage.local) {
-    chrome.storage.local.get(["pureai_ext_pro"], (res) => {
-      if (res && res.pureai_ext_pro === true) {
-        cachedExtPro = true;
+    const todayStorageKey = getTodayKey();
+    chrome.storage.local.get(["pureai_ext_license_v2", todayStorageKey], (res) => {
+      if (res && typeof res[todayStorageKey] === "number" && res[todayStorageKey] > cachedDailyUses) {
+        cachedDailyUses = Math.max(0, res[todayStorageKey]);
+      }
+      const lic = res && res.pureai_ext_license_v2;
+      if (lic && lic.valid === true && lic.key && isValidProLicenseCode(lic.key) && typeof lic.expiresAt === "number" && Date.now() <= lic.expiresAt) {
+        cachedLicenseRecord = lic;
+        verifyLicenseFailClosed(lic.key);
+      } else {
+        cachedLicenseRecord = null;
       }
     });
+    if (chrome.storage.onChanged && typeof chrome.storage.onChanged.addListener === "function") {
+      chrome.storage.onChanged.addListener((changes, areaName) => {
+        if (areaName && areaName !== "local") return;
+        const curTodayKey = getTodayKey();
+        if (changes && changes[curTodayKey] && typeof changes[curTodayKey].newValue === "number") {
+          cachedDailyUses = Math.max(0, cachedDailyUses, changes[curTodayKey].newValue);
+        }
+        if (changes && Object.prototype.hasOwnProperty.call(changes, "pureai_ext_license_v2")) {
+          const newLic = changes.pureai_ext_license_v2 && changes.pureai_ext_license_v2.newValue;
+          if (newLic && newLic.valid === true && newLic.key && isValidProLicenseCode(newLic.key) && typeof newLic.expiresAt === "number" && Date.now() <= newLic.expiresAt) {
+            cachedLicenseRecord = newLic;
+          } else {
+            cachedLicenseRecord = null;
+          }
+        }
+      });
+    }
   }
 
   function isProUnlocked() {
-    return cachedExtPro || localStorage.getItem("pureai_ext_pro") === "true";
+    if (!cachedLicenseRecord || cachedLicenseRecord.valid !== true) return false;
+    if (typeof cachedLicenseRecord.expiresAt !== "number" || Date.now() > cachedLicenseRecord.expiresAt) {
+      cachedLicenseRecord = null;
+      return false;
+    }
+    return true;
   }
 
   function getUsedToday() {
-    return parseInt(localStorage.getItem(getTodayKey()) || "0", 10) || 0;
+    let localVal = 0;
+    try {
+      localVal = Math.max(0, parseInt(localStorage.getItem(getTodayKey()) || "0", 10) || 0);
+    } catch (_) {}
+    return Math.max(0, cachedDailyUses, localVal);
   }
 
   function incrementUsedToday() {
+    const todayStorageKey = getTodayKey();
     const next = getUsedToday() + 1;
-    localStorage.setItem(getTodayKey(), String(next));
+    cachedDailyUses = next;
+    try {
+      localStorage.setItem(todayStorageKey, String(next));
+    } catch (_) {}
+    if (typeof chrome !== "undefined" && chrome.storage && chrome.storage.local) {
+      chrome.storage.local.set({ [todayStorageKey]: next });
+    }
     return next;
   }
 
@@ -87,45 +199,59 @@
   function showInlineProPrompt(barEl) {
     let box = barEl.querySelector(".pureai-inline-upsell");
     if (box) return;
+    const isEsExt = typeof navigator !== "undefined" && /^es\b/i.test(navigator.language || "");
     box = document.createElement("div");
     box.className = "pureai-inline-upsell";
     box.style.cssText =
       "display:flex;gap:6px;align-items:center;flex-wrap:wrap;background:#140e26;border:1px solid #a855f7;border-radius:10px;padding:6px 10px;font-size:11px;color:#f8fafc;";
-    box.innerHTML = `
+    box.innerHTML = isEsExt
+      ? `
       <span>🔒 <strong>3/3 textos gratis hoy agotados:</strong></span>
-      <a href="https://buy.stripe.com/aFacN6e66fTn6DudPA00009" target="_blank" rel="noopener" style="background:#00e5a3;color:#042f1e;padding:3px 8px;border-radius:6px;font-weight:800;text-decoration:none;">🔥 Pro Mensual -50% (4,99 €)</a>
-      <a href="https://buy.stripe.com/6oUfZi7HI6iN2ne26S0000e" target="_blank" rel="noopener" style="background:#38bdf8;color:#082f49;padding:3px 8px;border-radius:6px;font-weight:800;text-decoration:none;">💎 Pro Anual (39 €/año)</a>
+      <a href="https://buy.stripe.com/9B6cN6e669uZ4vmeTE0000f" target="_blank" rel="noopener" style="background:#00e5a3;color:#042f1e;padding:3px 8px;border-radius:6px;font-weight:800;text-decoration:none;">⚡ 10 Usos (2,99 €)</a>
+      <a href="https://buy.stripe.com/3cIdRae66bD74vm6n80000g" target="_blank" rel="noopener" style="background:#a855f7;color:#fff;padding:3px 8px;border-radius:6px;font-weight:800;text-decoration:none;">🔥 50 Usos (9,90 €)</a>
+      <a href="https://buy.stripe.com/eVq00k7HIfTn1jabHs0000h" target="_blank" rel="noopener" style="background:#38bdf8;color:#082f49;padding:3px 8px;border-radius:6px;font-weight:800;text-decoration:none;">💎 Anual (39 €)</a>
       <button type="button" class="pureai-key-btn" style="background:#1e293b;color:#cbd5e1;border:1px solid #475569;padding:3px 7px;border-radius:6px;cursor:pointer;font-size:11px;">🔑 Activar Clave Pro</button>
+    `
+      : `
+      <span>🔒 <strong>3/3 free daily texts used:</strong></span>
+      <a href="https://buy.stripe.com/9B6cN6e669uZ4vmeTE0000f" target="_blank" rel="noopener" style="background:#00e5a3;color:#042f1e;padding:3px 8px;border-radius:6px;font-weight:800;text-decoration:none;">⚡ 10 Pass (€2.99)</a>
+      <a href="https://buy.stripe.com/3cIdRae66bD74vm6n80000g" target="_blank" rel="noopener" style="background:#a855f7;color:#fff;padding:3px 8px;border-radius:6px;font-weight:800;text-decoration:none;">🔥 50 Pack (€9.90)</a>
+      <a href="https://buy.stripe.com/eVq00k7HIfTn1jabHs0000h" target="_blank" rel="noopener" style="background:#38bdf8;color:#082f49;padding:3px 8px;border-radius:6px;font-weight:800;text-decoration:none;">💎 Unlimited (€39/yr)</a>
+      <button type="button" class="pureai-key-btn" style="background:#1e293b;color:#cbd5e1;border:1px solid #475569;padding:3px 7px;border-radius:6px;cursor:pointer;font-size:11px;">🔑 Activate Key</button>
     `;
     box.querySelector(".pureai-key-btn").addEventListener("click", async () => {
       const k = prompt("Introduce tu Clave Multi-Dispositivo verificada (PRO-XXXX-YYYY) o ID de Sesión de Stripe (cs_live_...):");
       if (isValidProLicenseCode(k)) {
-        try {
-          const resp = await fetch("https://pureai-stripe-webhook.pureaistudio-app.workers.dev/verify-license?code=" + encodeURIComponent(k.trim()), {
-            method: "GET",
-            headers: { Accept: "application/json" }
-          });
-          const ct = (resp.headers && resp.headers.get && resp.headers.get("content-type")) || "";
-          if (ct.includes("application/json")) {
-            const data = await resp.json();
-            if (resp.status === 404 || data.valid === false) {
-              alert("⚠️ Esta clave no figura como pagada o activa en el servidor de Stripe.");
-              return;
-            }
-          }
-        } catch (_) {}
-        cachedExtPro = true;
-        localStorage.setItem("pureai_ext_pro", "true");
-        if (typeof chrome !== "undefined" && chrome.storage && chrome.storage.local) {
-          chrome.storage.local.set({ pureai_ext_pro: true });
+        const verification = await verifyLicenseFailClosed(k.trim());
+        if (!verification || verification.valid !== true) {
+          const msg = verification && verification.reason === "max_devices_exceeded"
+            ? "⚠️ Esta licencia ha alcanzado el límite máximo de dispositivos permitidos."
+            : "⚠️ No se pudo verificar una suscripción activa en Stripe para esta clave (comprueba tu clave o conexión).";
+          alert(msg);
+          return;
         }
         box.remove();
-        alert("🎉 PureAI Studio Pro verificado y activado en ChatGPT y Claude sin límites.");
+        alert("🎉 PureAI Studio Pro verificado con el servidor y activado en ChatGPT y Claude sin límites.");
       } else if (k) {
         alert("⚠️ Clave inválida. Introduce una clave legítima PRO-XXXX-YYYY o tu session_id de Stripe (cs_live_...).");
       }
     });
     barEl.appendChild(box);
+  }
+
+  function extractCleanSourceText(msgEl) {
+    if (!msgEl) return "";
+    if (typeof msgEl.cloneNode === "function") {
+      try {
+        const clone = msgEl.cloneNode(true);
+        if (clone && typeof clone.querySelectorAll === "function") {
+          clone.querySelectorAll(".pureai-ext-bar").forEach((n) => n.remove());
+        }
+        return clone.innerText || clone.textContent || "";
+      } catch (_) {}
+    }
+    return String(msgEl.innerText || msgEl.textContent || "")
+      .replace(/\s*(✨ Copiar Texto Limpio|✅ ¡Copiado[^\n]*|🔒 3\/3 textos gratis hoy agotados:[\s\S]*)$/u, "");
   }
 
   function injectPureAiButtons() {
@@ -137,6 +263,7 @@
       msgEl.dataset.pureaiInjected = "1";
 
       const bar = document.createElement("div");
+      bar.className = "pureai-ext-bar";
       bar.style.cssText = "margin-top:8px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;";
 
       const btn = document.createElement("button");
@@ -151,7 +278,7 @@
           return;
         }
         const used = isProUnlocked() ? 0 : incrementUsedToday();
-        const clean = scrubAndHumanizeText(msgEl.innerText || msgEl.textContent || "");
+        const clean = scrubAndHumanizeText(extractCleanSourceText(msgEl));
         navigator.clipboard.writeText(clean).catch(() => {});
         btn.textContent = isProUnlocked()
           ? "✅ ¡Copiado Pro (Texto Limpio)!"

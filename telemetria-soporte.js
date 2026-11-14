@@ -194,9 +194,6 @@
   const activeAff = (() => { try { return localStorage.getItem("pureai_aff_partner") || ""; } catch (_) { return ""; } })();
   if (document.querySelectorAll) {
     document.querySelectorAll('a[href*="buy.stripe.com"]').forEach((a) => {
-      if (a.href && (a.href.includes("aFacN6e66fTn6DudPA00009") || a.href.includes("6oUfZi7HI6iN2ne26S0000e")) && !a.href.includes("prefilled_promo_code=")) {
-        a.href += (a.href.includes("?") ? "&" : "?") + "prefilled_promo_code=FRIEND50";
-      }
       if (activeAff && a.href && !a.href.includes("client_reference_id=")) {
         a.href += (a.href.includes("?") ? "&" : "?") + "client_reference_id=aff_" + encodeURIComponent(activeAff);
       }
@@ -246,10 +243,13 @@
     const link = e.target.closest("a");
     if (!link || !link.href) return;
     if (link.href.includes("buy.stripe.com")) {
-      const planSelected = link.href.includes("6oUfZi7HI6iN2ne26S0000e") ? "PRO_ANNUAL_3900" : "PRO_MONTHLY_499";
-      if (planSelected === "PRO_MONTHLY_499" && typeof navigator !== "undefined" && navigator.clipboard && navigator.clipboard.writeText) {
-        navigator.clipboard.writeText("FRIEND50").catch(() => {});
-      }
+      const planSelected = link.href.includes("eVq00k7HIfTn1jabHs0000h")
+        ? "PRO_ANNUAL_3900"
+        : link.href.includes("3cIdRae66bD74vm6n80000g")
+          ? "PACK_50_990"
+          : link.href.includes("9B6cN6e669uZ4vmeTE0000f")
+            ? "PACK_10_299"
+            : "STRIPE_DIRECT";
       sendTelemetry({
         type: "click_checkout",
         event_name: "checkout_clicked",
@@ -343,19 +343,29 @@
     });
   }
 
-  // 4. Barra Flotante de Conversión (Sticky CTA) en las Landings SEO (solo planes Pro Mensual y Anual vigentes)
+  // 4. Barra Flotante de Conversión (Sticky CTA) en las Landings SEO (Idioma adaptativo EN/ES + Lotes de Pago Único y Anual 39 €)
   const isMainStudio = /clean-ai-studio\.html|index\.html/i.test(pageName);
   if (!isMainStudio && typeof document !== "undefined" && document.body && !document.getElementById("pa-sticky-seo-bar")) {
+    const isEsNav = typeof navigator !== "undefined" && /^es\b/i.test(navigator.language || "");
     const stickyBar = document.createElement("div");
     stickyBar.id = "pa-sticky-seo-bar";
     stickyBar.className = "no-print";
     stickyBar.style.cssText =
-      "position:fixed;bottom:0;left:0;right:0;z-index:9990;background:linear-gradient(90deg,rgba(14,9,28,0.96),rgba(24,14,46,0.96));backdrop-filter:blur(14px);border-top:1px solid rgba(0,229,163,0.4);padding:10px 16px;display:flex;justify-content:center;align-items:center;gap:12px;flex-wrap:wrap;font-family:system-ui,sans-serif;box-shadow:0 -10px 30px rgba(0,0,0,0.6);";
-    stickyBar.innerHTML = `
-      <span style="color:#f8fafc;font-size:0.82rem;font-weight:700;">🛡️ <strong>PureAI Studio:</strong> Limpia metadatos C2PA/EXIF y caracteres invisibles Unicode 100% en tu navegador</span>
-      <a href="clean-ai-studio.html" style="background:linear-gradient(135deg,#00e5a3,#06b6d4);color:#042f1e;text-decoration:none;padding:6px 14px;border-radius:8px;font-size:0.78rem;font-weight:900;">🚀 Probar Gratis (3 Fotos)</a>
-      <a href="https://buy.stripe.com/aFacN6e66fTn6DudPA00009" target="_blank" rel="noopener" style="background:rgba(168,85,247,0.2);border:1px solid #a855f7;color:#e9d5ff;text-decoration:none;padding:5px 12px;border-radius:8px;font-size:0.76rem;font-weight:800;">🔥 Pro Mensual -50% (4,99 €)</a>
-      <a href="https://buy.stripe.com/6oUfZi7HI6iN2ne26S0000e" target="_blank" rel="noopener" style="background:rgba(56,189,248,0.18);border:1px solid #38bdf8;color:#bae6fd;text-decoration:none;padding:5px 12px;border-radius:8px;font-size:0.76rem;font-weight:800;">💎 Pro Anual (39 €/año)</a>
+      "position:fixed;bottom:0;left:0;right:0;z-index:9990;background:linear-gradient(90deg,rgba(14,9,28,0.96),rgba(24,14,46,0.96));backdrop-filter:blur(14px);border-top:1px solid rgba(0,229,163,0.4);padding:10px 16px;display:flex;justify-content:center;align-items:center;gap:10px;flex-wrap:wrap;font-family:system-ui,sans-serif;box-shadow:0 -10px 30px rgba(0,0,0,0.6);";
+    stickyBar.innerHTML = isEsNav
+      ? `
+      <span style="color:#f8fafc;font-size:0.8rem;font-weight:700;">🛡️ <strong>PureAI Studio:</strong> Limpia C2PA/EXIF y Unicode 100% en tu navegador</span>
+      <a href="clean-ai-studio.html" style="background:linear-gradient(135deg,#00e5a3,#06b6d4);color:#042f1e;text-decoration:none;padding:6px 13px;border-radius:8px;font-size:0.77rem;font-weight:900;">🚀 Probar Gratis</a>
+      <a href="https://buy.stripe.com/9B6cN6e669uZ4vmeTE0000f" target="_blank" rel="noopener" style="background:rgba(16,185,129,0.18);border:1px solid #10b981;color:#a7f3d0;text-decoration:none;padding:5px 11px;border-radius:8px;font-size:0.75rem;font-weight:800;">⚡ 10 Usos (2,99 €)</a>
+      <a href="https://buy.stripe.com/3cIdRae66bD74vm6n80000g" target="_blank" rel="noopener" style="background:rgba(168,85,247,0.2);border:1px solid #a855f7;color:#e9d5ff;text-decoration:none;padding:5px 11px;border-radius:8px;font-size:0.75rem;font-weight:800;">🔥 50 Usos + .ZIP (9,90 €)</a>
+      <a href="https://buy.stripe.com/eVq00k7HIfTn1jabHs0000h" target="_blank" rel="noopener" style="background:rgba(56,189,248,0.18);border:1px solid #38bdf8;color:#bae6fd;text-decoration:none;padding:5px 11px;border-radius:8px;font-size:0.75rem;font-weight:800;">💎 Anual Ilimitado (39 €)</a>
+    `
+      : `
+      <span style="color:#f8fafc;font-size:0.8rem;font-weight:700;">🛡️ <strong>PureAI Studio:</strong> Strip C2PA/EXIF &amp; Invisible Unicode 100% Locally</span>
+      <a href="clean-ai-studio.html" style="background:linear-gradient(135deg,#00e5a3,#06b6d4);color:#042f1e;text-decoration:none;padding:6px 13px;border-radius:8px;font-size:0.77rem;font-weight:900;">🚀 Try Free</a>
+      <a href="https://buy.stripe.com/9B6cN6e669uZ4vmeTE0000f" target="_blank" rel="noopener" style="background:rgba(16,185,129,0.18);border:1px solid #10b981;color:#a7f3d0;text-decoration:none;padding:5px 11px;border-radius:8px;font-size:0.75rem;font-weight:800;">⚡ 10-File Pass (€2.99)</a>
+      <a href="https://buy.stripe.com/3cIdRae66bD74vm6n80000g" target="_blank" rel="noopener" style="background:rgba(168,85,247,0.2);border:1px solid #a855f7;color:#e9d5ff;text-decoration:none;padding:5px 11px;border-radius:8px;font-size:0.75rem;font-weight:800;">🔥 50 Files + .ZIP (€9.90)</a>
+      <a href="https://buy.stripe.com/eVq00k7HIfTn1jabHs0000h" target="_blank" rel="noopener" style="background:rgba(56,189,248,0.18);border:1px solid #38bdf8;color:#bae6fd;text-decoration:none;padding:5px 11px;border-radius:8px;font-size:0.75rem;font-weight:800;">💎 Unlimited (€39/yr)</a>
     `;
     document.body.appendChild(stickyBar);
   }

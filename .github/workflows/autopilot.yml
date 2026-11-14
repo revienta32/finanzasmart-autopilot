@@ -17,6 +17,9 @@ jobs:
       REDDIT_USER: ${{ secrets.REDDIT_USER }}
       REDDIT_PASS: ${{ secrets.REDDIT_PASS }}
       PUREAI_MOBILE_NTFY_TOPIC: ${{ secrets.PUREAI_MOBILE_NTFY_TOPIC }}
+      NTFY_SECRET_TOPIC_URL: ${{ secrets.NTFY_SECRET_TOPIC_URL }}
+      ADMIN_DIGEST_TOKEN: ${{ secrets.ADMIN_DIGEST_TOKEN }}
+      STRIPE_WEBHOOK_SECRET: ${{ secrets.STRIPE_WEBHOOK_SECRET }}
       TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
       TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
     steps:

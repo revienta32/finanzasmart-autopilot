@@ -16,7 +16,13 @@ const cleanAiHtml = fs.readFileSync(path.join(__dirname, "clean-ai-studio.html")
 assert(!cleanAiHtml.includes("https://ntfy.sh"), "clean-ai-studio.html no debe exponer URLs directas de ntfy.sh en el cliente");
 assert(!telemetriaCode.includes("https://ntfy.sh"), "telemetria-soporte.js debe enviar eventos al relay /telemetry y nunca exponer el topic de ntfy.sh en cliente");
 assert(cleanAiHtml.includes("trainedAlgorithmicMedia") && cleanAiHtml.includes("\\u202F"), "Falta motor C2PA y Unicode Scrubber en clean-ai-studio.html");
-assert(cleanAiHtml.includes("https://buy.stripe.com/aFacN6e66fTn6DudPA00009") && cleanAiHtml.includes("https://buy.stripe.com/6oUfZi7HI6iN2ne26S0000e"), "Faltan enlaces de Stripe Checkout en vivo (4,99 €/mes y 39 €/año)");
+assert(
+  cleanAiHtml.includes("https://buy.stripe.com/9B6cN6e669uZ4vmeTE0000f") &&
+  cleanAiHtml.includes("https://buy.stripe.com/3cIdRae66bD74vm6n80000g") &&
+  cleanAiHtml.includes("https://buy.stripe.com/eVq00k7HIfTn1jabHs0000h") &&
+  !cleanAiHtml.includes("FRIEND50"),
+  "Faltan los 3 enlaces híbridos de Stripe Checkout en vivo (2,99 € / 9,90 € / 39 €) o quedan rastros del cupón antiguo FRIEND50"
+);
 assert(!cleanAiHtml.includes("paypal.me") && !cleanAiHtml.includes("revolut.me"), "No deben existir pasarelas ajenas a Stripe en la suite principal");
 assert(cleanAiHtml.includes("telemetria-soporte.js"), "Falta inyección de telemetria-soporte.js en clean-ai-studio.html");
 assert(!fs.existsSync(path.join(__dirname, "calculadoras-PureAI Studio.html")) && !fs.existsSync(path.join(__dirname, "verifactu-studio.html")), "Todo archivo relacionado con PureAI Studio o VeriFactu debe estar eliminado del proyecto");
@@ -701,12 +707,13 @@ assert(cleanAiHtml.includes("terms.html") && cleanAiHtml.includes("Art. 103.m TR
   const termsCurrent = fs.readFileSync(path.join(__dirname, "terms.html"), "utf8");
   assert(!privPolicyCurrent.includes("[NOMBRE COMPLETO") && !termsCurrent.includes("[NOMBRE COMPLETO"), "privacy-policy.html y terms.html no deben contener marcadores de borrador sin completar");
   const swCurrent = fs.readFileSync(path.join(__dirname, "sw.js"), "utf8");
-  assert(swCurrent.includes("pureai-studio-v4") && swCurrent.includes('e.request.mode === "navigate"'), "sw.js debe implementar caché v4 con soporte de navegación offline y revalidación");
+  assert(swCurrent.includes("pureai-studio-v5") && swCurrent.includes('e.request.mode === "navigate"'), "sw.js debe implementar caché v5 con soporte de navegación offline y revalidación");
 
-  // 17e. Verificar Cuota Unificada de 3 Fotos/Vídeos Gratis (tanto en Limpieza Neutra como en EXIF Cámara Pro) y 1 prueba de texto corto (<=180 palabras) en deepHumanizePro
+  // 17e. Verificar Cuota Gratuita de 1 Foto/Vídeo Gratis (MAX_FREE_IMG_USES = 1) y 1 prueba de texto corto (<=180 palabras) en deepHumanizePro
+  assert.strictEqual(paSandbox.MAX_FREE_IMG_USES, 1, "CRO: MAX_FREE_IMG_USES debe ser exactamente 1 exportación gratuita");
   paSandbox.isPureAiPro = false;
   paSandbox.freeProCredits = 0;
-  paSandbox.persistImgQuota(3); // Simular que ya gastó las 3 fotos gratuitas
+  paSandbox.persistImgQuota(1); // Simular que ya gastó su 1ª exportación gratuita
   paSandbox.loadedImgElement = { naturalWidth: 64, naturalHeight: 64 };
   paSandbox.loadedImgFile = { name: "user-photo.jpg", size: 2048, type: "image/jpeg" };
   paSandbox.loadedIsVideo = false;
@@ -714,12 +721,12 @@ assert(cleanAiHtml.includes("terms.html") && cleanAiHtml.includes("Art. 103.m TR
   getPaEl("img-gps-city").value = "none";
   getPaEl("pro-modal-overlay").style.display = "none";
   paSandbox.scrubAndDownloadImage();
-  assert.strictEqual(getPaEl("pro-modal-overlay").style.display, "flex", "PLG: La 4ª foto incluso en Limpieza Neutra sin suscripción debe mostrar el modal Pro");
+  assert.strictEqual(getPaEl("pro-modal-overlay").style.display, "flex", "PLG: La 2ª foto incluso en Limpieza Neutra sin Pack/Pro debe mostrar el modal Pro");
 
   getPaEl("pro-modal-overlay").style.display = "none";
   getPaEl("img-defense").value = "spoof";
   paSandbox.scrubAndDownloadImage();
-  assert.strictEqual(getPaEl("pro-modal-overlay").style.display, "flex", "PLG: El 4º uso de un perfil EXIF Pro (iPhone 16 Pro) sin suscripción debe mostrar el modal Pro");
+  assert.strictEqual(getPaEl("pro-modal-overlay").style.display, "flex", "PLG: El 2º uso con perfil EXIF Pro (iPhone 16 Pro) sin Pack/Pro debe mostrar el modal Pro");
 
   getPaEl("pro-modal-overlay").style.display = "none";
   paSandbox.localStorage.removeItem("pureai_plg_short_txt_tried");
@@ -748,9 +755,9 @@ assert(cleanAiHtml.includes("terms.html") && cleanAiHtml.includes("Art. 103.m TR
   getPaEl("pro-modal-overlay").style.display = "none";
   getPaEl("img-defense").value = "pure";
   paSandbox.loadedIsVideo = true;
-  paSandbox.persistImgQuota(3);
+  paSandbox.persistImgQuota(1);
   paSandbox.scrubAndDownloadImage();
-  assert.strictEqual(getPaEl("pro-modal-overlay").style.display, "flex", "PLG Vídeo: El 4º uso de limpieza de vídeo (.MP4/.MOV) sin Pro debe mostrar el modal Pro");
+  assert.strictEqual(getPaEl("pro-modal-overlay").style.display, "flex", "PLG Vídeo: El 2º uso de limpieza de vídeo (.MP4/.MOV) sin Pack/Pro debe mostrar el modal Pro");
   paSandbox.loadedIsVideo = false;
 
   paSandbox.freeProCredits = 0;
@@ -804,7 +811,7 @@ assert(cleanAiHtml.includes("terms.html") && cleanAiHtml.includes("Art. 103.m TR
   assert(mixedBatchEntries[1].name.startsWith("IMG_") && mixedBatchEntries[1].name.endsWith(".MP4"), "Batch Mixto .ZIP: El vídeo del lote con perfil 'spoof' debe renombrarse como IMG_XXXX.MP4");
   const batchVidStr = Buffer.from(mixedBatchEntries[1].bytes).toString("latin1");
   assert(!/c2paSora/i.test(batchVidStr) && batchVidStr.includes("iPhone 16 Pro"), "Batch Mixto .ZIP: El vídeo dentro del lote debe quedar limpio de C2PA e incluir átomo udta de cámara");
-  assert(!cleanAiHtml.includes("REF15") && !cleanAiHtml.includes("REF30"), "Simplificación PLG: Eliminada escalera redundante REF15/REF30 en favor del cupón directo FRIEND50");
+  assert(!cleanAiHtml.includes("REF15") && !cleanAiHtml.includes("REF30") && !cleanAiHtml.includes("FRIEND50"), "Simplificación PLG: Eliminados cupones manuales REF15/REF30/FRIEND50 en favor de precios fijos directos con IVA incluido");
   assert(cleanAiHtml.includes('tool_id: "forensic_certificate"') && cleanAiHtml.includes('"img_batch_zip"'), "Telemetría de Valor: Debe instrumentar eventos anónimos por función para decisiones de producto");
 
   // 17i. Verificar Retención: Memoria Persistente de Preset EXIF/GPS (saveCurrentCreatorWorkflow / restoreSavedCreatorWorkflow), Prompt PWA en 2º uso y Cohortes D1/W1/M1 + genuineReturn
@@ -834,8 +841,13 @@ assert(cleanAiHtml.includes("terms.html") && cleanAiHtml.includes("Art. 103.m TR
   assert.strictEqual(retFunnel.retentionBreakdown.genuineReturningUsers, 2, "Retención Genuina: Debe separar retornos orgánicos genuinos (2) de promocionales");
   assert.strictEqual(retFunnel.retentionBreakdown.promoReturningUsers, 1, "Retención Promocional: Debe aislar retornos inducidos por promoción (?ref= / bonus email)");
 
-  // 17j. Verificar Mejoras de Conversión en Monetización: ?prefilled_promo_code=FRIEND50, Contexto Dinámico en showProModal (#pro-modal-desc / #pro-modal-title) y Deduplicación de Cuota por Archivo Único
-  assert(cleanAiHtml.includes("https://buy.stripe.com/aFacN6e66fTn6DudPA00009?prefilled_promo_code=FRIEND50"), "Checkout Friction Zero: Los enlaces del plan mensual deben pre-aplicar ?prefilled_promo_code=FRIEND50 para evitar shock de precio en Stripe");
+  // 17j. Verificar Mejoras de Conversión en Monetización: Precios directos sin código promocional, Contexto Dinámico en showProModal (#pro-modal-desc / #pro-modal-title) y Deduplicación de Cuota por Archivo Único
+  assert(
+    cleanAiHtml.includes("https://buy.stripe.com/9B6cN6e669uZ4vmeTE0000f") &&
+    cleanAiHtml.includes("https://buy.stripe.com/3cIdRae66bD74vm6n80000g") &&
+    cleanAiHtml.includes("https://buy.stripe.com/eVq00k7HIfTn1jabHs0000h"),
+    "Checkout Friction Zero: Los 3 enlaces híbridos de Stripe deben usar precios directos con IVA incluido sin códigos promocionales"
+  );
   paSandbox.showProModal("🔒 Tienes 12 fotos y vídeos en lote listos para descargar en .ZIP", "img_batch_zip");
   assert(getPaEl("pro-modal-title").textContent.includes("Lotes .ZIP Mixtos"), "Paywall Contextual: showProModal debe adaptar #pro-modal-title a la función que disparó el bloqueo");
   assert(getPaEl("pro-modal-desc").textContent.includes("12 fotos y vídeos"), "Paywall Contextual: showProModal debe inyectar el mensaje específico msg en #pro-modal-desc");
@@ -958,13 +970,13 @@ assert(cleanAiHtml.includes("terms.html") && cleanAiHtml.includes("Art. 103.m TR
 
   // BUG-06 y BUG-08: freeProCredits (obtenido por ?ref= o email) desbloquea también 1 uso Pro de imagen y wrangler.toml coincide con el endpoint del Worker
   paSandbox.isPureAiPro = false;
-  paSandbox.persistImgQuota(3);
+  paSandbox.persistImgQuota(1);
   paSandbox.freeProCredits = 1;
   getPaEl("pro-modal-overlay").style.display = "none";
   getPaEl("img-defense").value = "spoof";
   paSandbox.loadedImgFile = { name: "bonus-credit-test.jpg", size: 4096, type: "image/jpeg" };
   paSandbox.scrubAndDownloadImage();
-  assert.strictEqual(getPaEl("pro-modal-overlay").style.display, "none", "QA BUG-06: freeProCredits debe permitir 1 uso Pro de imagen cuando usedImgCredits === 3");
+  assert.strictEqual(getPaEl("pro-modal-overlay").style.display, "none", "QA BUG-06: freeProCredits debe permitir 1 uso Pro de imagen cuando usedImgCredits === 1");
   assert.strictEqual(paSandbox.freeProCredits, 0, "QA BUG-06: Consumir el crédito extra Pro en imagen debe descontar freeProCredits a 0");
   assert(wranglerToml.includes('name = "pureai-stripe-webhook"'), "QA BUG-08: wrangler.toml debe usar el nombre exacto pureai-stripe-webhook");
 
@@ -1039,7 +1051,757 @@ assert(cleanAiHtml.includes("terms.html") && cleanAiHtml.includes("Art. 103.m TR
   assert.strictEqual(finViabilityDigest.incorporationReadiness.readyToCreateCompany, false, "Con solo 2 ventas no debe recomendar constituir empresa ni asumir gastos fijos de gestoría");
   assert(finViabilityDigest.incorporationReadiness.recommendation.includes("DO_NOT_INCORPORATE_YET"), "Debe advertir expresamente DO_NOT_INCORPORATE_YET mientras no supere 350 €/mes y 15 clientes");
 
-  console.log("✅ QA TEST SUITE PASSED (17 SECCIONES / 179 ASERCIONES): 100% E2E VM + Pre-Incorporation Gate + Mom-Test Scorer + 5 Core Convergent Validation Tests + 90-Day Bottleneck Diagnostics + QA Edge-Cases (BUG-01..09 Fixed) + Financial Viability + Channel Attribution Funnel + UX First-Visit Clarity + Checkout Friction Zero + Paywall Contextual + Retención D1/W1/M1 + Sticky Presets + Batch Mixto Foto/MP4 + Lossless JPEG + MP4 Camera Udta + EXIF GPS 0x8825 + Pagos/Webhooks KV + CFO + Legal/AI Act + Ciberseguridad verificadas sin errores.");
+  // 18. AUDITORÍA PROFUNDA ANTI-BYPASS DE LÍMITES DE USO Y CIBERSEGURIDAD END-TO-END
+  // 18a. Anti-Bypass por falsificación de nombre de archivo ("dalle3-instagram-sample.jpg") vs Demo legítima integrada
+  paSandbox.isPureAiPro = false;
+  paSandbox.persistImgQuota(1);
+  paSandbox.freeProCredits = 0;
+  getPaEl("pro-modal-overlay").style.display = "none";
+  paSandbox.loadedImgElement = { naturalWidth: 64, naturalHeight: 64 };
+  paSandbox.loadedImgFile = { name: "dalle3-instagram-sample.jpg", size: 184320, type: "image/jpeg" };
+  paSandbox.loadedIsVideo = false;
+  paSandbox.scrubAndDownloadImage();
+  assert.strictEqual(getPaEl("pro-modal-overlay").style.display, "flex", "SEC-BYPASS-01: Renombrar un archivo de usuario a dalle3-instagram-sample.jpg NO debe saltarse el límite de 1 exportación gratuita");
+
+  getPaEl("pro-modal-overlay").style.display = "none";
+  paSandbox.loadSampleAiImage();
+  paSandbox.scrubAndDownloadImage();
+  assert.strictEqual(getPaEl("pro-modal-overlay").style.display, "none", "SEC-BYPASS-01b: El botón oficial de foto de ejemplo (con _isTrustedBuiltInDemo) sí debe seguir funcionando sin cobrar cuota");
+
+  // 18b. Sincronización Multi-Pestaña de cuota y Anti-Acumulación de créditos promocionales (Email + ?ref=)
+  paSandbox.usedImgCredits = 0; // Pestaña antigua en memoria con contador en 0
+  paSandbox.localStorage.setItem("pureai_img_used", "1"); // Otra pestaña ya consumió la exportación gratuita
+  getPaEl("pro-modal-overlay").style.display = "none";
+  paSandbox.loadedImgElement = { naturalWidth: 64, naturalHeight: 64 };
+  paSandbox.loadedImgFile = { name: "multitab-photo.jpg", size: 5000, type: "image/jpeg" };
+  paSandbox.scrubAndDownloadImage();
+  assert.strictEqual(paSandbox.usedImgCredits, 1, "SEC-BYPASS-02: scrubAndDownloadImage debe sincronizar pureai_img_used desde localStorage entre pestañas");
+  assert.strictEqual(getPaEl("pro-modal-overlay").style.display, "flex", "SEC-BYPASS-02b: Una segunda pestaña no debe permitir reiniciar ni sobrescribir la cuota agotada");
+
+  paSandbox.localStorage.removeItem("pureai_email_bonus_claimed");
+  paSandbox.localStorage.removeItem("pureai_promo_extra_credit_claimed");
+  paSandbox.freeProCredits = 0;
+  getPaEl("modal-lead-email").value = "invalido@.c";
+  assert.strictEqual(paSandbox.claimFreeExtraUnlockByEmail(), false, "SEC-BYPASS-03: Emails malformados deben ser rechazados en el desbloqueo promocional");
+  getPaEl("modal-lead-email").value = "usuario.real@dominio.com";
+  assert.strictEqual(paSandbox.claimFreeExtraUnlockByEmail(), true, "SEC-BYPASS-03b: Email con formato válido debe aceptarse una única vez");
+  assert.strictEqual(paSandbox.freeProCredits, 1, "SEC-BYPASS-03c: El bonus por email debe conceder exactamente 1 crédito extra");
+  assert.strictEqual(paSandbox.usedImgCredits, 1, "SEC-BYPASS-03d: El bonus por email NO debe además restar usedImgCredits (evitando regalar 2 usos en vez de 1)");
+  paSandbox.freeProCredits = 0;
+  assert.strictEqual(paSandbox.claimFreeExtraUnlockByEmail(), true, "Llamada repetida cierra modal sin error");
+  assert.strictEqual(paSandbox.freeProCredits, 0, "SEC-BYPASS-03e: El bonus promocional no debe poder reclamarse múltiples veces");
+
+  // 18c. Bloqueo de sesiones Stripe de prueba (cs_test_), expiración de ventana de gracia no verificada y rechazo de pureai_sub_record_v2 sin clave
+  assert.strictEqual(paSandbox.isValidProLicenseCode("cs_test_1234567890abcdefghijklmnop"), false, "SEC-BYPASS-04: Claves de entorno de prueba cs_test_ deben rechazarse en producción");
+  assert.strictEqual(paSandbox.processStripeCheckoutReturn("?session_id=cs_test_1234567890abcdefghijklmnop").activated, false, "SEC-BYPASS-04b: Retorno URL con cs_test_ no debe activar Pro");
+
+  const expiredGraceEval = paSandbox.evaluateSubscriptionAccess(
+    { status: "ACTIVE", verifiedByServer: "CHECKOUT_GRACE", checkoutGraceUntil: Date.now() - 1000 },
+    Date.now()
+  );
+  assert.strictEqual(expiredGraceEval.hasAccess, false, "SEC-BYPASS-05: Una ventana CHECKOUT_GRACE caducada sin confirmación del servidor debe revocar el acceso");
+  assert.strictEqual(paSandbox.localStorage.getItem("pureai_unverified_grace_abused"), "1", "SEC-BYPASS-05b: Expirar una ventana CHECKOUT_GRACE sin pago real debe marcar pureai_unverified_grace_abused");
+  const replayGraceAttempt = paSandbox.processStripeCheckoutReturn("?session_id=cs_live_forged_replay_grace_9999999999");
+  assert.strictEqual(replayGraceAttempt.activated, false, "SEC-BYPASS-05c: Tras expirar una gracia no verificada, nuevos ?session_id=cs_live_ inventados NO deben conceder otra ventana de gracia gratuita");
+  assert.strictEqual(paSandbox.isPureAiPro, false, "SEC-BYPASS-05d: isPureAiPro debe permanecer en false ante reintentos de ?session_id= no verificados");
+
+  paSandbox.localStorage.setItem("pureai_sub_record_v2", JSON.stringify({ status: "ACTIVE", verifiedByServer: true, expiresAt: Date.now() + 999999999 }));
+  paSandbox.localStorage.setItem("pureai_studio_pro", "true");
+  assert.strictEqual(paSandbox.revalidateStoredSubscriptionState(), false, "SEC-BYPASS-06: Un registro pureai_sub_record_v2 manipulado sin clave verificable debe ser revocado inmediatamente");
+  assert.strictEqual(paSandbox.isPureAiPro, false, "SEC-BYPASS-06b: isPureAiPro debe quedar en false tras limpiar el registro inválido");
+
+  // 18d. Auditoría de todas las páginas SEO con herramientas rápidas (quickCleanImg, seoCleanPhoto, inspectAndCleanImg) y CSP endurecida
+  const allRepoHtmlFiles = fs.readdirSync(__dirname).filter((f) => f.endsWith(".html") && !f.startsWith("google"));
+  let quickToolPagesChecked = 0;
+  for (const hf of allRepoHtmlFiles) {
+    const hContent = fs.readFileSync(path.join(__dirname, hf), "utf8");
+    if (/function\s+(quickCleanImg|seoCleanPhoto|inspectAndCleanImg)\s*\(/.test(hContent)) {
+      quickToolPagesChecked++;
+      assert(hContent.includes("hasVerifiedSeoPro") && hContent.includes("used >= 1"), `SEC-BYPASS-07: La página ${hf} debe validar hasVerifiedSeoPro() y bloquear al llegar a used >= 1`);
+      assert(!hContent.includes("100% Free &amp; Unlimited") && !hContent.includes("Unlimited Free 1-by-1 Cleaning"), `SEC-BYPASS-07b: ${hf} no debe prometer limpiezas ilimitadas de fotos gratis`);
+    }
+    if (hContent.includes('http-equiv="Content-Security-Policy"')) {
+      assert(hContent.includes("object-src 'none'") && hContent.includes("base-uri 'self'"), `SEC-CSP-01: ${hf} debe incluir directivas CSP endurecidas object-src 'none' y base-uri 'self'`);
+    }
+  }
+  assert(quickToolPagesChecked >= 20, "SEC-BYPASS-07c: Deben haberse auditado al menos las 20 páginas SEO interactivas con scrubber rápido");
+
+  // Ejecución real en VM de seoCleanPhoto e inspectAndCleanImg con pureai_img_used=1 y pureai_studio_pro falsificado
+  const sampleSeoCleanHtml = fs.readFileSync(path.join(__dirname, "remove-made-with-ai-label-instagram-tiktok-c2pa.html"), "utf8");
+  const seoScriptMatch = sampleSeoCleanHtml.match(/<script>\s*(function hasVerifiedSeoPro[\s\S]*?)<\/script>/);
+  assert(seoScriptMatch, "Debe extraerse el bloque script de seoCleanPhoto");
+  const seoStatusEl = { innerHTML: "", textContent: "" };
+  const seoVm = {
+    localStorage: {
+      getItem: (k) => (k === "pureai_img_used" ? "1" : k === "pureai_studio_pro" ? "true" : null),
+      setItem: () => {}
+    },
+    document: { getElementById: () => seoStatusEl },
+    window: {},
+    Image: function () { throw new Error("No debe instanciar Image cuando la cuota está agotada"); }
+  };
+  vm.createContext(seoVm);
+  vm.runInContext(seoScriptMatch[1], seoVm);
+  seoVm.seoCleanPhoto({ name: "bypass-seo.jpg", size: 4096 });
+  assert(seoStatusEl.innerHTML.includes("1/1 free photo used"), "SEC-BYPASS-07d: seoCleanPhoto debe bloquear la 2ª foto incluso si localStorage.pureai_studio_pro='true' fue inyectado manualmente");
+
+  // 18e. Seguridad Backend del Worker (ntfy secreto, Auth en /daily-digest y GET /telemetry, anti-poisoning en POST /telemetry, multidivisa, límite de dispositivos y rate-limit)
+  const workerSrcRaw = fs.readFileSync(path.join(__dirname, "stripe-webhook-worker.js"), "utf8");
+  const doctorSrcRaw = fs.readFileSync(path.join(__dirname, "auto-doctor.js"), "utf8");
+  assert(!workerSrcRaw.includes("pureai_studio_ops_telemetry_94c2e1") && !doctorSrcRaw.includes("pureai_studio_ops_telemetry_94c2e1"), "SEC-BACKEND-01: Ningún archivo del repositorio público debe contener URLs secretas hardcodeadas de ntfy.sh");
+
+  const secStore = webhookEngine.createWebhookProcessorStore();
+  const secEnv = {
+    STRIPE_WEBHOOK_SECRET: "whsec_prod_test_secret_123456",
+    ADMIN_DIGEST_TOKEN: "adm_secret_digest_token_987654",
+    PUREAI_LICENSES_KV: (() => {
+      const m = new Map();
+      return {
+        get: async (k) => (m.has(k) ? m.get(k) : null),
+        put: async (k, v) => { m.set(k, String(v)); },
+        _m: m
+      };
+    })()
+  };
+
+  const unauthDigest = await webhookEngine.handleWorkerHttpRequest(
+    { method: "POST", url: "https://api.pureaistudios.com/daily-digest", headers: { get: () => "" }, text: async () => '{"force":true}' },
+    secEnv,
+    secStore
+  );
+  assert.strictEqual(unauthDigest.status, 401, "SEC-BACKEND-02: POST /daily-digest sin token Bearer válido debe ser rechazado con HTTP 401");
+
+  const wrongAuthDigest = await webhookEngine.handleWorkerHttpRequest(
+    {
+      method: "POST",
+      url: "https://api.pureaistudios.com/daily-digest",
+      headers: { get: (h) => (h.toLowerCase() === "authorization" ? "Bearer wrong_token_value_0000" : "") },
+      text: async () => '{"force":false}'
+    },
+    secEnv,
+    secStore
+  );
+  assert.strictEqual(wrongAuthDigest.status, 401, "SEC-BACKEND-02b: POST /daily-digest con Bearer incorrecto debe responder HTTP 401");
+
+  const validAuthDigest = await webhookEngine.handleWorkerHttpRequest(
+    {
+      method: "POST",
+      url: "https://api.pureaistudios.com/daily-digest",
+      headers: { get: (h) => (h.toLowerCase() === "authorization" ? "Bearer adm_secret_digest_token_987654" : "") },
+      text: async () => '{"force":false}'
+    },
+    secEnv,
+    secStore
+  );
+  assert.strictEqual(validAuthDigest.status, 200, "SEC-BACKEND-02c: POST /daily-digest con Bearer legítimo debe responder HTTP 200");
+
+  const unauthGetTelemetry = await webhookEngine.handleWorkerHttpRequest(
+    { method: "GET", url: "https://api.pureaistudios.com/telemetry", headers: { get: () => "" } },
+    secEnv,
+    secStore
+  );
+  assert.strictEqual(unauthGetTelemetry.status, 401, "SEC-BACKEND-03: GET /telemetry sin autenticación debe responder HTTP 401");
+
+  const forgedPurchaseTel = await webhookEngine.handleWorkerHttpRequest(
+    {
+      method: "POST",
+      url: "https://api.pureaistudios.com/telemetry",
+      headers: { get: (h) => (h.toLowerCase() === "origin" ? "https://pureaistudios.com" : "") },
+      text: async () => JSON.stringify({ event_name: "purchase_verified", amount_eur: "999.00" })
+    },
+    secEnv,
+    secStore
+  );
+  assert.strictEqual(forgedPurchaseTel.status, 403, "SEC-BACKEND-04: POST /telemetry debe bloquear con HTTP 403 intentos externos de inyectar purchase_verified");
+
+  const evilOriginTel = await webhookEngine.handleWorkerHttpRequest(
+    {
+      method: "POST",
+      url: "https://api.pureaistudios.com/telemetry",
+      headers: { get: (h) => (h.toLowerCase() === "origin" ? "https://evil-attacker.example" : "") },
+      text: async () => JSON.stringify({ type: "pageview", event_name: "session_start" })
+    },
+    secEnv,
+    secStore
+  );
+  assert.strictEqual(evilOriginTel.status, 403, "SEC-BACKEND-04b: POST /telemetry desde un Origin externo no autorizado debe responder HTTP 403");
+
+  const idOverwriteTel = await webhookEngine.handleWorkerHttpRequest(
+    {
+      method: "POST",
+      url: "https://api.pureaistudios.com/telemetry",
+      headers: { get: (h) => (h.toLowerCase() === "origin" ? "https://pureaistudios.com" : "") },
+      text: async () => JSON.stringify({ id: "attacker_custom_id", ts: "1999-01-01T00:00:00Z", type: "pageview", event_name: "session_start", injectedAdminFlag: true })
+    },
+    secEnv,
+    secStore
+  );
+  assert.strictEqual(idOverwriteTel.status, 200, "Evento legítimo desde pureaistudios.com debe aceptarse");
+  const savedTelEvents = JSON.parse(await secEnv.PUREAI_LICENSES_KV.get("telemetry:recent_events"));
+  assert(savedTelEvents[0].id.startsWith("kv_") && savedTelEvents[0].id !== "attacker_custom_id", "SEC-BACKEND-04c: El cliente no debe poder sobrescribir el ID generado por el servidor en KV");
+  assert.strictEqual(savedTelEvents[0].injectedAdminFlag, undefined, "SEC-BACKEND-04d: Campos fuera de la lista blanca deben ser descartados en /telemetry");
+
+  // Multidivisa en Stripe Adaptive Pricing (4,99 € cobrados en MXN/SEK/INR no deben regalar 1 año)
+  const mxnMonthlyPeriod = webhookEngine.resolveSubscriptionPeriod({ amount_total: 10800, currency: "mxn" }, baseNow);
+  const eurAnnualPeriod = webhookEngine.resolveSubscriptionPeriod({ amount_total: 3900, currency: "eur" }, baseNow);
+  assert.strictEqual(mxnMonthlyPeriod.planInterval, "month", "SEC-BACKEND-05: 108,00 MXN (10800 centavos ~ 4,99 €) NO debe clasificarse como plan anual de 366 días");
+  assert.strictEqual(eurAnnualPeriod.planInterval, "year", "SEC-BACKEND-05b: 39,00 EUR (3900 céntimos) sí debe clasificarse como plan anual");
+
+  // Límite de dispositivos por licencia (MAX_DEVICES_PER_LICENSE = 4) y Rate Limiting anti-fuerza bruta por IP
+  webhookEngine.processStripeWebhookEvent(secStore, {
+    id: "evt_dev_limit_01",
+    type: "checkout.session.completed",
+    created: nowSec + 20,
+    data: { object: { id: "cs_live_device_cap_session_1234567890", customer: "cus_dev_cap", payment_status: "paid", amount_total: 499, currency: "eur" } }
+  }, Date.now());
+  const devCapKey = webhookEngine.deriveProKeyFromSession("cs_live_device_cap_session_1234567890");
+  for (let d = 1; d <= 4; d++) {
+    const rDev = await webhookEngine.handleWorkerHttpRequest(
+      {
+        method: "GET",
+        url: `https://api.pureaistudios.com/verify-license?code=${devCapKey}&did=inst_device_test_000${d}`,
+        headers: { get: (h) => (h.toLowerCase() === "origin" ? "https://pureaistudios.com" : "") }
+      },
+      secEnv,
+      secStore
+    );
+    assert.strictEqual(rDev.status, 200, `Dispositivo ${d}/4 debe permitirse`);
+    assert.strictEqual(JSON.parse(rDev.body).valid, true, `Dispositivo ${d}/4 debe recibir valid=true`);
+  }
+  const fifthDevRes = await webhookEngine.handleWorkerHttpRequest(
+    {
+      method: "GET",
+      url: `https://api.pureaistudios.com/verify-license?code=${devCapKey}&did=inst_device_test_0005`,
+      headers: { get: (h) => (h.toLowerCase() === "origin" ? "https://pureaistudios.com" : "") }
+    },
+    secEnv,
+    secStore
+  );
+  assert.strictEqual(fifthDevRes.status, 403, "SEC-BACKEND-06: Un 5º dispositivo distinto intentando activar la misma clave compartida debe ser bloqueado con HTTP 403");
+  assert.strictEqual(JSON.parse(fifthDevRes.body).reason, "max_devices_exceeded", "SEC-BACKEND-06b: Debe indicar max_devices_exceeded");
+
+  let lastRlStatus = 200;
+  for (let attempt = 1; attempt <= 21; attempt++) {
+    const rlRes = await webhookEngine.handleWorkerHttpRequest(
+      {
+        method: "GET",
+        url: "https://api.pureaistudios.com/verify-license?code=PRO-2345-6789",
+        headers: { get: (h) => (h.toLowerCase() === "cf-connecting-ip" ? "198.51.100.42" : "https://pureaistudios.com") }
+      },
+      secEnv,
+      secStore
+    );
+    lastRlStatus = rlRes.status;
+  }
+  assert.strictEqual(lastRlStatus, 429, "SEC-BACKEND-07: Más de 20 intentos por minuto desde una misma IP en /verify-license deben bloquearse con HTTP 429");
+
+  // 18f. Extensión Chrome: Fail-Closed ante fallos de red/CORS y cuota de 3 imágenes en popup.js
+  let injectedBarBtnHandler = null;
+  const fakeAssistMsg = {
+    dataset: {},
+    innerText: "In conclusion\u202F—\u202Ftest message",
+    appendChild: () => {}
+  };
+  let promptQueue = ["PRO-AAAA-BBBB"];
+  let extAlerts = [];
+  const extFullVm = {
+    localStorage: {
+      _m: { pureai_ext_pro: "true" }, // Intento de bypass en localStorage de chatgpt.com
+      getItem(k) { return Object.prototype.hasOwnProperty.call(this._m, k) ? this._m[k] : null; },
+      setItem(k, v) { this._m[k] = String(v); },
+      removeItem(k) { delete this._m[k]; }
+    },
+    chrome: {
+      storage: { local: { get: (_keys, cb) => cb({}), set: () => {} } },
+      runtime: { sendMessage: (_msg, cb) => cb({ ok: false, valid: false, reason: "network_unreachable" }) }
+    },
+    fetch: async () => { throw new Error("Simulated CORS/Network Failure"); },
+    navigator: { clipboard: { writeText: async () => {} } },
+    prompt: () => promptQueue.shift(),
+    alert: (m) => extAlerts.push(m),
+    document: {
+      querySelectorAll: () => [fakeAssistMsg],
+      createElement: () => ({
+        style: {},
+        dataset: {},
+        querySelector: () => ({ addEventListener: (_ev, fn) => { injectedBarBtnHandler = fn; } }),
+        addEventListener: () => {},
+        appendChild: () => {},
+        remove: () => {}
+      })
+    },
+    setInterval: (fn) => fn(),
+    setTimeout: () => {}
+  };
+  vm.createContext(extFullVm);
+  vm.runInContext(fs.readFileSync(path.join(__dirname, "chrome-extension-pureai", "content-chatgpt.js"), "utf8"), extFullVm);
+  assert.strictEqual(extFullVm.localStorage.getItem("pureai_ext_pro"), null, "SEC-EXT-01: content-chatgpt.js debe purgar y no confiar en pureai_ext_pro del host web");
+
+  const validTestKeyForExt = paSandbox.generateMultiDeviceProKey("cs_live_ext_fail_closed_check_12345");
+  promptQueue = [validTestKeyForExt];
+  // Forzar aparición del upsell simulando 3 usos agotados hoy
+  const todayExtKey = "pureai_ext_uses_" + new Date().toISOString().slice(0, 10);
+  extFullVm.localStorage.setItem(todayExtKey, "3");
+  let copyClickHandler = null;
+  const fakeAssistMsg2 = { dataset: {}, innerText: "Test", appendChild: () => {} };
+  extFullVm.document.querySelectorAll = () => [fakeAssistMsg2];
+  extFullVm.document.createElement = () => ({
+    style: {},
+    dataset: {},
+    querySelector: (sel) => (sel === ".pureai-inline-upsell" ? null : { addEventListener: (_e, fn) => { injectedBarBtnHandler = fn; } }),
+    addEventListener: (_e, fn) => { copyClickHandler = fn; },
+    appendChild: () => {},
+    remove: () => {}
+  });
+  // Re-ejecutar en contexto limpio para probar clic en Activar Clave cuando el servidor falla
+  vm.runInContext(fs.readFileSync(path.join(__dirname, "chrome-extension-pureai", "content-chatgpt.js"), "utf8"), extFullVm);
+  copyClickHandler();
+  assert(typeof injectedBarBtnHandler === "function", "Debe montar el manejador de activación de clave en el upsell");
+  await injectedBarBtnHandler();
+  assert(extAlerts.some((a) => a.includes("No se pudo verificar")), "SEC-EXT-02: Si /verify-license falla o está offline, la extensión Chrome debe fallar CERRADA sin regalar Pro");
+
+  const popupCode = fs.readFileSync(path.join(__dirname, "chrome-extension-pureai", "popup.js"), "utf8");
+  assert(popupCode.includes("MAX_FREE_POPUP_IMG = 1") && popupCode.includes("popupImgUsed >= MAX_FREE_POPUP_IMG"), "SEC-EXT-03: popup.js debe aplicar el límite de 1 imagen gratuita");
+
+  // 18g. Protección contra .DOCX Zip Bombs, Zip-Slip en createZipBlob y SSRF en isSafeExternalImageUrl (?ext_img=)
+  const oversizedDocRes = await paSandbox.loadDocFile({ name: "huge.docx", size: 30 * 1024 * 1024, arrayBuffer: async () => new ArrayBuffer(8) });
+  assert.strictEqual(oversizedDocRes, false, "SEC-DOS-01: loadDocFile debe rechazar documentos mayores de 25 MB");
+
+  // Cabecera ZIP local con uncompHint > 10 MB para verificar bloqueo temprano de Zip Bomb en .DOCX
+  const bombBuf = new ArrayBuffer(64);
+  const bombDv = new DataView(bombBuf);
+  const bombBytes = new Uint8Array(bombBuf);
+  const entryNameBytes = Buffer.from("word/document.xml");
+  bombDv.setUint32(0, 0x04034b50, true);
+  bombDv.setUint16(8, 8, true); // deflate
+  bombDv.setUint32(18, 4, true); // compSize = 4 bytes
+  bombDv.setUint32(22, 50 * 1024 * 1024, true); // uncompHint = 50 MB (> 10 MB cap)
+  bombDv.setUint16(26, entryNameBytes.length, true);
+  bombBytes.set(entryNameBytes, 30);
+  const bombDocRes = await paSandbox.loadDocFile({ name: "zipbomb.docx", size: 64, arrayBuffer: async () => bombBuf });
+  assert.strictEqual(bombDocRes, false, "SEC-DOS-02: loadDocFile debe abortar de inmediato ante un .DOCX Zip Bomb con tamaño descomprimido > 10 MB");
+
+  const traversalZip = paSandbox.createZipBlob([{ name: "../../etc/passwd", bytes: new Uint8Array([0x41, 0x42]) }]);
+  const zipHeaderStr = Buffer.from(traversalZip._bytes).toString("latin1");
+  assert(!zipHeaderStr.includes("../") && !zipHeaderStr.includes("etc/passwd"), "SEC-ZIP-01: createZipBlob debe sanear rutas ../ y barras para impedir ataques Zip-Slip");
+
+  assert.strictEqual(paSandbox.isSafeExternalImageUrl("http://images.unsplash.com/test.jpg"), false, "SEC-SSRF-01: Debe bloquear HTTP sin cifrar");
+  assert.strictEqual(paSandbox.isSafeExternalImageUrl("https://admin:secret@images.unsplash.com/test.jpg"), false, "SEC-SSRF-02: Debe bloquear URLs con credenciales embebidas");
+  assert.strictEqual(paSandbox.isSafeExternalImageUrl("https://169.254.169.254/latest/meta-data/"), false, "SEC-SSRF-03: Debe bloquear IPs link-local / Cloud Metadata 169.254.x.x");
+  assert.strictEqual(paSandbox.isSafeExternalImageUrl("https://172.20.0.10/internal.jpg"), false, "SEC-SSRF-04: Debe bloquear rangos privados RFC1918 172.16-31.x.x");
+  assert.strictEqual(paSandbox.isSafeExternalImageUrl("https://[::1]/loopback.jpg"), false, "SEC-SSRF-05: Debe bloquear literales IPv6 loopback/privados");
+  assert.strictEqual(paSandbox.isSafeExternalImageUrl("https://router.local/photo.jpg"), false, "SEC-SSRF-06: Debe bloquear dominios mDNS/internos .local");
+  assert.strictEqual(paSandbox.isSafeExternalImageUrl("https://images.unsplash.com/photo-123.jpg"), true, "SEC-SSRF-07: Debe permitir URLs HTTPS públicas legítimas");
+
+  // 19. AUDITORÍA ADVERSARIAL DE SEGUNDA RONDA: CIERRE DE VECTORES DE BYPASS Y CIBERSEGURIDAD AVANZADA
+  // 19a. Bloqueo de evasión del límite de 4 dispositivos omitiendo ?did= o enviando ?did= malformado
+  const noDidFifthRes = await webhookEngine.handleWorkerHttpRequest(
+    {
+      method: "GET",
+      url: `https://api.pureaistudios.com/verify-license?code=${devCapKey}`,
+      headers: { get: (h) => (h.toLowerCase() === "origin" ? "https://pureaistudios.com" : "") }
+    },
+    secEnv,
+    secStore
+  );
+  assert.strictEqual(noDidFifthRes.status, 403, "SEC-R2-01: Omitir el parámetro did cuando los 4 huecos de dispositivos están llenos NO debe permitir saltarse MAX_DEVICES_PER_LICENSE");
+
+  const ipFallbackFifthRes = await webhookEngine.handleWorkerHttpRequest(
+    {
+      method: "GET",
+      url: `https://api.pureaistudios.com/verify-license?code=${devCapKey}`,
+      headers: { get: (h) => (h.toLowerCase() === "cf-connecting-ip" ? "203.0.113.77" : h.toLowerCase() === "origin" ? "https://pureaistudios.com" : "") }
+    },
+    secEnv,
+    secStore
+  );
+  assert.strictEqual(ipFallbackFifthRes.status, 403, "SEC-R2-01b: Omitir did desde una IP externa distinta debe consumir/respetar el tope de 4 dispositivos y devolver HTTP 403");
+
+  const malformedDidRes = await webhookEngine.handleWorkerHttpRequest(
+    {
+      method: "GET",
+      url: `https://api.pureaistudios.com/verify-license?code=${devCapKey}&did=x`,
+      headers: { get: (h) => (h.toLowerCase() === "origin" ? "https://pureaistudios.com" : "") }
+    },
+    secEnv,
+    secStore
+  );
+  assert.strictEqual(malformedDidRes.status, 400, "SEC-R2-01c: Enviar un did malformado (<8 chars) debe ser rechazado con HTTP 400 en vez de ignorar el control de dispositivos");
+
+  // 19b. Rate-Limit ante IPv6 mapeado a IPv4 (::ffff:x.x.x.x) y comparación constante ante longitudes distintas
+  let mappedIpv6LastStatus = 200;
+  for (let i = 1; i <= 21; i++) {
+    const r = await webhookEngine.handleWorkerHttpRequest(
+      {
+        method: "GET",
+        url: "https://api.pureaistudios.com/verify-license?code=PRO-2345-6789",
+        headers: { get: (h) => (h.toLowerCase() === "cf-connecting-ip" ? "::ffff:203.0.113.88" : "https://pureaistudios.com") }
+      },
+      secEnv,
+      secStore
+    );
+    mappedIpv6LastStatus = r.status;
+  }
+  assert.strictEqual(mappedIpv6LastStatus, 429, "SEC-R2-02: Direcciones IPv4-mapped IPv6 (::ffff:x.x.x.x) NO deben evadir el rate-limit de /verify-license");
+
+  const sameBucketIpv4Res = await webhookEngine.handleWorkerHttpRequest(
+    {
+      method: "GET",
+      url: "https://api.pureaistudios.com/verify-license?code=PRO-2345-6789",
+      headers: { get: (h) => (h.toLowerCase() === "cf-connecting-ip" ? "203.0.113.88" : "https://pureaistudios.com") }
+    },
+    secEnv,
+    secStore
+  );
+  assert.strictEqual(sameBucketIpv4Res.status, 429, "SEC-R2-02b: ::ffff:203.0.113.88 y 203.0.113.88 deben compartir exactamente el mismo bucket de rate-limit");
+
+  const shortTokenDigest = await webhookEngine.handleWorkerHttpRequest(
+    {
+      method: "POST",
+      url: "https://api.pureaistudios.com/daily-digest",
+      headers: { get: (h) => (h.toLowerCase() === "authorization" ? "Bearer x" : "") },
+      text: async () => '{"force":false}'
+    },
+    secEnv,
+    secStore
+  );
+  assert.strictEqual(shortTokenDigest.status, 401, "SEC-R2-02c: Tokens Bearer de longitud distinta deben rechazarse mediante hash SHA-256 de tamaño fijo");
+
+  // 19c. Clawback de afiliados en KV ante charge.dispute.created sin obj.customer y revocación en customer.subscription.updated (unpaid/canceled)
+  const signStripeTestEvt = (evtObj) => {
+    const raw = JSON.stringify(evtObj);
+    const ts = Math.floor(Date.now() / 1000);
+    const sig = require("crypto").createHmac("sha256", secEnv.STRIPE_WEBHOOK_SECRET).update(`${ts}.${raw}`).digest("hex");
+    return { raw, header: `t=${ts},v1=${sig}` };
+  };
+  const paidAffEvt = {
+    id: "evt_r2_aff_paid_01",
+    type: "checkout.session.completed",
+    created: Math.floor(Date.now() / 1000),
+    data: {
+      object: {
+        id: "cs_live_r2_aff_dispute_session_0001",
+        customer: "cus_r2_aff_disp_01",
+        payment_intent: "pi_r2_aff_disp_01",
+        payment_status: "paid",
+        amount_total: 499,
+        currency: "eur",
+        client_reference_id: "aff_partner77"
+      }
+    }
+  };
+  const signedPaidAff = signStripeTestEvt(paidAffEvt);
+  const resPaidAff = await webhookEngine.handleWorkerHttpRequest(
+    { method: "POST", url: "https://api.pureaistudios.com/webhook/stripe", headers: { get: (h) => (h.toLowerCase() === "stripe-signature" ? signedPaidAff.header : "") }, text: async () => signedPaidAff.raw },
+    secEnv,
+    webhookEngine.createWebhookProcessorStore()
+  );
+  assert.strictEqual(resPaidAff.status, 200, "Webhook inicial de venta con afiliado debe persistir en KV");
+
+  const disputeNoCustEvt = {
+    id: "evt_r2_aff_disp_02",
+    type: "charge.dispute.created",
+    created: Math.floor(Date.now() / 1000) + 5,
+    data: { object: { id: "dp_r2_no_customer_field", payment_intent: "pi_r2_aff_disp_01" } }
+  };
+  const signedDisp = signStripeTestEvt(disputeNoCustEvt);
+  const resDisp = await webhookEngine.handleWorkerHttpRequest(
+    { method: "POST", url: "https://api.pureaistudios.com/webhook/stripe", headers: { get: (h) => (h.toLowerCase() === "stripe-signature" ? signedDisp.header : "") }, text: async () => signedDisp.raw },
+    secEnv,
+    webhookEngine.createWebhookProcessorStore()
+  );
+  assert.strictEqual(resDisp.status, 200, "Webhook de disputa sin obj.customer debe procesarse vía pi: en KV");
+  const kvAffAfterDispute = JSON.parse(await secEnv.PUREAI_LICENSES_KV.get("aff_cust:cus_r2_aff_disp_01"));
+  assert.strictEqual(kvAffAfterDispute.entry.commissionCents, 0, "SEC-R2-03: charge.dispute.created sin obj.customer debe anular la comisión del afiliado en KV");
+  assert.strictEqual(kvAffAfterDispute.entry.status, "FROZEN_DISPUTE", "SEC-R2-03b: El estado en KV debe quedar en FROZEN_DISPUTE");
+
+  const unpaidUpdateStore = webhookEngine.createWebhookProcessorStore();
+  webhookEngine.processStripeWebhookEvent(unpaidUpdateStore, {
+    id: "evt_sub_act_01",
+    type: "checkout.session.completed",
+    created: nowSec + 30,
+    data: { object: { id: "cs_live_sub_unpaid_transition_01", customer: "cus_unpaid_01", payment_status: "paid", amount_total: 499, currency: "eur" } }
+  }, Date.now());
+  const unpaidRes = webhookEngine.processStripeWebhookEvent(unpaidUpdateStore, {
+    id: "evt_sub_unpaid_02",
+    type: "customer.subscription.updated",
+    created: nowSec + 60,
+    data: { object: { id: "sub_unpaid_01", customer: "cus_unpaid_01", status: "unpaid" } }
+  }, Date.now());
+  assert.strictEqual(unpaidRes.state, "EXPIRED", "SEC-R2-03c: customer.subscription.updated con status='unpaid' o 'canceled' debe revocar la suscripción a EXPIRED");
+
+  // 19d. Bloqueo de encadenamiento infinito (<60s) de ?session_id=cs_live_, bloqueo de Batch .ZIP sin verificación del servidor y tope de usos en gracia
+  paSandbox.localStorage.removeItem("pureai_unverified_grace_abused");
+  paSandbox.localStorage.removeItem("pureai_grace_uses");
+  const firstGrace = paSandbox.processStripeCheckoutReturn("?session_id=cs_live_r2_first_grace_window_00001");
+  assert.strictEqual(firstGrace.activated, true, "1ª ventana de gracia legítima tras redirección debe iniciar espera del webhook");
+
+  getPaEl("pro-modal-overlay").style.display = "none";
+  paSandbox.handleSelectedFiles([
+    { name: "b1.jpg", size: 1024, type: "image/jpeg", arrayBuffer: async () => new ArrayBuffer(8), _dataUrl: "data:image/png;base64,iVBORw0KGgo=" },
+    { name: "b2.jpg", size: 1024, type: "image/jpeg", arrayBuffer: async () => new ArrayBuffer(8), _dataUrl: "data:image/png;base64,iVBORw0KGgo=" }
+  ]);
+  assert.strictEqual(paSandbox.batchQueue.length, 1, "SEC-R2-04: Durante CHECKOUT_GRACE no verificada por el servidor NO debe permitirse procesar lotes masivos .ZIP");
+  assert.strictEqual(getPaEl("pro-modal-overlay").style.display, "flex", "SEC-R2-04b: Seleccionar múltiples archivos durante gracia no verificada debe exigir verificación Pro");
+
+  paSandbox.localStorage.setItem("pureai_grace_uses", "3");
+  getPaEl("pro-modal-overlay").style.display = "none";
+  paSandbox.loadedImgElement = { naturalWidth: 64, naturalHeight: 64 };
+  paSandbox.loadedImgFile = { name: "grace-cap.jpg", size: 2048, type: "image/jpeg" };
+  paSandbox.loadedIsVideo = false;
+  paSandbox.scrubAndDownloadImage();
+  assert.strictEqual(getPaEl("pro-modal-overlay").style.display, "flex", "SEC-R2-04c: Una gracia CHECKOUT_GRACE no confirmada no debe permitir limpiezas ilimitadas antes de los 60s");
+
+  const chainedGraceBefore60s = paSandbox.processStripeCheckoutReturn("?session_id=cs_live_r2_chained_grace_window_00002");
+  assert.strictEqual(chainedGraceBefore60s.activated, false, "SEC-R2-04d: Rotar ?session_id=cs_live_ antes de 60s mientras hay otra gracia sin verificar debe bloquearse de inmediato");
+  assert.strictEqual(paSandbox.isPureAiPro, false, "SEC-R2-04e: El encadenamiento de sesiones falsas debe dejar isPureAiPro=false");
+
+  // 19e. Bloqueo de evasión del límite de 180 palabras en deepHumanizePro (Zero-Width / CJK sin espacios) y saneamiento de contadores negativos/inflados
+  paSandbox.isPureAiPro = false;
+  paSandbox.freeProCredits = 0;
+  paSandbox.localStorage.removeItem("pureai_plg_short_txt_tried");
+  getPaEl("pro-modal-overlay").style.display = "none";
+  getPaEl("txt-input").value = "palabra\u200B".repeat(400);
+  paSandbox.deepHumanizePro();
+  assert.strictEqual(getPaEl("pro-modal-overlay").style.display, "flex", "SEC-R2-05: Unir 400 palabras con espacios invisibles U+200B NO debe burlar el límite gratuito de 180 palabras en deepHumanizePro");
+
+  getPaEl("pro-modal-overlay").style.display = "none";
+  getPaEl("txt-input").value = "人工智能生成内容检测规避测试文本".repeat(120);
+  paSandbox.deepHumanizePro();
+  assert.strictEqual(getPaEl("pro-modal-overlay").style.display, "flex", "SEC-R2-05b: Textos largos sin espacios ASCII (>1500 caracteres CJK) NO deben burlar el límite gratuito de deepHumanizePro");
+
+  paSandbox.localStorage.setItem("pureai_img_used", "-500");
+  paSandbox.restoreImgQuotaFromAllLayers();
+  assert.strictEqual(paSandbox.usedImgCredits, 0, "SEC-R2-05c: Inyectar valores negativos en pureai_img_used debe acotarse a >= 0");
+  paSandbox.localStorage.removeItem("pureai_promo_extra_credit_claimed");
+  paSandbox.localStorage.removeItem("pureai_email_bonus_claimed");
+  paSandbox.localStorage.removeItem("pureai_ref_bonus_claimed");
+  paSandbox.localStorage.setItem("pureai_free_pro_credits", "9999");
+  assert.strictEqual(paSandbox.readClampedPromoCredits(), 0, "SEC-R2-05d: pureai_free_pro_credits inflado sin reclamación legítima debe acotarse a 0 (y máximo 1 con reclamación)");
+
+  // 19f. Protección contra Decompression Pixel Bombs (25000x25000 = 625 MP) y validación de checksum en páginas SEO
+  let pixelBombEncoded = false;
+  paSandbox.scrubSingleImageToBlob({ naturalWidth: 25000, naturalHeight: 25000 }, "bomb.png", "pure", "image/jpeg", "jpg", () => {
+    pixelBombEncoded = true;
+  });
+  assert.strictEqual(pixelBombEncoded, false, "SEC-R2-06: Imágenes bomba con dimensiones extremas (25000x25000 / 625 MP) deben abortarse antes de reservar memoria RGBA en Canvas");
+
+  const seoBadChecksumVm = {
+    localStorage: {
+      getItem: (k) => k === "pureai_sub_record_v2"
+        ? JSON.stringify({ key: "PRO-AAAA-AAAA", status: "ACTIVE", verifiedByServer: true, expiresAt: Date.now() + 999999 })
+        : (k === "pureai_img_used" ? "3" : null),
+      setItem: () => {},
+      removeItem: () => {}
+    },
+    document: { getElementById: () => seoStatusEl },
+    window: {},
+    Image: function () { throw new Error("No debe procesar imagen con checksum PRO inválido"); }
+  };
+  vm.createContext(seoBadChecksumVm);
+  vm.runInContext(seoScriptMatch[1], seoBadChecksumVm);
+  assert.strictEqual(seoBadChecksumVm.hasVerifiedSeoPro(), false, "SEC-R2-06b: hasVerifiedSeoPro en páginas SEO debe rechazar claves PRO-XXXX-YYYY con checksum FNV-1a inválido");
+
+  // 19g. Extensión Chrome: sincronización entre pestañas (chatgpt.com <-> claude.ai) vía chrome.storage.onChanged y copia limpia sin texto del botón
+  let storageChangedCb = null;
+  let extCopiedText = "";
+  let extBtnClick = null;
+  let upsellMounted = false;
+  const extMsgNode = {
+    dataset: {},
+    innerText: "Texto limpio de prueba\u202F—\u202Fsin basura\n✨ Copiar Texto Limpio",
+    appendChild: () => {}
+  };
+  const extSyncVm = {
+    localStorage: {
+      _m: {},
+      getItem(k) { return Object.prototype.hasOwnProperty.call(this._m, k) ? this._m[k] : null; },
+      setItem(k, v) { this._m[k] = String(v); },
+      removeItem(k) { delete this._m[k]; }
+    },
+    chrome: {
+      storage: {
+        local: { get: (_k, cb) => cb({}), set: () => {} },
+        onChanged: { addListener: (fn) => { storageChangedCb = fn; } }
+      },
+      runtime: { sendMessage: (_m, cb) => cb({ ok: true, valid: false }) }
+    },
+    navigator: { clipboard: { writeText: async (t) => { extCopiedText = t; } } },
+    document: {
+      querySelectorAll: () => [extMsgNode],
+      createElement: (tag) => ({
+        tag,
+        style: {},
+        dataset: {},
+        querySelector: (sel) => (sel === ".pureai-inline-upsell" ? null : { addEventListener: () => {} }),
+        addEventListener: (_e, fn) => { if (tag === "button") extBtnClick = fn; },
+        appendChild: (child) => { if (child && child.className === "pureai-inline-upsell") upsellMounted = true; },
+        remove: () => {}
+      })
+    },
+    setInterval: (fn) => fn(),
+    setTimeout: () => {}
+  };
+  vm.createContext(extSyncVm);
+  vm.runInContext(fs.readFileSync(path.join(__dirname, "chrome-extension-pureai", "content-chatgpt.js"), "utf8"), extSyncVm);
+  extBtnClick();
+  assert(!extCopiedText.includes("Copiar Texto Limpio"), "SEC-R2-07: Copiar un mensaje en ChatGPT/Claude NO debe arrastrar el texto del botón inyectado al portapapeles");
+
+  assert(typeof storageChangedCb === "function", "content-chatgpt.js debe escuchar chrome.storage.onChanged");
+  storageChangedCb({ [todayExtKey]: { newValue: 3 } }, "local");
+  extBtnClick();
+  assert.strictEqual(upsellMounted, true, "SEC-R2-07b: Agotar los 3 usos diarios en otra pestaña/dominio (claude.ai) debe sincronizarse al instante vía storage.onChanged sin reiniciar la cuota");
+
+  // 19h. Workflow CI GitHub Actions cableado con secretos de autenticación del Worker
+  const ciWorkflowYml = fs.readFileSync(path.join(__dirname, ".github", "workflows", "autopilot.yml"), "utf8");
+  assert(ciWorkflowYml.includes("ADMIN_DIGEST_TOKEN") && ciWorkflowYml.includes("NTFY_SECRET_TOPIC_URL"), "SEC-R2-08: autopilot.yml debe inyectar ADMIN_DIGEST_TOKEN y NTFY_SECRET_TOPIC_URL para los scripts operativos");
+
+  // 20. VERIFICACIÓN END-TO-END DE MODELO HÍBRIDO (PACK 10 / PACK 50 / ANUAL 39 €), LEDGER DE CRÉDITOS, ANTI-INCÓGNITO Y CRO PAYWALL
+  // 20a. Resolución de Packs por Payment Link ID e importes, y acumulación de créditos en recargas
+  const hybridStore = webhookEngine.createWebhookProcessorStore();
+  const pack10Evt1 = {
+    id: "evt_pack10_buy_01",
+    type: "checkout.session.completed",
+    created: nowSec + 100,
+    data: {
+      object: {
+        id: "cs_live_pack10_session_00000001",
+        customer: "cus_hybrid_pack_user",
+        payment_link: "plink_1UbbsAJGMJW2ESycP7cZbuRv",
+        mode: "payment",
+        payment_status: "paid",
+        amount_total: 299,
+        currency: "eur"
+      }
+    }
+  };
+  const pack10Signed = signStripeTestEvt(pack10Evt1);
+  const resPack10 = await webhookEngine.handleWorkerHttpRequest(
+    { method: "POST", url: "https://api.pureaistudios.com/webhook/stripe", headers: { get: (h) => (h.toLowerCase() === "stripe-signature" ? pack10Signed.header : "") }, text: async () => pack10Signed.raw },
+    secEnv,
+    hybridStore
+  );
+  assert.strictEqual(resPack10.status, 200, "CRO-PACK-01: Webhook de Pack 10 usos (2,99 €) debe responder HTTP 200");
+
+  const pack10Verify = await webhookEngine.handleWorkerHttpRequest(
+    { method: "GET", url: "https://api.pureaistudios.com/verify-license?code=cs_live_pack10_session_00000001&did=inst_pack10_dev_01", headers: { get: (h) => (h.toLowerCase() === "origin" ? "https://pureaistudios.com" : "") } },
+    secEnv,
+    hybridStore
+  );
+  const pack10VerifyBody = JSON.parse(pack10Verify.body);
+  assert.strictEqual(pack10VerifyBody.valid, true, "CRO-PACK-01b: Pack 10 usos debe verificarse como activo");
+  assert.strictEqual(pack10VerifyBody.unlimited, false, "CRO-PACK-01c: Pack 10 usos no debe ser ilimitado");
+  assert.strictEqual(pack10VerifyBody.creditsRemaining, 10, "CRO-PACK-01d: Pack 10 usos debe acreditar exactamente 10 créditos");
+  assert.strictEqual(pack10VerifyBody.planType, "pack_10", "CRO-PACK-01e: planType debe ser pack_10");
+
+  const pack50Period = webhookEngine.resolveSubscriptionPeriod({ payment_link: "plink_1UbbsCJGMJW2ESyccAo1J7VN", mode: "payment", amount_total: 990, currency: "eur" }, baseNow);
+  assert.strictEqual(pack50Period.planType, "pack_50", "CRO-PACK-02: plink de 9,90 € debe resolverse como pack_50");
+  assert.strictEqual(pack50Period.creditsGranted, 50, "CRO-PACK-02b: Pack 50 debe otorgar 50 créditos");
+  assert.strictEqual(pack50Period.unlimited, false, "CRO-PACK-02c: Pack 50 debe ser no ilimitado");
+
+  // 20b. Consumo atómico e idempotente de créditos en POST /consume-credit y agotamiento a 0
+  const consume1Res = await webhookEngine.handleWorkerHttpRequest(
+    {
+      method: "POST",
+      url: "https://api.pureaistudios.com/consume-credit",
+      headers: { get: (h) => (h.toLowerCase() === "origin" ? "https://pureaistudios.com" : "") },
+      text: async () => JSON.stringify({ code: "cs_live_pack10_session_00000001", count: 1, opId: "op_unique_001" })
+    },
+    secEnv,
+    hybridStore
+  );
+  assert.strictEqual(consume1Res.status, 200, "CRO-LEDGER-01: Descontar 1 crédito de un Pack activo debe devolver HTTP 200");
+  assert.strictEqual(JSON.parse(consume1Res.body).creditsRemaining, 9, "CRO-LEDGER-01b: Deben quedar 9 créditos tras el 1er uso");
+
+  const consumeIdemRes = await webhookEngine.handleWorkerHttpRequest(
+    {
+      method: "POST",
+      url: "https://api.pureaistudios.com/consume-credit",
+      headers: { get: (h) => (h.toLowerCase() === "origin" ? "https://pureaistudios.com" : "") },
+      text: async () => JSON.stringify({ code: "cs_live_pack10_session_00000001", count: 1, opId: "op_unique_001" })
+    },
+    secEnv,
+    hybridStore
+  );
+  assert.strictEqual(JSON.parse(consumeIdemRes.body).idempotent, true, "CRO-LEDGER-02: Reintentar el mismo opId debe ser idempotente");
+  assert.strictEqual(JSON.parse(consumeIdemRes.body).creditsRemaining, 9, "CRO-LEDGER-02b: Reintentar opId no debe descontar dos veces");
+
+  const consumeBatch9Res = await webhookEngine.handleWorkerHttpRequest(
+    {
+      method: "POST",
+      url: "https://api.pureaistudios.com/consume-credit",
+      headers: { get: (h) => (h.toLowerCase() === "origin" ? "https://pureaistudios.com" : "") },
+      text: async () => JSON.stringify({ code: "cs_live_pack10_session_00000001", count: 9, opId: "op_batch_002" })
+    },
+    secEnv,
+    hybridStore
+  );
+  assert.strictEqual(JSON.parse(consumeBatch9Res.body).creditsRemaining, 0, "CRO-LEDGER-03: Consumir lote de 9 créditos debe dejar el saldo en 0");
+  assert.strictEqual(JSON.parse(consumeBatch9Res.body).status, "EXPIRED", "CRO-LEDGER-03b: Al llegar a 0 créditos el estado debe pasar a EXPIRED");
+
+  const consumeExhaustedRes = await webhookEngine.handleWorkerHttpRequest(
+    {
+      method: "POST",
+      url: "https://api.pureaistudios.com/consume-credit",
+      headers: { get: (h) => (h.toLowerCase() === "origin" ? "https://pureaistudios.com" : "") },
+      text: async () => JSON.stringify({ code: "cs_live_pack10_session_00000001", count: 1, opId: "op_over_003" })
+    },
+    secEnv,
+    hybridStore
+  );
+  assert.strictEqual(consumeExhaustedRes.status, 403, "CRO-LEDGER-04: Consumir con saldo 0 debe rechazarse con HTTP 403");
+  assert.strictEqual(JSON.parse(consumeExhaustedRes.body).reason, "insufficient_credits", "CRO-LEDGER-04b: Debe indicar insufficient_credits");
+
+  const verifyExhaustedRes = await webhookEngine.handleWorkerHttpRequest(
+    { method: "GET", url: "https://api.pureaistudios.com/verify-license?code=cs_live_pack10_session_00000001&did=inst_pack10_dev_01", headers: { get: (h) => (h.toLowerCase() === "origin" ? "https://pureaistudios.com" : "") } },
+    secEnv,
+    hybridStore
+  );
+  assert.strictEqual(JSON.parse(verifyExhaustedRes.body).valid, false, "CRO-LEDGER-05: Un Pack con 0 créditos debe devolver valid=false en /verify-license");
+
+  // 20c. Control Anti-Incógnito por hash salado efímero en POST /check-free-quota (sin guardar IP en claro)
+  const testIncogIp = "198.51.100.211";
+  const fqFirst = await webhookEngine.handleWorkerHttpRequest(
+    {
+      method: "POST",
+      url: "https://api.pureaistudios.com/check-free-quota",
+      headers: { get: (h) => (h.toLowerCase() === "cf-connecting-ip" ? testIncogIp : h.toLowerCase() === "origin" ? "https://pureaistudios.com" : "") },
+      text: async () => JSON.stringify({ consume: true })
+    },
+    secEnv,
+    hybridStore
+  );
+  assert.strictEqual(JSON.parse(fqFirst.body).allowed, true, "CRO-INCOG-01: La 1ª exportación gratuita desde una IP nueva debe permitirse");
+  assert.strictEqual(JSON.parse(fqFirst.body).used, 1, "CRO-INCOG-01b: El contador efímero debe quedar en 1");
+
+  const fqSecondIncognito = await webhookEngine.handleWorkerHttpRequest(
+    {
+      method: "POST",
+      url: "https://api.pureaistudios.com/check-free-quota",
+      headers: { get: (h) => (h.toLowerCase() === "cf-connecting-ip" ? testIncogIp : h.toLowerCase() === "origin" ? "https://pureaistudios.com" : "") },
+      text: async () => JSON.stringify({ consume: false })
+    },
+    secEnv,
+    hybridStore
+  );
+  assert.strictEqual(JSON.parse(fqSecondIncognito.body).allowed, false, "CRO-INCOG-02: Abrir ventana de Incógnito desde la misma IP tras agotar la prueba gratuita debe recibir allowed=false");
+  const allKvKeysDump = Array.from(secEnv.PUREAI_LICENSES_KV._m.keys()).join(" ");
+  assert(!allKvKeysDump.includes(testIncogIp), "CRO-INCOG-03 (RGPD): La dirección IP nunca debe almacenarse en texto claro en KV, solo hash HMAC salado");
+
+  // 20d. CRO UI: Barra de Presets 1-Clic encima de #btn-scrub-img, Vista Previa anti-XSS en #pro-modal-asset-preview y Downsell colapsado
+  const posPresetBar = cleanAiHtml.indexOf('id="quick-exif-preset-bar"');
+  const posScrubBtn = cleanAiHtml.indexOf('id="btn-scrub-img"');
+  assert(posPresetBar > 0 && posPresetBar < posScrubBtn, "CRO-UX-01: La barra rápida de presets EXIF (#quick-exif-preset-bar) debe aparecer ENCIMA del botón de descarga (#btn-scrub-img)");
+  assert(!/<details[^>]*id="pro-modal-downsell"[^>]*open/i.test(cleanAiHtml), "CRO-UX-02: El bloque de escape gratuito (#pro-modal-downsell) debe permanecer cerrado por defecto para no canibalizar el checkout");
+
+  paSandbox.loadedImgFile = { name: '"><img src=x onerror=alert(99)>.jpg', size: 8192, type: "image/jpeg" };
+  paSandbox.batchQueue = [paSandbox.loadedImgFile];
+  paSandbox.showProModal("🔒 Desbloquea exportación", "img_c2pa_scrubber");
+  const modalPrevHtml = getPaEl("pro-modal-asset-preview").innerHTML;
+  assert.strictEqual(getPaEl("pro-modal-asset-preview").style.display, "flex", "CRO-UX-03: showProModal debe mostrar la vista previa del activo bloqueado (#pro-modal-asset-preview)");
+  assert(!modalPrevHtml.includes("<img src=x onerror=alert(99)>") && modalPrevHtml.includes("&lt;img src=x onerror=alert(99)&gt;"), "CRO-SEC-01: #pro-modal-asset-preview debe escapar nombres de archivo maliciosos contra DOM XSS");
+
+  console.log("✅ QA TEST SUITE PASSED (20 SECCIONES / 270+ ASERCIONES): 100% E2E VM + Hybrid Credit Packs (2,99 € / 9,90 € / 39 €) + Atomic Credit Ledger (/consume-credit) + Anti-Incognito Quota (/check-free-quota) + CRO Paywall Asset Preview + Round-2 Adversarial Security + Pre-Incorporation Gate + Mom-Test Scorer + 5 Core Validation Tests + 90-Day Bottleneck Diagnostics + Batch Mixto Foto/MP4 + Lossless JPEG + MP4 Camera Udta + EXIF GPS 0x8825 + Pagos/Webhooks KV + CFO + Legal/AI Act + Ciberseguridad verificadas sin errores.");
 })();
 
 

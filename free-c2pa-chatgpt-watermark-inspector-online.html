@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="referrer" content="strict-origin-when-cross-origin" />
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self' https: data: blob:; script-src 'self' 'unsafe-inline' https://www.googletagmanager.com https://www.googleadservices.com https://googleads.g.doubleclick.net; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; connect-src 'self' https:;" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self' https: data: blob:; script-src 'self' 'unsafe-inline' https://www.googletagmanager.com https://www.googleadservices.com https://googleads.g.doubleclick.net; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; connect-src 'self' https:; object-src 'none'; base-uri 'self'; form-action 'self';" />
   <title>Free C2PA Metadata Viewer &amp; ChatGPT Invisible Watermark Detector Online (U+202F X-Ray) | PureAI Studio</title>
   <meta name="description" content="Free 100% client-side C2PA/JUMBF binary inspector and ChatGPT invisible Unicode watermark checker (U+202F, U+200B). See why Instagram, TikTok, or Turnitin flags your file and strip it in 1 click (No Signup)." />
   <link rel="canonical" href="https://pureaistudios.com/free-c2pa-chatgpt-watermark-inspector-online.html" />
@@ -37,7 +37,7 @@
       <div style="margin: 1.25rem 0 1.6rem; padding: 1.35rem; background: linear-gradient(145deg, rgba(16,185,129,0.16), rgba(15,23,42,0.98)); border: 2px solid #10b981; border-radius: 14px; box-shadow: 0 10px 30px rgba(0,0,0,0.45);">
         <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:10px;">
           <strong style="color:#6ee7b7;font-size:1.02rem;">⚡ 1. Binary C2PA / JUMBF / EXIF Inspector &amp; Free 1-Click Scrubber</strong>
-          <span style="background:rgba(16,185,129,0.2);color:#6ee7b7;border:1px solid #10b981;padding:3px 10px;border-radius:999px;font-size:0.74rem;font-weight:800;">🎁 100% Free &amp; Unlimited (1-by-1)</span>
+          <span style="background:rgba(16,185,129,0.2);color:#6ee7b7;border:1px solid #10b981;padding:3px 10px;border-radius:999px;font-size:0.74rem;font-weight:800;">🎁 3 Free Photos · 100% Local</span>
         </div>
         <input type="file" id="quick-img-inp" accept="image/jpeg,image/png,image/webp" style="display:none" onchange="if(this.files[0])inspectAndCleanImg(this.files[0])" />
         <div onclick="document.getElementById('quick-img-inp').click()" style="border:2px dashed #10b981;border-radius:12px;padding:18px;text-align:center;cursor:pointer;background:rgba(11,15,25,0.75);transition:all 0.2s;">
@@ -92,9 +92,52 @@
       }
       scanQuickText();
 
+      function hasVerifiedSeoPro() {
+        try {
+          var raw = localStorage.getItem("pureai_sub_record_v2");
+          if (!raw) return false;
+          var rec = JSON.parse(raw);
+          if (!rec || rec.verifiedByServer !== true) return false; if (rec.unlimited === false && typeof rec.creditsRemaining === "number" && rec.creditsRemaining <= 0) return false;
+          var key = String(rec.stripeSessionId || rec.key || "").trim();
+          var m = key.toUpperCase().match(/^PRO-([A-Z2-9]{4})-([A-Z2-9]{4})$/);
+          if (m) {
+            var chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789", h = 0x811c9dc5, s = "PUREAI2026:" + m[1];
+            for (var i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 0x01000193) >>> 0; }
+            var chk = "";
+            for (var j = 0; j < 4; j++) chk += chars.charAt((h >>> (j * 5)) % chars.length);
+            if (chk !== m[2]) return false;
+          } else if (!/^(cs_live_[a-zA-Z0-9_]{20,}|(sub|pi|cus)_[a-zA-Z0-9]{14,})$/.test(key)) {
+            return false;
+          }
+          var now = Date.now();
+          var active = (rec.status === "ACTIVE" || rec.status === "CANCELED_AT_PERIOD_END")
+            ? (typeof rec.expiresAt === "number" && now <= rec.expiresAt)
+            : (rec.status === "PAST_DUE" && typeof rec.graceEndsAt === "number" && now <= rec.graceEndsAt);
+          if (active && typeof fetch === "function" && !window._pureaiSeoRevalidated) {
+            window._pureaiSeoRevalidated = true;
+            var did = localStorage.getItem("pureai_install_id") || "";
+            var didQ = /^[a-zA-Z0-9_-]{12,48}$/.test(did) ? ("&did=" + encodeURIComponent(did)) : "";
+            fetch("https://pureai-stripe-webhook.pureaistudio-app.workers.dev/verify-license?code=" + encodeURIComponent(key) + didQ, { method: "GET", headers: { Accept: "application/json" } })
+              .then(function (r) { return r.json().then(function (d) { return { s: r.status, d: d }; }); })
+              .then(function (x) {
+                if (x.s === 403 || x.s === 404 || (x.d && x.d.valid === false)) {
+                  localStorage.removeItem("pureai_sub_record_v2");
+                  localStorage.removeItem("pureai_studio_pro");
+                }
+              }).catch(function () {});
+          }
+          return active;
+        } catch (_) {}
+        return false;
+      }
+
       async function inspectAndCleanImg(file) {
         if (!file || !file.size) return;
         var st = document.getElementById("quick-img-status");
+        if (file.size > 50 * 1024 * 1024) {
+          st.textContent = "⚠️ File exceeds 50 MB local browser safety limit.";
+          return;
+        }
         st.textContent = "⏳ Inspecting binary C2PA / JUMBF / EXIF container...";
         var buf = await file.arrayBuffer();
         var bytes = new Uint8Array(buf);
@@ -102,11 +145,32 @@
         var detected = ["c2pa", "jumbf", "trainedAlgorithmicMedia", "Midjourney", "DALL-E", "Sora", "ComfyUI", "Exif"].filter(function (k) {
           return new RegExp(k, "i").test(ascii);
         });
+        var isPro = hasVerifiedSeoPro();
+        var used = 0;
+        try {
+          used = Math.max(0, parseInt(localStorage.getItem("pureai_img_used") || "0", 10) || 0);
+        } catch (_) {}
+        if (!isPro && used >= 1) {
+          if (typeof window.sendPureAiAnalyticsEvent === "function") {
+            window.sendPureAiAnalyticsEvent({ type: "app_action", event_name: "paywall_viewed", trigger_tool: "img_c2pa_scrubber", usedCredits: used });
+          }
+          var scanSummary = detected.length ? ("Signatures detected: <strong>" + escapeSeoHtml(detected.join(", ")) + "</strong>. ") : "Container inspected. ";
+          st.innerHTML = "🔒 " + scanSummary + "<strong>3/3 free photo cleans used.</strong> <a href='https://buy.stripe.com/9B6cN6e669uZ4vmeTE0000f' target='_blank' rel='noopener noreferrer' style='color:#00e5a3;font-weight:900;'>Unlock Unlimited Photos + Batch .ZIP + iPhone 16 Pro EXIF (€2.99 one-time, no subscription) →</a>";
+          return;
+        }
+        try { if (!isPro) localStorage.setItem("pureai_img_used", String(used + 1)); } catch (_) {}
         var img = new Image();
+        var objUrl = URL.createObjectURL(file);
         img.onload = function () {
+          if (URL.revokeObjectURL) URL.revokeObjectURL(objUrl);
+          var nw = Number(img.naturalWidth) || 512, nh = Number(img.naturalHeight) || 512;
+          if (nw > 16384 || nh > 16384 || (nw * nh) > 67108864) {
+            st.textContent = "⚠️ Image pixel dimensions exceed browser safety limit (max 16384px / 67 MP).";
+            return;
+          }
           var c = document.getElementById("quick-canvas");
-          c.width = img.naturalWidth || 512;
-          c.height = img.naturalHeight || 512;
+          c.width = nw;
+          c.height = nh;
           var ctx = c.getContext("2d");
           ctx.drawImage(img, 0, 0);
           c.toBlob(function (blob) {
@@ -116,10 +180,11 @@
             a.download = cleanName;
             a.click();
             var foundMsg = detected.length ? ("Detected & Stripped: " + escapeSeoHtml(detected.join(", "))) : "Container Re-Encoded (0 Metadata)";
-            st.innerHTML = "✅ <strong>" + escapeSeoHtml(cleanName) + " downloaded (" + foundMsg + ")!</strong> Need iPhone 16 Pro EXIF headers or 50+ photos in a .ZIP? <a href='clean-ai-studio.html' style='color:#fcd34d;font-weight:800;'>Open PureAI Studio Pro (from 4,99 €) →</a>";
+            st.innerHTML = "✅ <strong>" + escapeSeoHtml(cleanName) + " downloaded (" + foundMsg + ")!</strong> (" + (isPro ? "Pro Unlimited" : ("1/1 free used")) + ") — <a href='clean-ai-studio.html' style='color:#fcd34d;font-weight:800;'>Open PureAI Studio Pro (from €2.99 one-time) →</a>";
           }, "image/jpeg", 0.95);
         };
-        img.src = URL.createObjectURL(file);
+        img.onerror = function () { if (URL.revokeObjectURL) URL.revokeObjectURL(objUrl); };
+        img.src = objUrl;
       }
       </script>
 
@@ -127,7 +192,7 @@
       <ul style="margin: 1rem 0 1.5rem 1.25rem; color: #cbd5e1;">
         <li><strong>100% Local Browser Execution:</strong> Your photos, videos, and essays never leave your computer or phone.</li>
         <li><strong>Instant Binary Verification:</strong> Detects <code>c2pa.claim</code>, <code>JUMBF</code> boxes, <code>trainedAlgorithmicMedia</code> IPTC tags, and ComfyUI <code>tEXt</code> prompt chunks.</li>
-        <li><strong>Unlimited Free 1-by-1 Cleaning:</strong> Strip single files completely free with zero signup, or upgrade to <strong>PureAI Pro</strong> (<code>4,99 €</code> 1st month with code <code>FRIEND50</code> or <code>39 €/year</code>) for Bulk <code>.ZIP</code> batches and <code>iPhone 16 Pro</code> / <code>Sony A7IV</code> EXIF camera profiles.</li>
+        <li><strong>3 Free Photo Cleans + Free Text Scanner:</strong> Inspect and strip up to 3 photos free (with unlimited Unicode text X-Ray) with zero signup, or upgrade to <strong>PureAI Pro</strong> (<code>4,99 €</code> 1st month with code <code>DIRECT</code> or <code>39 €/year</code>) for Unlimited Photos, Bulk <code>.ZIP</code> batches, and <code>iPhone 16 Pro</code> / <code>Sony A7IV</code> EXIF camera profiles.</li>
       </ul>
     </article>
 
@@ -135,11 +200,11 @@
       <div class="offer-card" style="border-color:#10b981;background:linear-gradient(160deg,#0f172a 0%,#064e3b 100%);">
         <span class="offer-badge">🧬 PureAI Studio Pro (4,99 € 1st Month)</span>
         <h2>Unlock Bulk .ZIP, Camera EXIF &amp; Full-Essay Humanizer</h2>
-        <p>Clean 50+ photos at once in a single <code>.ZIP</code>, inject real <code>iPhone 16 Pro / Sony A7IV</code> EXIF headers, and humanize full Word <code>.DOCX</code> documents. <strong>50% OFF 1st month (4,99 €) with code FRIEND50</strong>.</p>
+        <p>Clean 50+ photos at once in a single <code>.ZIP</code>, inject real <code>iPhone 16 Pro / Sony A7IV</code> EXIF headers, and humanize full Word <code>.DOCX</code> documents. <strong>50% OFF 1st month (4,99 €) with code DIRECT</strong>.</p>
         <a href="clean-ai-studio.html" class="cta-button">Open Full Studio Free →</a>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:8px;">
-          <a href="https://buy.stripe.com/aFacN6e66fTn6DudPA00009" target="_blank" rel="noopener" style="background:#00e5a3;color:#042f1e;text-decoration:none;padding:6px;border-radius:7px;font-size:0.75rem;font-weight:900;text-align:center;">🔥 Pro Monthly: 4,99 €</a>
-          <a href="https://buy.stripe.com/6oUfZi7HI6iN2ne26S0000e" target="_blank" rel="noopener" style="background:#1e293b;color:#93c5fd;border:1px solid #3b82f6;text-decoration:none;padding:6px;border-radius:7px;font-size:0.75rem;font-weight:800;text-align:center;">💎 Pro Annual: 39 €</a>
+          <a href="https://buy.stripe.com/9B6cN6e669uZ4vmeTE0000f" target="_blank" rel="noopener" style="background:#00e5a3;color:#042f1e;text-decoration:none;padding:6px;border-radius:7px;font-size:0.75rem;font-weight:900;text-align:center;">🔥 Pro Monthly: 4,99 €</a>
+          <a href="https://buy.stripe.com/eVq00k7HIfTn1jabHs0000h" target="_blank" rel="noopener" style="background:#1e293b;color:#93c5fd;border:1px solid #3b82f6;text-decoration:none;padding:6px;border-radius:7px;font-size:0.75rem;font-weight:800;text-align:center;">💎 Pro Annual: 39 €</a>
         </div>
       </div>
 

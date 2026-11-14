@@ -148,36 +148,84 @@ function buildSeoPageHtml(page) {
         <canvas id="quick-canvas" style="display:none;"></canvas>
         <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;">
           <a href="${page.calcLink}" class="cta-button" style="flex:1;text-align:center;padding:0.75rem 1rem;font-weight:800;">🧬 Open Full Studio (Camera EXIF Profile · Batch .ZIP) →</a>
-          <a href="https://buy.stripe.com/aFacN6e66fTn6DudPA00009" target="_blank" rel="noopener" style="background:#00e5a3;color:#042f1e;text-decoration:none;padding:0.75rem 1rem;border-radius:10px;font-weight:900;font-size:0.85rem;">🔥 Pro Monthly -50% (4,99 €)</a>
+          <a href="https://buy.stripe.com/9B6cN6e669uZ4vmeTE0000f" target="_blank" rel="noopener" style="background:#00e5a3;color:#042f1e;text-decoration:none;padding:0.75rem 1rem;border-radius:10px;font-weight:900;font-size:0.85rem;">⚡ 10-File Pass (€2.99)</a>
         </div>
       </div>
       <script>
       function escapeSeoHtml(s) {
         return String(s || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
       }
+      function hasVerifiedSeoPro() {
+        try {
+          var raw = localStorage.getItem("pureai_sub_record_v2");
+          if (!raw) return false;
+          var rec = JSON.parse(raw);
+          if (!rec || rec.verifiedByServer !== true) return false;
+          var key = String(rec.stripeSessionId || rec.key || "").trim();
+          var m = key.toUpperCase().match(/^PRO-([A-Z2-9]{4})-([A-Z2-9]{4})$/);
+          if (m) {
+            var chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789", h = 0x811c9dc5, s = "PUREAI2026:" + m[1];
+            for (var i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 0x01000193) >>> 0; }
+            var chk = "";
+            for (var j = 0; j < 4; j++) chk += chars.charAt((h >>> (j * 5)) % chars.length);
+            if (chk !== m[2]) return false;
+          } else if (!/^(cs_live_[a-zA-Z0-9_]{20,}|(sub|pi|cus)_[a-zA-Z0-9]{14,})$/.test(key)) {
+            return false;
+          }
+          var now = Date.now();
+          var active = (rec.status === "ACTIVE" || rec.status === "CANCELED_AT_PERIOD_END")
+            ? (typeof rec.expiresAt === "number" && now <= rec.expiresAt)
+            : (rec.status === "PAST_DUE" && typeof rec.graceEndsAt === "number" && now <= rec.graceEndsAt);
+          if (active && typeof fetch === "function" && !window._pureaiSeoRevalidated) {
+            window._pureaiSeoRevalidated = true;
+            var did = localStorage.getItem("pureai_install_id") || "";
+            var didQ = /^[a-zA-Z0-9_-]{12,48}$/.test(did) ? ("&did=" + encodeURIComponent(did)) : "";
+            fetch("https://pureai-stripe-webhook.pureaistudio-app.workers.dev/verify-license?code=" + encodeURIComponent(key) + didQ, { method: "GET", headers: { Accept: "application/json" } })
+              .then(function (r) { return r.json().then(function (d) { return { s: r.status, d: d }; }); })
+              .then(function (x) {
+                if (x.s === 403 || x.s === 404 || (x.d && x.d.valid === false)) {
+                  localStorage.removeItem("pureai_sub_record_v2");
+                  localStorage.removeItem("pureai_studio_pro");
+                }
+              }).catch(function () {});
+          }
+          return active;
+        } catch (_) {}
+        return false;
+      }
       function quickCleanImg(file) {
         if (!file || !file.size) return;
         var st = document.getElementById("quick-img-status");
-        var isPro = false;
+        if (file.size > 50 * 1024 * 1024) {
+          st.textContent = "⚠️ File exceeds 50 MB local browser safety limit.";
+          return;
+        }
+        var isPro = hasVerifiedSeoPro();
         var used = 0;
         try {
-          isPro = localStorage.getItem("pureai_studio_pro") === "true";
-          used = parseInt(localStorage.getItem("pureai_img_used") || "0", 10) || 0;
+          used = Math.max(0, parseInt(localStorage.getItem("pureai_img_used") || "0", 10) || 0);
         } catch (_) {}
-        if (!isPro && used >= 3) {
+        if (!isPro && used >= 1) {
           if (typeof window.sendPureAiAnalyticsEvent === "function") {
             window.sendPureAiAnalyticsEvent({ type: "app_action", event_name: "paywall_viewed", trigger_tool: "img_c2pa_scrubber", usedCredits: used });
           }
-          st.innerHTML = "🔒 <strong>3/3 free photos used.</strong> <a href='https://buy.stripe.com/aFacN6e66fTn6DudPA00009?prefilled_promo_code=FRIEND50' target='_blank' rel='noopener' style='color:#00e5a3;font-weight:900;'>Unlock Unlimited Photos + Batch .ZIP + iPhone 16 Pro EXIF (4,99 € w/ FRIEND50) →</a>";
+          st.innerHTML = "🔒 <strong>1/1 free photo used.</strong> <a href='https://buy.stripe.com/9B6cN6e669uZ4vmeTE0000f' target='_blank' rel='noopener noreferrer' style='color:#00e5a3;font-weight:900;'>Unlock 10-File Pass (€2.99 one-time) →</a> · <a href='https://buy.stripe.com/3cIdRae66bD74vm6n80000g' target='_blank' rel='noopener noreferrer' style='color:#e9d5ff;font-weight:900;'>50 Files + Batch .ZIP (€9.90) →</a>";
           return;
         }
         try { if (!isPro) localStorage.setItem("pureai_img_used", String(used + 1)); } catch (_) {}
         st.textContent = "⏳ Scanning & stripping C2PA / EXIF binary containers...";
         var img = new Image();
+        var objUrl = URL.createObjectURL(file);
         img.onload = function () {
+          if (URL.revokeObjectURL) URL.revokeObjectURL(objUrl);
+          var nw = Number(img.naturalWidth) || 512, nh = Number(img.naturalHeight) || 512;
+          if (nw > 16384 || nh > 16384 || (nw * nh) > 67108864) {
+            st.textContent = "⚠️ Image pixel dimensions exceed browser safety limit (max 16384px / 67 MP).";
+            return;
+          }
           var c = document.getElementById("quick-canvas");
-          c.width = img.naturalWidth || 512;
-          c.height = img.naturalHeight || 512;
+          c.width = nw;
+          c.height = nh;
           var ctx = c.getContext("2d");
           ctx.drawImage(img, 0, 0);
           var d = ctx.getImageData(0, 0, c.width, c.height);
@@ -194,10 +242,11 @@ function buildSeoPageHtml(page) {
             if (typeof window.sendPureAiAnalyticsEvent === "function") {
               window.sendPureAiAnalyticsEvent({ type: "app_action", event_name: "tool_completed", tool_id: "img_c2pa_scrubber", isDemo: false });
             }
-            st.innerHTML = "✅ <strong>" + escapeSeoHtml(cleanName) + " downloaded (0% C2PA / 0% EXIF)!</strong> (" + Math.min(3, used + 1) + "/3 free used) — <a href='clean-ai-studio.html' style='color:#fcd34d;font-weight:800;'>Unlock Unlimited + Batch .ZIP in PureAI Pro (from 4,99 €) →</a>";
+            st.innerHTML = "✅ <strong>" + escapeSeoHtml(cleanName) + " downloaded (0% C2PA / 0% EXIF)!</strong> (" + (isPro ? "Pro Active" : "1/1 free used") + ") — <a href='clean-ai-studio.html' style='color:#fcd34d;font-weight:800;'>Unlock 10-File Pass (€2.99) or 50 Files + Batch .ZIP (€9.90) →</a>";
           }, "image/jpeg", 0.95);
         };
-        img.src = URL.createObjectURL(file);
+        img.onerror = function () { if (URL.revokeObjectURL) URL.revokeObjectURL(objUrl); };
+        img.src = objUrl;
       }
       </script>`
     : "";
@@ -208,7 +257,7 @@ function buildSeoPageHtml(page) {
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="referrer" content="strict-origin-when-cross-origin" />
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self' https: data: blob:; script-src 'self' 'unsafe-inline' https://www.googletagmanager.com https://www.googleadservices.com https://googleads.g.doubleclick.net; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; connect-src 'self' https:;" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self' https: data: blob:; script-src 'self' 'unsafe-inline' https://www.googletagmanager.com https://www.googleadservices.com https://googleads.g.doubleclick.net; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; connect-src 'self' https:; object-src 'none'; base-uri 'self'; form-action 'self';" />
   <title>${page.title} | PureAI Studio</title>
   <meta name="description" content="${page.lead}" />
   <link rel="canonical" href="${SITE_URL}/${page.slug}" />
@@ -247,14 +296,15 @@ function buildSeoPageHtml(page) {
 
     <aside class="affiliate-sidebar">
       <div class="offer-card" style="border-color:#10b981;background:linear-gradient(160deg,#0f172a 0%,#064e3b 100%);">
-        <span class="offer-badge">🧬 PureAI Studio Pro (4,99 € 1er mes)</span>
+        <span class="offer-badge">⚡ Pases sin Suscripción desde 2,99 €</span>
         <h2>Limpia Metadatos C2PA / JUMBF + Lotes .ZIP + EXIF Cámara</h2>
-        <p>Procesa fotos y vídeos cortos MP4 por lotes (.ZIP), aplica perfiles técnicos EXIF JPEG y limpia caracteres invisibles Unicode. <strong>50% DTO 1er mes (4,99 €) con código FRIEND50</strong>.</p>
+        <p>Procesa fotos y vídeos cortos MP4 por lotes (.ZIP), aplica perfiles técnicos EXIF JPEG y limpia caracteres invisibles Unicode. <strong>Pago único sin suscripción ni caducidad (IVA incluido)</strong>.</p>
         <a href="clean-ai-studio.html" class="cta-button">Abrir PureAI Studio Gratis →</a>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:8px;">
-          <a href="https://buy.stripe.com/aFacN6e66fTn6DudPA00009" target="_blank" rel="noopener" style="background:#00e5a3;color:#042f1e;text-decoration:none;padding:6px;border-radius:7px;font-size:0.75rem;font-weight:900;text-align:center;">🔥 Pro Mensual: 4,99 €</a>
-          <a href="https://buy.stripe.com/6oUfZi7HI6iN2ne26S0000e" target="_blank" rel="noopener" style="background:#1e293b;color:#93c5fd;border:1px solid #3b82f6;text-decoration:none;padding:6px;border-radius:7px;font-size:0.75rem;font-weight:800;text-align:center;">💎 Pro Anual: 39 €</a>
+          <a href="https://buy.stripe.com/9B6cN6e669uZ4vmeTE0000f" target="_blank" rel="noopener" style="background:#00e5a3;color:#042f1e;text-decoration:none;padding:6px;border-radius:7px;font-size:0.74rem;font-weight:900;text-align:center;">⚡ 10 Usos: 2,99 €</a>
+          <a href="https://buy.stripe.com/3cIdRae66bD74vm6n80000g" target="_blank" rel="noopener" style="background:#a855f7;color:#fff;text-decoration:none;padding:6px;border-radius:7px;font-size:0.74rem;font-weight:900;text-align:center;">🔥 50 + .ZIP: 9,90 €</a>
         </div>
+        <a href="https://buy.stripe.com/eVq00k7HIfTn1jabHs0000h" target="_blank" rel="noopener" style="display:block;margin-top:6px;background:#1e293b;color:#93c5fd;border:1px solid #3b82f6;text-decoration:none;padding:6px;border-radius:7px;font-size:0.74rem;font-weight:800;text-align:center;">💎 Estudio Anual Ilimitado: 39 €/año</a>
       </div>
     </aside>
   </main>
@@ -502,16 +552,26 @@ async function sendDailyMobilePushDigest(opportunities, telegraphUrls) {
   const topOpp = opportunities && opportunities[0] ? opportunities[0] : null;
   try {
     // El envío diario a Telegram lo ejecuta con precisión exacta el Cron Trigger de Cloudflare a las 10:00 AM CET
-  if (process.env.FORCE_TELEGRAM_DIGEST === "1") await fetch("https://pureai-stripe-webhook.pureaistudio-app.workers.dev/daily-digest", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        articlesCount: Array.isArray(telegraphUrls) ? telegraphUrls.length : 0,
-        topOpp
-      })
-    });
+    const digestToken = process.env.ADMIN_DIGEST_TOKEN || process.env.STRIPE_WEBHOOK_SECRET || "";
+    if (process.env.FORCE_TELEGRAM_DIGEST === "1" && digestToken) {
+      await fetch("https://pureai-stripe-webhook.pureaistudio-app.workers.dev/daily-digest", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: "Bearer " + digestToken
+        },
+        body: JSON.stringify({
+          articlesCount: Array.isArray(telegraphUrls) ? telegraphUrls.length : 0,
+          topOpp
+        })
+      });
+    }
     console.log("✈️ Daily Telegram digest triggered via Cloudflare Worker");
   } catch (_) {}
 }
 
-run().catch(console.error);
+if (require.main === module) {
+  run().catch(console.error);
+} else {
+  module.exports = { SEO_PAGES, buildSeoPageHtml };
+}

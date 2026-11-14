@@ -107,6 +107,20 @@ function timingSafeHexEqual(aHex, bHex) {
   return diff === 0;
 }
 
+function timingSafeStringEqual(aStr, bStr) {
+  const a = String(aStr || "");
+  const b = String(bStr || "");
+  if (a.length === 0 || b.length === 0) return false;
+  const enc = new TextEncoder();
+  const hashA = sha256Bytes(enc.encode(a));
+  const hashB = sha256Bytes(enc.encode(b));
+  let diff = 0;
+  for (let i = 0; i < 32; i++) {
+    diff |= hashA[i] ^ hashB[i];
+  }
+  return diff === 0;
+}
+
 const SUBSCRIPTION_STATES = {
   PENDING: "PENDING",
   ACTIVE: "ACTIVE",
@@ -166,7 +180,27 @@ function calculateAffiliateNetCommission(grossCents, taxCents, stripeFeeCents, a
   };
 }
 
+const STRIPE_PAYMENT_LINK_PLANS = {
+  plink_1UbbsAJGMJW2ESycP7cZbuRv: { planType: "pack_10", planInterval: "one_time", unlimited: false, creditsGranted: 10 },
+  plink_1UbbsCJGMJW2ESyccAo1J7VN: { planType: "pack_50", planInterval: "one_time", unlimited: false, creditsGranted: 50 },
+  plink_1UbbsDJGMJW2ESycZKktNrhu: { planType: "annual_unlimited", planInterval: "year", unlimited: true, creditsGranted: null }
+};
+
 function resolveSubscriptionPeriod(obj, nowMs, previousPlanInterval) {
+  const plinkId = String((obj && obj.payment_link) || "").trim();
+  if (plinkId && STRIPE_PAYMENT_LINK_PLANS[plinkId]) {
+    const mapped = STRIPE_PAYMENT_LINK_PLANS[plinkId];
+    const durMs = mapped.planInterval === "one_time" ? 10 * 365 * 24 * 3600 * 1000 : 366 * 24 * 3600 * 1000;
+    return {
+      planInterval: mapped.planInterval,
+      planType: mapped.planType,
+      unlimited: mapped.unlimited,
+      creditsGranted: mapped.creditsGranted,
+      expiresAt: nowMs + durMs
+    };
+  }
+
+  const metaPlanType = String((obj && obj.metadata && obj.metadata.plan_type) || "").trim().toLowerCase();
   const metaInterval = obj && obj.metadata && obj.metadata.plan_interval;
   const lineInterval =
     obj &&
@@ -177,14 +211,48 @@ function resolveSubscriptionPeriod(obj, nowMs, previousPlanInterval) {
     obj.lines.data[0].price.recurring &&
     obj.lines.data[0].price.recurring.interval;
   const amountCents = Number((obj && (obj.amount_total || obj.amount_paid || obj.amount_due)) || 0);
+  const currency = String((obj && obj.currency) || "").trim().toLowerCase();
+  const isMajorCurrency = !currency || currency === "eur" || currency === "usd" || currency === "gbp" || currency === "chf";
+  const isOneTimeMode = Boolean(obj && obj.mode === "payment");
+
+  if (
+    metaPlanType === "pack_10" ||
+    (isMajorCurrency && amountCents >= 200 && amountCents <= 390) ||
+    (isOneTimeMode && isMajorCurrency && amountCents > 0 && amountCents <= 450)
+  ) {
+    return {
+      planInterval: "one_time",
+      planType: "pack_10",
+      unlimited: false,
+      creditsGranted: 10,
+      expiresAt: nowMs + 10 * 365 * 24 * 3600 * 1000
+    };
+  }
+
+  if (
+    metaPlanType === "pack_50" ||
+    (isMajorCurrency && amountCents === 990) ||
+    (isOneTimeMode && isMajorCurrency && amountCents >= 700 && amountCents <= 2500)
+  ) {
+    return {
+      planInterval: "one_time",
+      planType: "pack_50",
+      unlimited: false,
+      creditsGranted: 50,
+      expiresAt: nowMs + 10 * 365 * 24 * 3600 * 1000
+    };
+  }
+
   const isAnnual =
+    metaPlanType === "annual_unlimited" ||
     metaInterval === "year" ||
     (obj && obj.plan_interval === "year") ||
     lineInterval === "year" ||
-    amountCents >= 3500 ||
+    (isMajorCurrency && amountCents >= 3500) ||
     (!amountCents && previousPlanInterval === "year");
 
   const planInterval = isAnnual ? "year" : "month";
+  const planType = isAnnual ? "annual_unlimited" : "monthly_unlimited";
   const defaultDurationMs = isAnnual ? 366 * 24 * 3600 * 1000 : 32 * 24 * 3600 * 1000;
 
   let expiresAt = nowMs + defaultDurationMs;
@@ -195,7 +263,7 @@ function resolveSubscriptionPeriod(obj, nowMs, previousPlanInterval) {
   } else if (obj && typeof obj.period_end === "number" && obj.period_end > 0) {
     expiresAt = obj.period_end * 1000;
   }
-  return { planInterval, expiresAt };
+  return { planInterval, planType, unlimited: true, creditsGranted: null, expiresAt };
 }
 
 function computeKeyChecksumBlock(block4) {
@@ -234,6 +302,7 @@ function createWebhookProcessorStore() {
     processedEventIds: new Set(),
     subscriptionsByCustomer: new Map(),
     affiliateLedger: new Map(),
+    rateLimits: new Map(),
     auditErrors: []
   };
 }
@@ -296,9 +365,27 @@ function processStripeWebhookEvent(store, event, nowMs, options) {
   switch (event.type) {
     case "checkout.session.completed": {
       if (obj.payment_status === "paid") {
+        const hadActiveUnlimited =
+          existing.unlimited === true &&
+          existing.status === SUBSCRIPTION_STATES.ACTIVE &&
+          (!existing.expiresAt || existing.expiresAt > now);
+        const prevCredits =
+          existing.unlimited === false &&
+          typeof existing.creditsRemaining === "number" &&
+          existing.status === SUBSCRIPTION_STATES.ACTIVE
+            ? Math.max(0, existing.creditsRemaining)
+            : 0;
         const periodInfo = resolveSubscriptionPeriod(obj, now, existing.planInterval);
         existing.status = SUBSCRIPTION_STATES.ACTIVE;
         existing.planInterval = periodInfo.planInterval;
+        existing.planType = periodInfo.planType || (periodInfo.planInterval === "year" ? "annual_unlimited" : "monthly_unlimited");
+        if (periodInfo.unlimited || hadActiveUnlimited) {
+          existing.unlimited = true;
+          existing.creditsRemaining = null;
+        } else {
+          existing.unlimited = false;
+          existing.creditsRemaining = prevCredits + (Number(periodInfo.creditsGranted) || 10);
+        }
         existing.expiresAt = periodInfo.expiresAt;
         existing.graceEndsAt = existing.expiresAt + 72 * 3600 * 1000;
         if (obj.id && String(obj.id).startsWith("cs_")) {
@@ -313,7 +400,14 @@ function processStripeWebhookEvent(store, event, nowMs, options) {
         const ref = String(obj.client_reference_id || "");
         if (ref.startsWith("aff_")) {
           const affId = ref.slice(4);
-          const defaultGross = existing.planInterval === "year" ? 3900 : 499;
+          const defaultGross =
+            existing.planType === "pack_10"
+              ? 299
+              : existing.planType === "pack_50"
+                ? 990
+                : existing.planInterval === "year"
+                  ? 3900
+                  : 499;
           const comm = calculateAffiliateNetCommission(
             obj.amount_total || defaultGross,
             obj.total_details && obj.total_details.amount_tax ? obj.total_details.amount_tax : 0,
@@ -352,11 +446,18 @@ function processStripeWebhookEvent(store, event, nowMs, options) {
     case "customer.subscription.updated": {
       const periodInfo = resolveSubscriptionPeriod(obj, now, existing.planInterval);
       existing.planInterval = periodInfo.planInterval;
-      if (obj.cancel_at_period_end) {
+      if (obj.status === "canceled" || obj.status === "unpaid" || obj.status === "incomplete_expired") {
+        existing.status = SUBSCRIPTION_STATES.EXPIRED;
+        existing.cancelAtPeriodEnd = false;
+        existing.expiresAt = now - 1000;
+      } else if (obj.status === "past_due") {
+        existing.status = SUBSCRIPTION_STATES.PAST_DUE;
+        existing.graceEndsAt = now + 72 * 3600 * 1000;
+      } else if (obj.cancel_at_period_end) {
         existing.status = SUBSCRIPTION_STATES.CANCELED_AT_PERIOD_END;
         existing.cancelAtPeriodEnd = true;
         if (obj.current_period_end) existing.expiresAt = obj.current_period_end * 1000;
-      } else if (obj.status === "active") {
+      } else if (obj.status === "active" || obj.status === "trialing") {
         existing.status = SUBSCRIPTION_STATES.ACTIVE;
         existing.cancelAtPeriodEnd = false;
         if (obj.current_period_end) existing.expiresAt = obj.current_period_end * 1000;
@@ -371,12 +472,16 @@ function processStripeWebhookEvent(store, event, nowMs, options) {
     case "charge.refunded": {
       existing.status = SUBSCRIPTION_STATES.REFUNDED;
       existing.expiresAt = now - 1000;
+      existing.creditsRemaining = 0;
+      existing.unlimited = false;
       clawbackStatus = "CLAWBACK_REFUNDED";
       break;
     }
     case "charge.dispute.created": {
       existing.status = SUBSCRIPTION_STATES.DISPUTED;
       existing.expiresAt = now - 1000;
+      existing.creditsRemaining = 0;
+      existing.unlimited = false;
       clawbackStatus = "FROZEN_DISPUTE";
       break;
     }
@@ -432,16 +537,103 @@ const ALLOWED_ORIGINS = new Set([
   "https://www.pureaistudios.com"
 ]);
 
-function buildCorsHeaders(origin) {
-  const allowed = ALLOWED_ORIGINS.has(origin) ? origin : "https://pureaistudios.com";
+const VERIFY_LICENSE_EXTRA_ORIGINS = new Set([
+  "https://chatgpt.com",
+  "https://claude.ai"
+]);
+
+const GLOBAL_RATE_LIMITS = new Map();
+const MAX_DEVICES_PER_LICENSE = 4;
+
+function isAllowedExtensionOrigin(origin) {
+  return /^chrome-extension:\/\/[a-z]{32}$/.test(String(origin || ""));
+}
+
+function buildCorsHeaders(origin, pathname) {
+  const isVerifyPath = pathname === "/verify-license" || pathname === "/consume-credit";
+  const allowed =
+    ALLOWED_ORIGINS.has(origin) ||
+    isAllowedExtensionOrigin(origin) ||
+    (isVerifyPath && VERIFY_LICENSE_EXTRA_ORIGINS.has(origin))
+      ? origin
+      : "https://pureaistudios.com";
   return {
     "Access-Control-Allow-Origin": allowed,
     "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-    "Access-Control-Allow-Headers": "Content-Type, Stripe-Signature",
+    "Access-Control-Allow-Headers": "Content-Type, Stripe-Signature, Authorization",
     "Content-Type": "application/json; charset=utf-8",
     "X-Content-Type-Options": "nosniff",
     "Cache-Control": "no-store"
   };
+}
+
+function extractClientIp(req) {
+  if (!req || !req.headers || typeof req.headers.get !== "function") return null;
+  const raw = String(req.headers.get("cf-connecting-ip") || "").trim();
+  if (!raw || raw.length > 45 || raw.startsWith("http://") || raw.startsWith("https://")) return null;
+  const normalized = raw.replace(/^::ffff:/i, "");
+  if (/^(?:\d{1,3}\.){3}\d{1,3}$/.test(normalized)) return normalized;
+  if (/^[0-9a-fA-F:]{2,45}$/.test(normalized) && normalized.includes(":")) return normalized.toLowerCase();
+  if (/^[0-9a-fA-F:.]{2,45}$/.test(normalized) && normalized.includes(":")) return normalized.toLowerCase();
+  return null;
+}
+
+function checkWorkerRateLimit(rateMap, bucketKey, maxPerMinute, nowMs) {
+  if (!bucketKey) return { allowed: true };
+  const map = rateMap || GLOBAL_RATE_LIMITS;
+  const now = typeof nowMs === "number" ? nowMs : Date.now();
+  const windowMs = 60 * 1000;
+  const prev = map.get(bucketKey);
+  const timestamps = Array.isArray(prev) ? prev.filter((t) => now - t < windowMs) : [];
+  if (timestamps.length >= maxPerMinute) {
+    map.set(bucketKey, timestamps);
+    return { allowed: false, retryAfterSec: 60 };
+  }
+  timestamps.push(now);
+  if (map.size > 5000 && !prev) {
+    const oldestKey = map.keys().next().value;
+    if (oldestKey) map.delete(oldestKey);
+  }
+  map.set(bucketKey, timestamps);
+  return { allowed: true };
+}
+
+function verifyAdminBearerAuth(req, env) {
+  const expectedSecret = String((env && (env.ADMIN_DIGEST_TOKEN || env.STRIPE_WEBHOOK_SECRET)) || "").trim();
+  if (expectedSecret.length < 12) return false;
+  const authHeader = String((req && req.headers && typeof req.headers.get === "function" && req.headers.get("authorization")) || "").trim();
+  if (!authHeader.startsWith("Bearer ")) return false;
+  const provided = authHeader.slice(7).trim();
+  return timingSafeStringEqual(provided, expectedSecret);
+}
+
+const ALLOWED_TELEMETRY_STR_FIELDS = [
+  "type", "event_name", "target", "tool_id", "trigger_tool", "plan_selected",
+  "channel", "lang", "cohortWeek", "retentionBucket", "userTier", "page",
+  "aff", "partner", "maskedSession", "maskedProKey", "commissionBasis"
+];
+const ALLOWED_TELEMETRY_BOOL_FIELDS = ["isReturning", "genuineReturn", "isDemo"];
+const ALLOWED_TELEMETRY_NUM_FIELDS = ["daysSinceFirstVisit", "usedCredits", "line"];
+
+function sanitizeClientTelemetryPayload(parsed) {
+  const clean = {};
+  for (const k of ALLOWED_TELEMETRY_STR_FIELDS) {
+    if (typeof parsed[k] === "string" && parsed[k].length > 0) {
+      clean[k] = parsed[k].slice(0, 120);
+    }
+  }
+  if (typeof parsed.msg === "string" && parsed.msg.length > 0) {
+    clean.msg = parsed.msg.slice(0, 500);
+  }
+  for (const k of ALLOWED_TELEMETRY_BOOL_FIELDS) {
+    if (typeof parsed[k] === "boolean") clean[k] = parsed[k];
+  }
+  for (const k of ALLOWED_TELEMETRY_NUM_FIELDS) {
+    if (typeof parsed[k] === "number" && Number.isFinite(parsed[k])) {
+      clean[k] = Math.max(0, Math.min(1000000, Math.trunc(parsed[k])));
+    }
+  }
+  return clean;
 }
 
 async function hydrateStoreFromKv(env, store, eventObj) {
@@ -499,11 +691,11 @@ async function persistWebhookResultToKv(env, eventObj, result) {
   const kv = env.PUREAI_LICENSES_KV;
   const obj = (eventObj.data && eventObj.data.object) || {};
   const customerId = obj.customer || obj.id || "cust_unknown";
+  const effectiveCustId = (result.subscription && result.subscription.customerId) || customerId;
   const sessId = (obj.id && String(obj.id).startsWith("cs_") ? String(obj.id) : null) || (result.subscription && result.subscription.lastCheckoutSessionId);
 
   if (result.subscription) {
     const serializedSub = JSON.stringify(result.subscription);
-    const effectiveCustId = result.subscription.customerId || customerId;
     const proKey = result.subscription.proKey;
     const piId = result.subscription.lastPaymentIntentId || obj.payment_intent;
     if (effectiveCustId) await kv.put(`sub:${effectiveCustId}`, serializedSub);
@@ -513,18 +705,19 @@ async function persistWebhookResultToKv(env, eventObj, result) {
   }
   if (result.pendingAffiliateKey && result.pendingAffiliateEntry) {
     await kv.put(
-      `aff_cust:${customerId}`,
+      `aff_cust:${effectiveCustId}`,
       JSON.stringify({ key: result.pendingAffiliateKey, entry: result.pendingAffiliateEntry })
     );
-  } else if (result.clawbackStatus && customerId && typeof kv.get === "function") {
-    const affRaw = await kv.get(`aff_cust:${customerId}`);
+  } else if (result.clawbackStatus && effectiveCustId && typeof kv.get === "function") {
+    const affKey = `aff_cust:${effectiveCustId}`;
+    const affRaw = (await kv.get(affKey)) || (customerId !== effectiveCustId ? await kv.get(`aff_cust:${customerId}`) : null);
     if (affRaw) {
       try {
         const parsed = JSON.parse(affRaw);
         if (parsed && parsed.entry) {
           parsed.entry.commissionCents = 0;
           parsed.entry.status = result.clawbackStatus;
-          await kv.put(`aff_cust:${customerId}`, JSON.stringify(parsed));
+          await kv.put(affKey, JSON.stringify(parsed));
         }
       } catch (_) {}
     }
@@ -537,9 +730,12 @@ async function persistWebhookResultToKv(env, eventObj, result) {
 
 async function handleWorkerHttpRequest(req, env, sharedStore) {
   const store = sharedStore || createWebhookProcessorStore();
+  const rateMap = (sharedStore && sharedStore.rateLimits) || GLOBAL_RATE_LIMITS;
   const url = new URL(req.url || "https://pureaistudios.com/");
-  const origin = (req.headers && req.headers.get && req.headers.get("origin")) || "https://pureaistudios.com";
-  const headers = buildCorsHeaders(origin);
+  const rawOrigin = (req.headers && req.headers.get && req.headers.get("origin")) || "";
+  const origin = rawOrigin || "https://pureaistudios.com";
+  const headers = buildCorsHeaders(origin, url.pathname);
+  const clientIp = extractClientIp(req);
 
   if (req.method === "OPTIONS") {
     return { status: 204, headers, body: "" };
@@ -579,23 +775,42 @@ async function handleWorkerHttpRequest(req, env, sharedStore) {
       if (eventObj.type === "checkout.session.completed" && result.state === SUBSCRIPTION_STATES.ACTIVE) {
         const objPaid = (eventObj.data && eventObj.data.object) || {};
         const amountEur = ((Number(objPaid.amount_total) || 0) / 100).toFixed(2);
+        const rawRef = String(objPaid.client_reference_id || "");
+        const affPartner = rawRef.startsWith("aff_") ? rawRef.slice(4) : "organic";
         if (env && env.PUREAI_LICENSES_KV && typeof env.PUREAI_LICENSES_KV.get === "function" && typeof env.PUREAI_LICENSES_KV.put === "function") {
           try {
             const rawList = await env.PUREAI_LICENSES_KV.get("telemetry:recent_events");
             const list = rawList ? JSON.parse(rawList) : [];
-            list.push({ id: "sale_" + eventObj.id, event_name: "purchase_verified", amount_eur: amountEur, planInterval: result.subscription && result.subscription.planInterval, ts: new Date().toISOString() });
+            list.push({
+              id: "sale_" + eventObj.id,
+              type: "sale_verified_session",
+              event_name: "purchase_verified",
+              amount_eur: amountEur,
+              amountCents: Number(objPaid.amount_total) || 0,
+              partner: affPartner,
+              planInterval: result.subscription && result.subscription.planInterval,
+              ts: new Date().toISOString()
+            });
             while (list.length > 250) list.shift();
             await env.PUREAI_LICENSES_KV.put("telemetry:recent_events", JSON.stringify(list));
           } catch (_) {}
         }
         if (env && env.TELEGRAM_BOT_TOKEN && env.TELEGRAM_CHAT_ID && typeof fetch === "function") {
+          const planLabel =
+            result.subscription && result.subscription.planType === "pack_10"
+              ? "Pack 10 usos"
+              : result.subscription && result.subscription.planType === "pack_50"
+                ? "Pack 50 usos + .ZIP"
+                : result.subscription && result.subscription.planInterval === "year"
+                  ? "Anual Ilimitado"
+                  : "Suscripción Mensual";
           try {
             await fetch("https://api.telegram.org/bot" + env.TELEGRAM_BOT_TOKEN + "/sendMessage", {
               method: "POST",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({
                 chat_id: env.TELEGRAM_CHAT_ID,
-                text: "💰 ¡NUEVA SUSCRIPCIÓN PAGADA EN STRIPE!\n• Importe: " + amountEur + " €\n• Plan: " + ((result.subscription && result.subscription.planInterval === "year") ? "Anual" : "Mensual") + "\n• Clave Pro: " + ((result.subscription && result.subscription.proKey) || "Activa"),
+                text: "💰 ¡NUEVA VENTA PAGADA EN STRIPE!\n• Importe: " + amountEur + " €\n• Plan: " + planLabel + "\n• Clave Pro: " + ((result.subscription && result.subscription.proKey) || "Activa"),
                 disable_web_page_preview: true
               })
             });
@@ -625,18 +840,28 @@ async function handleWorkerHttpRequest(req, env, sharedStore) {
 
   // 2. Endpoint de verificación Server-Side de licencia / session_id (GET /verify-license?code=...)
   if (req.method === "GET" && url.pathname === "/verify-license") {
+    if (clientIp) {
+      const rl = checkWorkerRateLimit(rateMap, `verify:${clientIp}`, 20, Date.now());
+      if (!rl.allowed) {
+        return {
+          status: 429,
+          headers: { ...headers, "Retry-After": String(rl.retryAfterSec) },
+          body: JSON.stringify({ valid: false, reason: "rate_limit_exceeded" })
+        };
+      }
+    }
     const code = String(url.searchParams.get("code") || "").trim();
-    if (!code || code.length < 8 || code.length > 128) {
+    if (!code || code.length < 8 || code.length > 128 || /^cs_test_/i.test(code)) {
       return { status: 400, headers, body: JSON.stringify({ valid: false, reason: "invalid_code_format" }) };
     }
     // Priorizar KV de Cloudflare para garantizar consistencia entre instancias y reinicios
     let subRecord = null;
+    const kvKey = code.startsWith("cs_")
+      ? `sess:${code}`
+      : /^PRO-[A-Z2-9]{4}-[A-Z2-9]{4}$/i.test(code)
+        ? `key:${code.toUpperCase()}`
+        : `sub:${code}`;
     if (env && env.PUREAI_LICENSES_KV && typeof env.PUREAI_LICENSES_KV.get === "function") {
-      const kvKey = code.startsWith("cs_")
-        ? `sess:${code}`
-        : /^PRO-[A-Z2-9]{4}-[A-Z2-9]{4}$/i.test(code)
-          ? `key:${code.toUpperCase()}`
-          : `sub:${code}`;
       const kvRaw = await env.PUREAI_LICENSES_KV.get(kvKey);
       if (kvRaw) {
         try {
@@ -652,28 +877,334 @@ async function handleWorkerHttpRequest(req, env, sharedStore) {
       return { status: 404, headers, body: JSON.stringify({ valid: false, status: SUBSCRIPTION_STATES.PENDING, reason: "license_not_found" }) };
     }
     const now = Date.now();
+    const isUnlimitedSub = subRecord.unlimited !== false;
+    const hasPackCredits = isUnlimitedSub || (typeof subRecord.creditsRemaining === "number" && subRecord.creditsRemaining > 0);
     const isActive =
+      hasPackCredits &&
+      ((subRecord.status === SUBSCRIPTION_STATES.ACTIVE && (!subRecord.expiresAt || now <= subRecord.expiresAt)) ||
+        (subRecord.status === SUBSCRIPTION_STATES.CANCELED_AT_PERIOD_END && now <= subRecord.expiresAt) ||
+        (subRecord.status === SUBSCRIPTION_STATES.PAST_DUE && now <= subRecord.graceEndsAt));
+
+    const rawDid = String(url.searchParams.get("did") || "").trim();
+    if (rawDid && !/^[a-zA-Z0-9_-]{8,64}$/.test(rawDid)) {
+      return {
+        status: 400,
+        headers,
+        body: JSON.stringify({ valid: false, reason: "invalid_device_id" })
+      };
+    }
+    const effectiveDid = rawDid || (clientIp ? "ip_" + hmacSha256Hex("pureai-did-slot", clientIp).slice(0, 16) : "");
+    if (isActive) {
+      const boundDevices = Array.isArray(subRecord.boundDevices) ? [...subRecord.boundDevices] : [];
+      if (!effectiveDid && boundDevices.length >= MAX_DEVICES_PER_LICENSE) {
+        return {
+          status: 403,
+          headers,
+          body: JSON.stringify({
+            valid: false,
+            verifiedByServer: true,
+            status: "DEVICE_LIMIT_REACHED",
+            reason: "max_devices_exceeded",
+            maxDevices: MAX_DEVICES_PER_LICENSE
+          })
+        };
+      }
+      if (effectiveDid && !boundDevices.includes(effectiveDid)) {
+        if (boundDevices.length >= MAX_DEVICES_PER_LICENSE) {
+          return {
+            status: 403,
+            headers,
+            body: JSON.stringify({
+              valid: false,
+              verifiedByServer: true,
+              status: "DEVICE_LIMIT_REACHED",
+              reason: "max_devices_exceeded",
+              maxDevices: MAX_DEVICES_PER_LICENSE
+            })
+          };
+        }
+        boundDevices.push(effectiveDid);
+        subRecord.boundDevices = boundDevices;
+        store.subscriptionsByCustomer.set(code, subRecord);
+        if (subRecord.proKey) store.subscriptionsByCustomer.set(subRecord.proKey, subRecord);
+        if (subRecord.lastCheckoutSessionId) store.subscriptionsByCustomer.set(subRecord.lastCheckoutSessionId, subRecord);
+        if (subRecord.customerId) store.subscriptionsByCustomer.set(subRecord.customerId, subRecord);
+        if (env && env.PUREAI_LICENSES_KV && typeof env.PUREAI_LICENSES_KV.put === "function") {
+          const serializedSub = JSON.stringify(subRecord);
+          await env.PUREAI_LICENSES_KV.put(kvKey, serializedSub);
+          if (subRecord.customerId) await env.PUREAI_LICENSES_KV.put(`sub:${subRecord.customerId}`, serializedSub);
+          if (subRecord.lastCheckoutSessionId) await env.PUREAI_LICENSES_KV.put(`sess:${subRecord.lastCheckoutSessionId}`, serializedSub);
+          if (subRecord.proKey) await env.PUREAI_LICENSES_KV.put(`key:${subRecord.proKey.toUpperCase()}`, serializedSub);
+        }
+      }
+    }
+
+    const responsePayload = {
+      valid: isActive,
+      verifiedByServer: true,
+      status: !hasPackCredits && !isUnlimitedSub ? SUBSCRIPTION_STATES.EXPIRED : subRecord.status,
+      planInterval: subRecord.planInterval || "month",
+      planType: subRecord.planType || (subRecord.planInterval === "year" ? "annual_unlimited" : "monthly_unlimited"),
+      unlimited: isUnlimitedSub,
+      creditsRemaining: typeof subRecord.creditsRemaining === "number" ? subRecord.creditsRemaining : null,
+      expiresAt: subRecord.expiresAt,
+      graceEndsAt: subRecord.graceEndsAt
+    };
+    if (!hasPackCredits && !isUnlimitedSub) {
+      responsePayload.reason = "credits_exhausted";
+    }
+    if (isActive) {
+      responsePayload.proKey = subRecord.proKey || deriveProKeyFromSession(code);
+    }
+
+    return {
+      status: 200,
+      headers,
+      body: JSON.stringify(responsePayload)
+    };
+  }
+
+  // 2a-bis. Consumo atómico e idempotente de créditos en Lotes de Uso (POST /consume-credit)
+  if (req.method === "POST" && url.pathname === "/consume-credit") {
+    if (clientIp) {
+      const rl = checkWorkerRateLimit(rateMap, `consume:${clientIp}`, 60, Date.now());
+      if (!rl.allowed) {
+        return {
+          status: 429,
+          headers: { ...headers, "Retry-After": String(rl.retryAfterSec) },
+          body: JSON.stringify({ ok: false, reason: "rate_limit_exceeded" })
+        };
+      }
+    }
+    if (rawOrigin && !ALLOWED_ORIGINS.has(rawOrigin) && !isAllowedExtensionOrigin(rawOrigin) && !VERIFY_LICENSE_EXTRA_ORIGINS.has(rawOrigin)) {
+      return { status: 403, headers, body: JSON.stringify({ ok: false, reason: "origin_not_allowed" }) };
+    }
+    const rawBody = typeof req.text === "function" ? await req.text() : String(req.body || "");
+    if (!rawBody || rawBody.length > 2048) {
+      return { status: 400, headers, body: JSON.stringify({ ok: false, reason: "invalid_payload_size" }) };
+    }
+    let parsed;
+    try {
+      parsed = JSON.parse(rawBody);
+    } catch (_) {
+      return { status: 400, headers, body: JSON.stringify({ ok: false, reason: "invalid_json" }) };
+    }
+    const code = String((parsed && parsed.code) || "").trim();
+    if (!code || code.length < 8 || code.length > 128 || /^cs_test_/i.test(code)) {
+      return { status: 400, headers, body: JSON.stringify({ ok: false, reason: "invalid_code_format" }) };
+    }
+    const count = Math.max(1, Math.min(100, Math.trunc(Number(parsed && parsed.count) || 1)));
+    const cleanOpId = typeof (parsed && parsed.opId) === "string" ? parsed.opId.trim().slice(0, 80) : "";
+
+    let subRecord = null;
+    const kvKey = code.startsWith("cs_")
+      ? `sess:${code}`
+      : /^PRO-[A-Z2-9]{4}-[A-Z2-9]{4}$/i.test(code)
+        ? `key:${code.toUpperCase()}`
+        : `sub:${code}`;
+    if (env && env.PUREAI_LICENSES_KV && typeof env.PUREAI_LICENSES_KV.get === "function") {
+      const kvRaw = await env.PUREAI_LICENSES_KV.get(kvKey);
+      if (kvRaw) {
+        try {
+          subRecord = JSON.parse(kvRaw);
+          store.subscriptionsByCustomer.set(code, subRecord);
+        } catch (_) {}
+      }
+    }
+    if (!subRecord) {
+      subRecord = store.subscriptionsByCustomer.get(code) || store.subscriptionsByCustomer.get(code.toUpperCase()) || null;
+    }
+    if (!subRecord) {
+      return { status: 404, headers, body: JSON.stringify({ ok: false, reason: "license_not_found" }) };
+    }
+
+    const now = Date.now();
+    const validTimeState =
       (subRecord.status === SUBSCRIPTION_STATES.ACTIVE && (!subRecord.expiresAt || now <= subRecord.expiresAt)) ||
       (subRecord.status === SUBSCRIPTION_STATES.CANCELED_AT_PERIOD_END && now <= subRecord.expiresAt) ||
       (subRecord.status === SUBSCRIPTION_STATES.PAST_DUE && now <= subRecord.graceEndsAt);
+
+    if (subRecord.unlimited !== false) {
+      if (!validTimeState) {
+        return { status: 403, headers, body: JSON.stringify({ ok: false, reason: "inactive_license" }) };
+      }
+      return { status: 200, headers, body: JSON.stringify({ ok: true, unlimited: true, creditsRemaining: null }) };
+    }
+
+    if (cleanOpId && Array.isArray(subRecord.recentOpIds) && subRecord.recentOpIds.includes(cleanOpId)) {
+      return {
+        status: 200,
+        headers,
+        body: JSON.stringify({
+          ok: true,
+          idempotent: true,
+          unlimited: false,
+          creditsRemaining: Math.max(0, Number(subRecord.creditsRemaining) || 0)
+        })
+      };
+    }
+
+    const currentCredits = Math.max(0, Number(subRecord.creditsRemaining) || 0);
+    if (!validTimeState || currentCredits < count) {
+      return {
+        status: 403,
+        headers,
+        body: JSON.stringify({
+          ok: false,
+          reason: currentCredits < count ? "insufficient_credits" : "inactive_license",
+          creditsRemaining: currentCredits
+        })
+      };
+    }
+
+    subRecord.creditsRemaining = currentCredits - count;
+    if (cleanOpId) {
+      const ops = Array.isArray(subRecord.recentOpIds) ? subRecord.recentOpIds.slice(-19) : [];
+      ops.push(cleanOpId);
+      subRecord.recentOpIds = ops;
+    }
+    if (subRecord.creditsRemaining === 0) {
+      subRecord.status = SUBSCRIPTION_STATES.EXPIRED;
+    }
+
+    store.subscriptionsByCustomer.set(code, subRecord);
+    if (subRecord.proKey) store.subscriptionsByCustomer.set(subRecord.proKey, subRecord);
+    if (subRecord.lastCheckoutSessionId) store.subscriptionsByCustomer.set(subRecord.lastCheckoutSessionId, subRecord);
+    if (subRecord.customerId) store.subscriptionsByCustomer.set(subRecord.customerId, subRecord);
+
+    if (env && env.PUREAI_LICENSES_KV && typeof env.PUREAI_LICENSES_KV.put === "function") {
+      const serializedSub = JSON.stringify(subRecord);
+      await env.PUREAI_LICENSES_KV.put(kvKey, serializedSub);
+      if (subRecord.customerId) await env.PUREAI_LICENSES_KV.put(`sub:${subRecord.customerId}`, serializedSub);
+      if (subRecord.lastCheckoutSessionId) await env.PUREAI_LICENSES_KV.put(`sess:${subRecord.lastCheckoutSessionId}`, serializedSub);
+      if (subRecord.proKey) await env.PUREAI_LICENSES_KV.put(`key:${subRecord.proKey.toUpperCase()}`, serializedSub);
+    }
 
     return {
       status: 200,
       headers,
       body: JSON.stringify({
-        valid: isActive,
-        verifiedByServer: true,
-        proKey: subRecord.proKey || deriveProKeyFromSession(code),
-        status: subRecord.status,
-        planInterval: subRecord.planInterval || "month",
-        expiresAt: subRecord.expiresAt,
-        graceEndsAt: subRecord.graceEndsAt
+        ok: true,
+        unlimited: false,
+        creditsRemaining: subRecord.creditsRemaining,
+        status: subRecord.status
       })
     };
   }
 
+  // 2a-ter. Control Anti-Incógnito RGPD-minimizado de cuota gratuita (POST /check-free-quota: hash salado efímero de IP, límite 1)
+  if (req.method === "POST" && url.pathname === "/check-free-quota") {
+    if (clientIp) {
+      const rl = checkWorkerRateLimit(rateMap, `freeq_rl:${clientIp}`, 30, Date.now());
+      if (!rl.allowed) {
+        return {
+          status: 429,
+          headers: { ...headers, "Retry-After": String(rl.retryAfterSec) },
+          body: JSON.stringify({ ok: false, reason: "rate_limit_exceeded" })
+        };
+      }
+    }
+    if (rawOrigin && !ALLOWED_ORIGINS.has(rawOrigin) && !isAllowedExtensionOrigin(rawOrigin)) {
+      return { status: 403, headers, body: JSON.stringify({ ok: false, reason: "origin_not_allowed" }) };
+    }
+    let consume = false;
+    try {
+      const rawBody = typeof req.text === "function" ? await req.text() : String(req.body || "{}");
+      if (rawBody && rawBody.length <= 512) {
+        const parsed = JSON.parse(rawBody);
+        consume = Boolean(parsed && parsed.consume);
+      }
+    } catch (_) {}
+
+    const MAX_SERVER_FREE_USES = 1;
+    if (!clientIp) {
+      return { status: 200, headers, body: JSON.stringify({ ok: true, allowed: true, used: 0, limit: MAX_SERVER_FREE_USES }) };
+    }
+    const monthBucket = new Date().toISOString().slice(0, 7);
+    const salt = String((env && env.STRIPE_WEBHOOK_SECRET) || "pureai-freeq-salt-2026").slice(0, 24);
+    const ipHash = hmacSha256Hex(`freeq:${monthBucket}:${salt}`, clientIp).slice(0, 20);
+    const fqKey = `freeq:${monthBucket}:${ipHash}`;
+
+    let used = 0;
+    const memVal = rateMap.get(fqKey);
+    if (typeof memVal === "number" && Number.isFinite(memVal)) {
+      used = Math.max(0, memVal);
+    }
+    if (env && env.PUREAI_LICENSES_KV && typeof env.PUREAI_LICENSES_KV.get === "function") {
+      try {
+        const kvVal = await env.PUREAI_LICENSES_KV.get(fqKey);
+        if (kvVal !== null && kvVal !== undefined) {
+          used = Math.max(used, parseInt(String(kvVal), 10) || 0);
+        }
+      } catch (_) {}
+    }
+
+    if (used >= MAX_SERVER_FREE_USES) {
+      return {
+        status: 200,
+        headers,
+        body: JSON.stringify({
+          ok: true,
+          allowed: false,
+          used,
+          limit: MAX_SERVER_FREE_USES,
+          reason: "free_quota_exhausted"
+        })
+      };
+    }
+
+    if (consume) {
+      const nextUsed = used + 1;
+      rateMap.set(fqKey, nextUsed);
+      if (env && env.PUREAI_LICENSES_KV && typeof env.PUREAI_LICENSES_KV.put === "function") {
+        try {
+          await env.PUREAI_LICENSES_KV.put(fqKey, String(nextUsed), { expirationTtl: 30 * 24 * 3600 });
+        } catch (_) {}
+      }
+      return {
+        status: 200,
+        headers,
+        body: JSON.stringify({ ok: true, allowed: true, used: nextUsed, limit: MAX_SERVER_FREE_USES })
+      };
+    }
+
+    return {
+      status: 200,
+      headers,
+      body: JSON.stringify({ ok: true, allowed: true, used, limit: MAX_SERVER_FREE_USES })
+    };
+  }
+
+  // 2b. Lectura autenticada de eventos recientes para monitorización privada (GET /telemetry)
+  if (req.method === "GET" && url.pathname === "/telemetry") {
+    if (!verifyAdminBearerAuth(req, env)) {
+      return { status: 401, headers, body: JSON.stringify({ ok: false, error: "unauthorized" }) };
+    }
+    let list = [];
+    if (env && env.PUREAI_LICENSES_KV && typeof env.PUREAI_LICENSES_KV.get === "function") {
+      try {
+        const rawList = await env.PUREAI_LICENSES_KV.get("telemetry:recent_events");
+        if (rawList) list = JSON.parse(rawList);
+      } catch (_) {}
+    }
+    return { status: 200, headers, body: JSON.stringify({ ok: true, events: list }) };
+  }
+
   // 3. Endpoint Server-Side de Soporte y Telemetría Opt-In (POST /telemetry | POST /support) para no exponer temas públicos en cliente
   if (req.method === "POST" && (url.pathname === "/telemetry" || url.pathname === "/support")) {
+    if (clientIp) {
+      const rl = checkWorkerRateLimit(rateMap, `telemetry:${clientIp}`, 45, Date.now());
+      if (!rl.allowed) {
+        return {
+          status: 429,
+          headers: { ...headers, "Retry-After": String(rl.retryAfterSec) },
+          body: JSON.stringify({ ok: false, error: "rate_limit_exceeded" })
+        };
+      }
+    }
+    if (rawOrigin && !ALLOWED_ORIGINS.has(rawOrigin) && !isAllowedExtensionOrigin(rawOrigin)) {
+      return { status: 403, headers, body: JSON.stringify({ ok: false, error: "origin_not_allowed" }) };
+    }
     const rawBody = typeof req.text === "function" ? await req.text() : String(req.body || "");
     if (!rawBody || rawBody.length > 4096) {
       return { status: 400, headers, body: JSON.stringify({ ok: false, error: "invalid_payload_size" }) };
@@ -684,10 +1215,18 @@ async function handleWorkerHttpRequest(req, env, sharedStore) {
     } catch (_) {
       return { status: 400, headers, body: JSON.stringify({ ok: false, error: "invalid_json" }) };
     }
-    delete parsed.ua;
-    delete parsed.countryTz;
-    delete parsed.deviceFp;
-    const evWithId = { id: "kv_" + Date.now() + "_" + Math.random().toString(36).slice(2, 7), ...parsed };
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+      return { status: 400, headers, body: JSON.stringify({ ok: false, error: "invalid_payload_object" }) };
+    }
+    if (parsed.event_name === "purchase_verified" || parsed.type === "sale_verified_session") {
+      return { status: 403, headers, body: JSON.stringify({ ok: false, error: "forbidden_server_only_event" }) };
+    }
+    const sanitized = sanitizeClientTelemetryPayload(parsed);
+    const evWithId = {
+      ...sanitized,
+      id: "kv_" + Date.now() + "_" + Math.random().toString(36).slice(2, 7),
+      ts: new Date().toISOString()
+    };
     if (env && env.PUREAI_LICENSES_KV && typeof env.PUREAI_LICENSES_KV.get === "function" && typeof env.PUREAI_LICENSES_KV.put === "function") {
       try {
         const rawList = await env.PUREAI_LICENSES_KV.get("telemetry:recent_events");
@@ -697,16 +1236,19 @@ async function handleWorkerHttpRequest(req, env, sharedStore) {
         await env.PUREAI_LICENSES_KV.put("telemetry:recent_events", JSON.stringify(list));
       } catch (_) {}
     }
-    const ntfyUrl = (env && env.NTFY_SECRET_TOPIC_URL) || "https://ntfy.sh/pureai_studio_ops_telemetry_94c2e1";
+    const ntfyUrl = (env && env.NTFY_SECRET_TOPIC_URL) || "";
     if (ntfyUrl && typeof fetch === "function") {
       try {
-        await fetch(ntfyUrl, { method: "POST", body: JSON.stringify(parsed) });
+        await fetch(ntfyUrl, { method: "POST", body: JSON.stringify(sanitized) });
       } catch (_) {}
     }
     return { status: 200, headers, body: JSON.stringify({ ok: true, relayed: true }) };
   }
 
   if (req.method === "POST" && url.pathname === "/daily-digest") {
+    if (!verifyAdminBearerAuth(req, env)) {
+      return { status: 401, headers, body: JSON.stringify({ ok: false, error: "unauthorized" }) };
+    }
     let bodyObj = {};
     try {
       const raw = typeof req.text === "function" ? await req.text() : String(req.body || "{}");

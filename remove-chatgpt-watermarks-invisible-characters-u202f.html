@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="referrer" content="strict-origin-when-cross-origin" />
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self' https: data: blob:; script-src 'self' 'unsafe-inline' https://www.googletagmanager.com https://www.googleadservices.com https://googleads.g.doubleclick.net; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; connect-src 'self' https:;" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self' https: data: blob:; script-src 'self' 'unsafe-inline' https://www.googletagmanager.com https://www.googleadservices.com https://googleads.g.doubleclick.net; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; connect-src 'self' https:; object-src 'none'; base-uri 'self'; form-action 'self';" />
   <title>Remove ChatGPT Invisible Watermarks (U+202F & Zero-Width Spaces) — Free Online Tool</title>
   <meta name="description" content="Detect and remove hidden ChatGPT Unicode watermarks (U+202F narrow no-break space, U+200B zero-width space, em-dashes) 100% locally in your browser." />
   <link rel="canonical" href="https://pureaistudios.com/remove-chatgpt-watermarks-invisible-characters-u202f.html" />
@@ -80,18 +80,79 @@
         <canvas id="seo-quick-canvas" style="display:none;"></canvas>
         <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;">
           <a href="clean-ai-studio.html" class="cta-button" style="flex:1;text-align:center;padding:0.7rem 1rem;font-weight:800;">🧬 Open Full Studio (iPhone 16 Pro EXIF Injector · Anti-SynthID · Batch .ZIP) →</a>
-          <a href="https://buy.stripe.com/aFacN6e66fTn6DudPA00009" target="_blank" rel="noopener" style="background:#f59e0b;color:#0b0f19;text-decoration:none;padding:0.7rem 1rem;border-radius:10px;font-weight:900;font-size:0.84rem;">🔥 Pro Monthly -50% (4,99 €)</a>
+          <a href="https://buy.stripe.com/9B6cN6e669uZ4vmeTE0000f" target="_blank" rel="noopener" style="background:#f59e0b;color:#0b0f19;text-decoration:none;padding:0.7rem 1rem;border-radius:10px;font-weight:900;font-size:0.84rem;">⚡ 10-File Pass (€2.99)</a>
         </div>
       </div>
       <script>
+      function hasVerifiedSeoPro() {
+        try {
+          var raw = localStorage.getItem("pureai_sub_record_v2");
+          if (!raw) return false;
+          var rec = JSON.parse(raw);
+          if (!rec || rec.verifiedByServer !== true) return false; if (rec.unlimited === false && typeof rec.creditsRemaining === "number" && rec.creditsRemaining <= 0) return false;
+          var key = String(rec.stripeSessionId || rec.key || "").trim();
+          var m = key.toUpperCase().match(/^PRO-([A-Z2-9]{4})-([A-Z2-9]{4})$/);
+          if (m) {
+            var chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789", h = 0x811c9dc5, s = "PUREAI2026:" + m[1];
+            for (var i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 0x01000193) >>> 0; }
+            var chk = "";
+            for (var j = 0; j < 4; j++) chk += chars.charAt((h >>> (j * 5)) % chars.length);
+            if (chk !== m[2]) return false;
+          } else if (!/^(cs_live_[a-zA-Z0-9_]{20,}|(sub|pi|cus)_[a-zA-Z0-9]{14,})$/.test(key)) {
+            return false;
+          }
+          var now = Date.now();
+          var active = (rec.status === "ACTIVE" || rec.status === "CANCELED_AT_PERIOD_END")
+            ? (typeof rec.expiresAt === "number" && now <= rec.expiresAt)
+            : (rec.status === "PAST_DUE" && typeof rec.graceEndsAt === "number" && now <= rec.graceEndsAt);
+          if (active && typeof fetch === "function" && !window._pureaiSeoRevalidated) {
+            window._pureaiSeoRevalidated = true;
+            var did = localStorage.getItem("pureai_install_id") || "";
+            var didQ = /^[a-zA-Z0-9_-]{12,48}$/.test(did) ? ("&did=" + encodeURIComponent(did)) : "";
+            fetch("https://pureai-stripe-webhook.pureaistudio-app.workers.dev/verify-license?code=" + encodeURIComponent(key) + didQ, { method: "GET", headers: { Accept: "application/json" } })
+              .then(function (r) { return r.json().then(function (d) { return { s: r.status, d: d }; }); })
+              .then(function (x) {
+                if (x.s === 403 || x.s === 404 || (x.d && x.d.valid === false)) {
+                  localStorage.removeItem("pureai_sub_record_v2");
+                  localStorage.removeItem("pureai_studio_pro");
+                }
+              }).catch(function () {});
+          }
+          return active;
+        } catch (_) {}
+        return false;
+      }
       function seoCleanPhoto(file) {
+        if (!file || !file.size) return;
         var st = document.getElementById('seo-quick-status');
+        if (file.size > 50 * 1024 * 1024) {
+          st.textContent = '⚠️ File exceeds 50 MB local browser safety limit.';
+          return;
+        }
+        var isPro = hasVerifiedSeoPro();
+        var used = 0;
+        try { used = Math.max(0, parseInt(localStorage.getItem('pureai_img_used') || '0', 10) || 0); } catch (_) {}
+        if (!isPro && used >= 1) {
+          if (typeof window.sendPureAiAnalyticsEvent === 'function') {
+            window.sendPureAiAnalyticsEvent({ type: 'app_action', event_name: 'paywall_viewed', trigger_tool: 'img_c2pa_scrubber', usedCredits: used });
+          }
+          st.innerHTML = '🔒 <strong>1/1 free photo used.</strong> <a href="https://buy.stripe.com/9B6cN6e669uZ4vmeTE0000f" target="_blank" rel="noopener noreferrer" style="color:#00e5a3;font-weight:900;">Unlock Unlimited Photos + Batch .ZIP + iPhone 16 Pro EXIF (€2.99 one-time, no subscription) →</a>';
+          return;
+        }
+        try { if (!isPro) localStorage.setItem('pureai_img_used', String(used + 1)); } catch (_) {}
         st.innerHTML = '⏳ Stripping C2PA, JUMBF & EXIF metadata locally...';
         var img = new Image();
+        var objUrl = URL.createObjectURL(file);
         img.onload = function () {
+          if (URL.revokeObjectURL) URL.revokeObjectURL(objUrl);
+          var nw = Number(img.naturalWidth) || 512, nh = Number(img.naturalHeight) || 512;
+          if (nw > 16384 || nh > 16384 || (nw * nh) > 67108864) {
+            st.textContent = '⚠️ Image pixel dimensions exceed browser safety limit (max 16384px / 67 MP).';
+            return;
+          }
           var c = document.getElementById('seo-quick-canvas');
-          c.width = img.naturalWidth || 512;
-          c.height = img.naturalHeight || 512;
+          c.width = nw;
+          c.height = nh;
           var ctx = c.getContext('2d');
           ctx.drawImage(img, 0, 0);
           var d = ctx.getImageData(0, 0, c.width, c.height);
@@ -106,10 +167,11 @@
             a.download = cleanName;
             a.click();
             var safeCleanName = String(cleanName || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
-            st.innerHTML = '✅ <strong>' + safeCleanName + ' downloaded (0% C2PA / 0% EXIF)!</strong> Need <strong>iPhone 16 Pro / Sony A7IV EXIF Injection</strong> or <strong>50-Photo Batch .ZIP</strong>? <a href="clean-ai-studio.html" style="color:#fcd34d;font-weight:800;">Unlock Pro (from 4,99 €) →</a>';
+            st.innerHTML = '✅ <strong>' + safeCleanName + ' downloaded (0% C2PA / 0% EXIF)!</strong> Need <strong>iPhone 16 Pro / Sony A7IV EXIF Injection</strong> or <strong>50-Photo Batch .ZIP</strong>? <a href="clean-ai-studio.html" style="color:#fcd34d;font-weight:800;">Unlock Pro (from €2.99 one-time) →</a>';
           }, 'image/jpeg', 0.95);
         };
-        img.src = URL.createObjectURL(file);
+        img.onerror = function () { if (URL.revokeObjectURL) URL.revokeObjectURL(objUrl); };
+        img.src = objUrl;
       }
       </script>
       <p>Academic detectors (Turnitin, GPTZero, Originality.ai) and enterprise filters scan for these exact hexadecimal code points and uniform sentence burstiness. PureAI Studio highlights every hidden watermark in red and strips them in 1 click without sending your text to any server.</p>
