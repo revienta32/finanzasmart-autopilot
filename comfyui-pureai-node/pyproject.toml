@@ -1,0 +1,15 @@
+[project]
+name = "comfyui-pureai-metadata-shield"
+description = "Strip embedded ComfyUI PNG workflow graphs, prompts, LoRA names, and C2PA metadata locally on save. Companion node to PureAI Studio (pureaistudios.com)."
+version = "1.0.0"
+license = { text = "MIT" }
+dependencies = ["Pillow", "numpy"]
+
+[project.urls]
+Repository = "https://github.com/revienta32/comfyui-pureai-metadata-shield"
+Homepage = "https://pureaistudios.com"
+
+[tool.comfy]
+PublisherId = "pureaistudio"
+DisplayName = "PureAI Metadata Shield (Strip Workflow & C2PA)"
+Icon = "https://pureaistudios.com/icon-192.png"

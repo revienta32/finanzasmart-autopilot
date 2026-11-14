@@ -99,10 +99,133 @@ const SEO_PAGES = [
       <p>Every PNG or JPEG exported from <strong>ComfyUI, Automatic1111, Forge, Flux.1, or Midjourney v6</strong> embeds your entire generation workflow, prompt text, LoRA models, and C2PA provenance inside hidden <code>tEXt</code>, <code>iTXt</code>, and <code>EXIF</code> chunks.</p>
       <ul style="margin: 1rem 0 1.5rem 1.25rem; color: #cbd5e1;">
         <li><strong>Protect Your Secret Prompts &amp; Workflows:</strong> Wipe embedded PNG chunk parameters so third parties cannot inspect your ComfyUI node graph.</li>
-        <li><strong>Instant Browser Extension &amp; Web Studio:</strong> Clean single images for free or unlock Batch <code>.ZIP</code> + iPhone 16 Pro EXIF injection from 4,99 €/month.</li>
+        <li><strong>Instant Browser Extension &amp; Web Studio:</strong> Clean your 1st file free or unlock 10-File Pass (€2.99 one-time) / 50 Files + Batch <code>.ZIP</code> (€9.90) + iPhone 16 Pro EXIF injection with zero subscription.</li>
       </ul>
     `
-  }  ,
+  },
+  {
+    slug: "remove-c2pa-metadata-mp4-video-sora-runway-kling.html",
+    title: "Remove C2PA Metadata from MP4 AI Videos Online: Sora, Runway Gen-3, Kling & Reels (100% Browser)",
+    h1: "🎬 Strip C2PA / UUID 'Made with AI' Metadata from .MP4 Videos (Sora · Runway · Kling · Luma)",
+    lead: "Clean hidden ISO BMFF C2PA/JUMBF provenance boxes and udta tags from AI-generated MP4 videos locally in your browser—zero cloud upload required.",
+    calcLink: "clean-ai-studio.html?lang=en",
+    bodyHtml: `
+      <p>Instagram Reels, TikTok, and YouTube Shorts inspect binary <strong>MP4 <code>uuid</code> (JUMBF/C2PA)</strong> and <strong><code>meta</code> / <code>udta</code></strong> atoms embedded by <strong>OpenAI Sora, Runway Gen-3, Kling AI, Luma Dream Machine, and Wan</strong> to apply automatic AI disclosure badges.</p>
+      <ul style="margin: 1rem 0 1.5rem 1.25rem; color: #cbd5e1;">
+        <li><strong>Zero-Upload MP4 Box Rebuilder:</strong> Strips C2PA/UUID provenance atoms directly in browser RAM without uploading heavy video files.</li>
+        <li><strong>QuickTime Camera Metadata Option:</strong> Optionally write standard Apple iPhone 16 Pro QuickTime <code>udta</code> headers or export mixed photo + MP4 Batch <code>.ZIP</code> archives.</li>
+      </ul>
+    `
+  },
+  {
+    slug: "quitar-metadatos-ia-video-mp4-reels-tiktok-sora.html",
+    title: "Cómo Quitar Metadatos C2PA 'Creado con IA' en Vídeos MP4 para Instagram Reels y TikTok (Sora / Kling)",
+    h1: "🎬 Limpiador de Metadatos C2PA y Cajas UUID en Vídeos .MP4 (Reels, TikTok, Sora, Kling y Runway)",
+    lead: "Elimina las firmas ocultas de IA en tus vídeos MP4 directamente desde tu navegador sin subir pesados archivos de vídeo a ningún servidor externo.",
+    calcLink: "clean-ai-studio.html?lang=es",
+    bodyHtml: `
+      <p>Generadores como <strong>Sora, Kling, Runway Gen-3, Luma y CapCut</strong> incrustan átomos binarios <code>uuid</code> (C2PA/JUMBF) y etiquetas <code>udta</code> dentro del archivo <code>.MP4</code> que disparan el aviso automático <em>"Información de IA"</em> al subir un Reel o TikTok.</p>
+      <ul style="margin: 1rem 0 1.5rem 1.25rem; color: #cbd5e1;">
+        <li><strong>Reconstrucción Binaria 100% Local:</strong> Limpia el contenedor MP4 al instante en tu dispositivo manteniendo intacta la pista de vídeo y audio.</li>
+        <li><strong>Modo Lote Mixto (.ZIP):</strong> Limpia decenas de vídeos cortos y fotos de una sola vez con pases de pago único sin suscripción.</li>
+      </ul>
+    `
+  },
+  {
+    slug: "strip-comfyui-workflow-json-png-keep-prompts-private.html",
+    title: "Strip ComfyUI Workflow JSON & Prompts from PNG Images Online (Keep LoRAs & Node Graphs Private)",
+    h1: "🔒 Wipe Hidden ComfyUI Workflow JSON, Positive Prompts, Seeds & LoRAs from PNG Files",
+    lead: "Prevent clients and competitors from dragging your exported PNG into ComfyUI to clone your proprietary Flux.1 / SDXL node graph and LoRA weights.",
+    calcLink: "clean-ai-studio.html?lang=en",
+    bodyHtml: `
+      <p>By default, every PNG saved in <strong>ComfyUI, Forge, or Automatic1111</strong> stores the complete JSON node graph inside hidden <code>tEXt</code> (<code>workflow</code>, <code>prompt</code>, <code>parameters</code>) chunks. Sharing that raw PNG on Discord, Reddit, Civitai, or client portals exposes your entire production pipeline.</p>
+      <ul style="margin: 1rem 0 1.5rem 1.25rem; color: #cbd5e1;">
+        <li><strong>100% Local Workflow Purge:</strong> Strips every <code>tEXt</code>, <code>zTXt</code>, <code>iTXt</code>, XMP, and C2PA chunk in your browser before publishing.</li>
+        <li><strong>Bulk Creator Pack:</strong> Drag &amp; drop up to 100 ComfyUI renders at once and export a clean <code>.ZIP</code> with optional Sony A7IV or iPhone 16 Pro EXIF headers.</li>
+      </ul>
+    `
+  },
+  {
+    slug: "fix-photoshop-lightroom-false-made-with-ai-label-instagram.html",
+    title: "Fix False 'Made with AI' / 'AI Info' Label on Instagram After Photoshop or Lightroom Edits",
+    h1: "📷 Why Instagram Flags Real Camera Photos as 'AI Info' After Photoshop / Lightroom (Lossless C2PA Fix)",
+    lead: "Remove accidental Adobe Content Credentials (c2pa.actions) triggered by minor spot healing, AI Denoise, or Generative Expand without recompressing your JPEG.",
+    calcLink: "clean-ai-studio.html?lang=en",
+    bodyHtml: `
+      <p>Photographers shooting on real Sony, Canon, Nikon, or iPhone cameras frequently get hit with Instagram's <strong>"AI Info"</strong> label simply because they used <strong>Lightroom Denoise</strong> or removed a tiny dust spot in <strong>Photoshop</strong>, which attaches an <code>APP11</code> C2PA manifest to the file.</p>
+      <ul style="margin: 1rem 0 1.5rem 1.25rem; color: #cbd5e1;">
+        <li><strong>Lossless JPEG Container Strip:</strong> Removes the binary C2PA/JUMBF segment byte-by-byte with <strong>0% pixel recompression</strong>—preserving 100% of your camera's dynamic range and sharpness.</li>
+        <li><strong>Keep Camera Authenticity:</strong> Optionally preserve or apply clean Canon EOS R5, Sony A7IV, or Apple iPhone 16 Pro technical EXIF headers.</li>
+      </ul>
+    `
+  },
+  {
+    slug: "quitar-aviso-informacion-ia-instagram-photoshop-lightroom.html",
+    title: "Cómo Quitar el Falso Aviso 'Información de IA' en Instagram tras Editar en Photoshop o Lightroom",
+    h1: "📷 Solución al Falso Positivo 'Información de IA' en Fotos Reales Editadas con Lightroom o Photoshop",
+    lead: "Elimina sin pérdida de calidad (Lossless JPEG) la etiqueta C2PA oculta que Adobe añade al usar reducción de ruido o borrado puntual en tus fotografías reales.",
+    calcLink: "clean-ai-studio.html?lang=es",
+    bodyHtml: `
+      <p>Muchos fotógrafos profesionales ven cómo Instagram marca sus sesiones reales como <em>"Creado con IA"</em> solo por haber aplicado <strong>Reducción de ruido en Lightroom</strong> o quitado un cable en <strong>Photoshop</strong>, ya que Adobe inyecta un manifiesto <code>APP11 C2PA</code> completo.</p>
+      <ul style="margin: 1rem 0 1.5rem 1.25rem; color: #cbd5e1;">
+        <li><strong>Modo Lossless JPEG (0% Recomprensión):</strong> Purga únicamente el segmento binario C2PA manteniendo intactos tus píxeles originales de cámara.</li>
+        <li><strong>100% Privado en tu Navegador:</strong> Tus fotografías de clientes nunca se suben a la nube.</li>
+      </ul>
+    `
+  },
+  {
+    slug: "clean-ai-influencer-photos-videos-fanvue-patreon-exif.html",
+    title: "Batch C2PA Scrubber & iPhone 16 Pro EXIF Tool for Digital Creators, Agencies & Virtual Models",
+    h1: "📱 Bulk Photo & MP4 Metadata Workflow for Virtual Creators (iPhone 16 Pro EXIF + Batch .ZIP)",
+    lead: "Clean up to 100 photos and MP4 reels in one click, strip generator provenance tags, and write consistent Apple iPhone 16 Pro camera headers locally.",
+    calcLink: "clean-ai-studio.html?lang=en",
+    bodyHtml: `
+      <ul style="margin: 1rem 0 1.5rem 1.25rem; color: #cbd5e1;">
+        <li><strong>Mixed Photo + Video Batch .ZIP:</strong> Process entire weekly content calendars (JPEGs, PNGs, and MP4 reels) in seconds locally on your device.</li>
+        <li><strong>Consistent Smartphone EXIF Profile:</strong> Apply realistic <code>Apple iPhone 16 Pro</code> or <code>Sony A7 IV</code> APP1 headers with optional city GPS tags.</li>
+      </ul>
+    `
+  },
+  {
+    slug: "remove-exif-gps-location-before-posting-reddit-marketplace.html",
+    title: "Remove Hidden EXIF GPS Coordinates & Camera Serial Numbers Before Posting Photos Online (Free)",
+    h1: "🛡️ Strip Personal EXIF GPS Location & Device Metadata Before Sharing Photos Online",
+    lead: "Protect your home address and personal privacy by wiping hidden latitude/longitude GPS tags from smartphone photos 100% locally in your browser.",
+    calcLink: "clean-ai-studio.html?lang=en",
+    bodyHtml: `
+      <p>Smartphone photos contain exact <strong>GPS coordinates (<code>0x8825</code>)</strong>, capture timestamps, and device identifiers. Before uploading photos to forums, classifieds, or public repositories, audit and strip every location tag locally without uploading private images to third-party servers.</p>
+    `
+  },
+  {
+    slug: "borrar-ubicacion-gps-exif-fotos-antes-de-subir-internet.html",
+    title: "Cómo Borrar la Ubicación GPS y Datos EXIF de una Foto Antes de Subirla a Internet (100% Privado)",
+    h1: "🛡️ Elimina Coordenadas GPS Exactas y Metadatos Ocultos del Móvil sin Subir tus Fotos a Servidores",
+    lead: "Comprueba gratis qué datos privados esconde cualquier foto de tu móvil y limpia las coordenadas GPS en 1 segundo desde tu propio navegador.",
+    calcLink: "clean-ai-studio.html?lang=es",
+    bodyHtml: `
+      <p>Cada foto tomada con el móvil guarda latitud, longitud exacta de tu domicilio, hora y modelo de dispositivo en cabeceras <strong>EXIF GPS</strong>. Con el inspector local de PureAI Studio puedes verificar y limpiar tus imágenes sin que salgan nunca de tu teléfono u ordenador.</p>
+    `
+  },
+  {
+    slug: "c2pa-content-credentials-viewer-debugger-online-free.html",
+    title: "Free Online C2PA Content Credentials Viewer & JUMBF Binary Inspector (Zero Upload)",
+    h1: "🔎 Inspect C2PA Manifests, JUMBF Boxes, SynthID Risk & EXIF Headers Locally in Your Browser",
+    lead: "Drop any JPEG, PNG, WebP, or MP4 file to instantly audit embedded AI Content Credentials, Adobe c2pa.actions, ComfyUI PNG chunks, and EXIF tags for free.",
+    calcLink: "clean-ai-studio.html?lang=en",
+    bodyHtml: `
+      <p>Unlike cloud C2PA verifiers that upload confidential agency assets to remote servers, <strong>PureAI Studio's Forensic Inspector</strong> parses binary <code>JUMBF / c2pa</code> boxes, XMP <code>DigitalSourceType</code>, PNG text chunks, and MP4 <code>uuid</code> atoms 100% locally—completely free and unlimited.</p>
+    `
+  },
+  {
+    slug: "verificador-metadatos-c2pa-online-gratis-fotos-videos.html",
+    title: "Verificador y Escáner de Metadatos C2PA Online Gratis para Fotos y Vídeos MP4 (Sin Subir Archivos)",
+    h1: "🔎 Analiza Gratis si una Foto o Vídeo MP4 Contiene Firmas Ocultas C2PA, JUMBF, ComfyUI o GPS",
+    lead: "Escáner forense gratuito e ilimitado 100% en tu navegador: comprueba en 1 segundo por qué Instagram, TikTok o bancos de imágenes detectan IA en tu archivo.",
+    calcLink: "clean-ai-studio.html?lang=es",
+    bodyHtml: `
+      <p>Arrastra cualquier imagen (<code>JPEG</code>, <code>PNG</code>, <code>WebP</code>) o vídeo (<code>.MP4</code>) para inspeccionar al instante y sin coste si contiene manifiestos binarios <strong>C2PA / JUMBF</strong>, grafos ocultos de <strong>ComfyUI</strong> o coordenadas <strong>EXIF GPS</strong> antes de publicar.</p>
+    `
+  },
   {
     slug: "turnitin-ai-detector-bypass-humanizer-2026.html",
     title: "How to Humanize ChatGPT Essays for Turnitin & GPTZero (2026 Academic Mode — Free)",
@@ -173,6 +296,7 @@ function buildSeoPageHtml(page) {
             return false;
           }
           var now = Date.now();
+          if (rec.unlimited === false && typeof rec.creditsRemaining === "number" && rec.creditsRemaining <= 0) return false;
           var active = (rec.status === "ACTIVE" || rec.status === "CANCELED_AT_PERIOD_END")
             ? (typeof rec.expiresAt === "number" && now <= rec.expiresAt)
             : (rec.status === "PAST_DUE" && typeof rec.graceEndsAt === "number" && now <= rec.graceEndsAt);
@@ -251,17 +375,45 @@ function buildSeoPageHtml(page) {
       </script>`
     : "";
 
+  const pageLang = /\?lang=de/.test(page.calcLink || "") ? "de" : (/\?lang=fr/.test(page.calcLink || "") ? "fr" : (/\?lang=es/.test(page.calcLink || "") || /^(quitar|detectar|humanizar|borrar|verificador|directorio)/.test(page.slug || "") ? "es" : "en"));
+  const isEsPage = pageLang === "es";
+  const faqSchemaObj = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: [
+      {
+        "@type": "Question",
+        name: page.title,
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: page.lead + " Runs 100% locally in your browser at " + SITE_URL + "/clean-ai-studio.html with zero server file uploads."
+        }
+      },
+      {
+        "@type": "Question",
+        name: isEsPage ? "¿PureAI Studio sube mis fotos o vídeos MP4 a algún servidor?" : "Does PureAI Studio upload my photos, ComfyUI PNGs, or MP4 videos to any server?",
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: isEsPage
+            ? "No. El 100% del escaneo forense C2PA/JUMBF, limpieza Lossless JPEG, reconstrucción de cajas MP4 e inyección EXIF (iPhone 16 Pro / Sony A7IV) ocurre localmente en la memoria de tu navegador."
+            : "No. 100% of C2PA/JUMBF binary scrubbing, Lossless JPEG stripping, MP4 box rebuilding, and Apple iPhone 16 Pro / Sony A7IV EXIF injection runs locally inside your browser RAM."
+        }
+      }
+    ]
+  };
+
   return `<!DOCTYPE html>
-<html lang="es">
+<html lang="${pageLang}">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="referrer" content="strict-origin-when-cross-origin" />
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self' https: data: blob:; script-src 'self' 'unsafe-inline' https://www.googletagmanager.com https://www.googleadservices.com https://googleads.g.doubleclick.net; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; connect-src 'self' https:; object-src 'none'; base-uri 'self'; form-action 'self';" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self' https: data: blob:; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; connect-src 'self' https:; object-src 'none'; base-uri 'self'; form-action 'self';" />
   <title>${page.title} | PureAI Studio</title>
   <meta name="description" content="${page.lead}" />
   <link rel="canonical" href="${SITE_URL}/${page.slug}" />
   <link rel="stylesheet" href="styles.css" />
+  <script type="application/ld+json">${JSON.stringify(faqSchemaObj)}</script>
 </head>
 <body>
   <header class="topbar">
@@ -270,13 +422,13 @@ function buildSeoPageHtml(page) {
         <span class="brand-icon">🧬</span>
         <div>
           <strong>PureAI Studio</strong>
-          <span class="brand-tag">C2PA Scrubber · EXIF Profile · Unicode Hygiene</span>
+          <span class="brand-tag">C2PA Scrubber · EXIF Profile · MP4 &amp; Unicode</span>
         </div>
       </a>
       <nav class="tabs">
         <a href="clean-ai-studio.html" class="tab-btn active" style="text-decoration:none;">🖼️ PureAI Studio</a>
-        <a href="https://chromewebstore.google.com/detail/pureai-studio-%E2%80%94-c2pa-meta/pdebjlkmjdhpgiigepojdcpfbfimcgmo" target="_blank" rel="noopener" class="tab-btn" style="text-decoration:none;">🧩 Extensión Chrome</a>
-        <a href="directorio-guias.html" class="tab-btn" style="text-decoration:none;">🗂️ Directorio IA</a>
+        <a href="https://chromewebstore.google.com/detail/pureai-studio-%E2%80%94-c2pa-meta/pdebjlkmjdhpgiigepojdcpfbfimcgmo" target="_blank" rel="noopener" class="tab-btn" style="text-decoration:none;">🧩 ${isEsPage ? "Extensión Chrome" : "Chrome Extension"}</a>
+        <a href="directorio-guias.html" class="tab-btn" style="text-decoration:none;">🗂️ ${isEsPage ? "Directorio IA" : "AI Tools Directory"}</a>
       </nav>
     </div>
   </header>
@@ -288,23 +440,23 @@ function buildSeoPageHtml(page) {
       ${instantToolWidget}
       ${page.bodyHtml}
       <div style="margin-top: 2rem; padding: 1.25rem; background: #0f172a; border: 1px solid #10b981; border-radius: 0.75rem;">
-        <h3 style="margin-bottom: 0.5rem;">⚡ Abrir Suite Completa en 1 Clic</h3>
-        <p style="color: #94a3b8; font-size: 0.9rem; margin-bottom: 1rem;">Accede a la herramienta interactiva completa sin registro y 100% en tu navegador:</p>
-        <a href="${page.calcLink}" class="cta-button" style="display:inline-block; padding: 0.7rem 1.4rem;">Abrir Herramienta Interactiva →</a>
+        <h3 style="margin-bottom: 0.5rem;">${isEsPage ? "⚡ Abrir Suite Completa en 1 Clic" : "⚡ Launch Full Local Studio in 1 Click"}</h3>
+        <p style="color: #94a3b8; font-size: 0.9rem; margin-bottom: 1rem;">${isEsPage ? "Accede a la herramienta interactiva completa (Foto, Vídeo MP4, Lossless JPEG, EXIF iPhone 16 Pro y Lotes .ZIP) sin registro:" : "Open the full interactive suite (Photo, MP4 Video, Lossless JPEG, iPhone 16 Pro EXIF & Batch .ZIP) with zero signup:"}</p>
+        <a href="${page.calcLink}" class="cta-button" style="display:inline-block; padding: 0.7rem 1.4rem;">${isEsPage ? "Abrir Herramienta Interactiva →" : "Open Interactive Studio →"}</a>
       </div>
     </article>
 
     <aside class="affiliate-sidebar">
       <div class="offer-card" style="border-color:#10b981;background:linear-gradient(160deg,#0f172a 0%,#064e3b 100%);">
-        <span class="offer-badge">⚡ Pases sin Suscripción desde 2,99 €</span>
-        <h2>Limpia Metadatos C2PA / JUMBF + Lotes .ZIP + EXIF Cámara</h2>
-        <p>Procesa fotos y vídeos cortos MP4 por lotes (.ZIP), aplica perfiles técnicos EXIF JPEG y limpia caracteres invisibles Unicode. <strong>Pago único sin suscripción ni caducidad (IVA incluido)</strong>.</p>
-        <a href="clean-ai-studio.html" class="cta-button">Abrir PureAI Studio Gratis →</a>
+        <span class="offer-badge">${isEsPage ? "⚡ Pases sin Suscripción desde 2,99 €" : "⚡ One-Time Packs from €2.99 (No Subscription)"}</span>
+        <h2>${isEsPage ? "Limpia Metadatos C2PA / MP4 + Lotes .ZIP + EXIF Cámara" : "Strip C2PA / MP4 Metadata + Batch .ZIP + Camera EXIF"}</h2>
+        <p>${isEsPage ? "Procesa fotos y vídeos cortos MP4 por lotes (.ZIP), aplica perfiles técnicos EXIF JPEG y limpia caracteres invisibles Unicode. <strong>Pago único sin suscripción ni caducidad (IVA incluido)</strong>." : "Batch-clean photos &amp; MP4 reels (.ZIP), write iPhone 16 Pro / Sony A7IV EXIF headers, and strip invisible Unicode watermarks. <strong>One-time credit packs never expire (VAT included)</strong>."}</p>
+        <a href="clean-ai-studio.html" class="cta-button">${isEsPage ? "Abrir PureAI Studio Gratis →" : "Try PureAI Studio Free →"}</a>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:8px;">
-          <a href="https://buy.stripe.com/9B6cN6e669uZ4vmeTE0000f" target="_blank" rel="noopener" style="background:#00e5a3;color:#042f1e;text-decoration:none;padding:6px;border-radius:7px;font-size:0.74rem;font-weight:900;text-align:center;">⚡ 10 Usos: 2,99 €</a>
-          <a href="https://buy.stripe.com/3cIdRae66bD74vm6n80000g" target="_blank" rel="noopener" style="background:#a855f7;color:#fff;text-decoration:none;padding:6px;border-radius:7px;font-size:0.74rem;font-weight:900;text-align:center;">🔥 50 + .ZIP: 9,90 €</a>
+          <a href="https://buy.stripe.com/9B6cN6e669uZ4vmeTE0000f" target="_blank" rel="noopener" style="background:#00e5a3;color:#042f1e;text-decoration:none;padding:6px;border-radius:7px;font-size:0.74rem;font-weight:900;text-align:center;">${isEsPage ? "⚡ 10 Usos: 2,99 €" : "⚡ 10 Files: €2.99"}</a>
+          <a href="https://buy.stripe.com/3cIdRae66bD74vm6n80000g" target="_blank" rel="noopener" style="background:#a855f7;color:#fff;text-decoration:none;padding:6px;border-radius:7px;font-size:0.74rem;font-weight:900;text-align:center;">${isEsPage ? "🔥 50 + .ZIP: 9,90 €" : "🔥 50 + .ZIP: €9.90"}</a>
         </div>
-        <a href="https://buy.stripe.com/eVq00k7HIfTn1jabHs0000h" target="_blank" rel="noopener" style="display:block;margin-top:6px;background:#1e293b;color:#93c5fd;border:1px solid #3b82f6;text-decoration:none;padding:6px;border-radius:7px;font-size:0.74rem;font-weight:800;text-align:center;">💎 Estudio Anual Ilimitado: 39 €/año</a>
+        <a href="https://buy.stripe.com/eVq00k7HIfTn1jabHs0000h" target="_blank" rel="noopener" style="display:block;margin-top:6px;background:#1e293b;color:#93c5fd;border:1px solid #3b82f6;text-decoration:none;padding:6px;border-radius:7px;font-size:0.74rem;font-weight:800;text-align:center;">${isEsPage ? "💎 Estudio Anual Ilimitado: 39 €/año" : "💎 Unlimited Studio: €39/yr"}</a>
       </div>
     </aside>
   </main>
@@ -450,7 +602,7 @@ ${fullUrlList
       host: "pureaistudios.com",
       key: INDEXNOW_KEY,
       keyLocation: `${SITE_URL}/${INDEXNOW_KEY}.txt`,
-      urlList: fullUrlList
+      urlList: [...fullUrlList, `${SITE_URL}/llms.txt`, `${SITE_URL}/llms-full.txt`]
     })
   });
   console.log("IndexNow status:", indexRes.status);

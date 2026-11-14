@@ -1,14 +1,15 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="referrer" content="strict-origin-when-cross-origin" />
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self' https: data: blob:; script-src 'self' 'unsafe-inline' https://www.googletagmanager.com https://www.googleadservices.com https://googleads.g.doubleclick.net; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; connect-src 'self' https:; object-src 'none'; base-uri 'self'; form-action 'self';" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self' https: data: blob:; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; connect-src 'self' https:; object-src 'none'; base-uri 'self'; form-action 'self';" />
   <title>Free GPTZero & Originality.ai Text Humanizer: Fix AI Perplexity, Burstiness & U+202F | PureAI Studio</title>
   <meta name="description" content="Paste your ChatGPT, Claude, or Gemini draft to strip hidden watermarks and humanize sentence rhythm in Academic, Social, or Agency Copy tone." />
   <link rel="canonical" href="https://pureaistudios.com/gptzero-bypass-ai-text-humanizer-free.html" />
   <link rel="stylesheet" href="styles.css" />
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"Free GPTZero & Originality.ai Text Humanizer: Fix AI Perplexity, Burstiness & U+202F","acceptedAnswer":{"@type":"Answer","text":"Paste your ChatGPT, Claude, or Gemini draft to strip hidden watermarks and humanize sentence rhythm in Academic, Social, or Agency Copy tone. Runs 100% locally in your browser at https://pureaistudios.com/clean-ai-studio.html with zero server file uploads."}},{"@type":"Question","name":"Does PureAI Studio upload my photos, ComfyUI PNGs, or MP4 videos to any server?","acceptedAnswer":{"@type":"Answer","text":"No. 100% of C2PA/JUMBF binary scrubbing, Lossless JPEG stripping, MP4 box rebuilding, and Apple iPhone 16 Pro / Sony A7IV EXIF injection runs locally inside your browser RAM."}}]}</script>
 </head>
 <body>
   <header class="topbar">
@@ -17,13 +18,13 @@
         <span class="brand-icon">🧬</span>
         <div>
           <strong>PureAI Studio</strong>
-          <span class="brand-tag">C2PA Scrubber · EXIF Profile · Unicode Hygiene</span>
+          <span class="brand-tag">C2PA Scrubber · EXIF Profile · MP4 &amp; Unicode</span>
         </div>
       </a>
       <nav class="tabs">
         <a href="clean-ai-studio.html" class="tab-btn active" style="text-decoration:none;">🖼️ PureAI Studio</a>
-        <a href="https://chromewebstore.google.com/detail/pureai-studio-%E2%80%94-c2pa-meta/pdebjlkmjdhpgiigepojdcpfbfimcgmo" target="_blank" rel="noopener" class="tab-btn" style="text-decoration:none;">🧩 Extensión Chrome</a>
-        <a href="directorio-guias.html" class="tab-btn" style="text-decoration:none;">🗂️ Directorio IA</a>
+        <a href="https://chromewebstore.google.com/detail/pureai-studio-%E2%80%94-c2pa-meta/pdebjlkmjdhpgiigepojdcpfbfimcgmo" target="_blank" rel="noopener" class="tab-btn" style="text-decoration:none;">🧩 Chrome Extension</a>
+        <a href="directorio-guias.html" class="tab-btn" style="text-decoration:none;">🗂️ AI Tools Directory</a>
       </nav>
     </div>
   </header>
@@ -60,7 +61,7 @@
           var raw = localStorage.getItem("pureai_sub_record_v2");
           if (!raw) return false;
           var rec = JSON.parse(raw);
-          if (!rec || rec.verifiedByServer !== true) return false; if (rec.unlimited === false && typeof rec.creditsRemaining === "number" && rec.creditsRemaining <= 0) return false;
+          if (!rec || rec.verifiedByServer !== true) return false;
           var key = String(rec.stripeSessionId || rec.key || "").trim();
           var m = key.toUpperCase().match(/^PRO-([A-Z2-9]{4})-([A-Z2-9]{4})$/);
           if (m) {
@@ -73,6 +74,7 @@
             return false;
           }
           var now = Date.now();
+          if (rec.unlimited === false && typeof rec.creditsRemaining === "number" && rec.creditsRemaining <= 0) return false;
           var active = (rec.status === "ACTIVE" || rec.status === "CANCELED_AT_PERIOD_END")
             ? (typeof rec.expiresAt === "number" && now <= rec.expiresAt)
             : (rec.status === "PAST_DUE" && typeof rec.graceEndsAt === "number" && now <= rec.graceEndsAt);
@@ -109,7 +111,7 @@
           if (typeof window.sendPureAiAnalyticsEvent === "function") {
             window.sendPureAiAnalyticsEvent({ type: "app_action", event_name: "paywall_viewed", trigger_tool: "img_c2pa_scrubber", usedCredits: used });
           }
-          st.innerHTML = "🔒 <strong>1/1 free photo used.</strong> <a href='https://buy.stripe.com/9B6cN6e669uZ4vmeTE0000f' target='_blank' rel='noopener noreferrer' style='color:#00e5a3;font-weight:900;'>Unlock Unlimited Photos + Batch .ZIP + iPhone 16 Pro EXIF (€2.99 one-time, no subscription) →</a>";
+          st.innerHTML = "🔒 <strong>1/1 free photo used.</strong> <a href='https://buy.stripe.com/9B6cN6e669uZ4vmeTE0000f' target='_blank' rel='noopener noreferrer' style='color:#00e5a3;font-weight:900;'>Unlock 10-File Pass (€2.99 one-time) →</a> · <a href='https://buy.stripe.com/3cIdRae66bD74vm6n80000g' target='_blank' rel='noopener noreferrer' style='color:#e9d5ff;font-weight:900;'>50 Files + Batch .ZIP (€9.90) →</a>";
           return;
         }
         try { if (!isPro) localStorage.setItem("pureai_img_used", String(used + 1)); } catch (_) {}
@@ -142,7 +144,7 @@
             if (typeof window.sendPureAiAnalyticsEvent === "function") {
               window.sendPureAiAnalyticsEvent({ type: "app_action", event_name: "tool_completed", tool_id: "img_c2pa_scrubber", isDemo: false });
             }
-            st.innerHTML = "✅ <strong>" + escapeSeoHtml(cleanName) + " downloaded (0% C2PA / 0% EXIF)!</strong> (" + (isPro ? "Pro Unlimited" : ("1/1 free used")) + ") — <a href='clean-ai-studio.html' style='color:#fcd34d;font-weight:800;'>Unlock Unlimited + Batch .ZIP in PureAI Pro (from €2.99 one-time) →</a>";
+            st.innerHTML = "✅ <strong>" + escapeSeoHtml(cleanName) + " downloaded (0% C2PA / 0% EXIF)!</strong> (" + (isPro ? "Pro Active" : "1/1 free used") + ") — <a href='clean-ai-studio.html' style='color:#fcd34d;font-weight:800;'>Unlock 10-File Pass (€2.99) or 50 Files + Batch .ZIP (€9.90) →</a>";
           }, "image/jpeg", 0.95);
         };
         img.onerror = function () { if (URL.revokeObjectURL) URL.revokeObjectURL(objUrl); };
@@ -153,22 +155,23 @@
       <p>Why does <strong>GPTZero</strong> still flag text even after manual edits? Because copy-pasting from ChatGPT carries invisible Unicode formatting bytes and predictable sentence lengths. <strong>PureAI Studio</strong> cleans both the binary character layer and the stylistic layer in 1 click.</p>
     
       <div style="margin-top: 2rem; padding: 1.25rem; background: #0f172a; border: 1px solid #10b981; border-radius: 0.75rem;">
-        <h3 style="margin-bottom: 0.5rem;">⚡ Abrir Suite Completa en 1 Clic</h3>
-        <p style="color: #94a3b8; font-size: 0.9rem; margin-bottom: 1rem;">Accede a la herramienta interactiva completa sin registro y 100% en tu navegador:</p>
-        <a href="clean-ai-studio.html?lang=en#card-text-tool" class="cta-button" style="display:inline-block; padding: 0.7rem 1.4rem;">Abrir Herramienta Interactiva →</a>
+        <h3 style="margin-bottom: 0.5rem;">⚡ Launch Full Local Studio in 1 Click</h3>
+        <p style="color: #94a3b8; font-size: 0.9rem; margin-bottom: 1rem;">Open the full interactive suite (Photo, MP4 Video, Lossless JPEG, iPhone 16 Pro EXIF & Batch .ZIP) with zero signup:</p>
+        <a href="clean-ai-studio.html?lang=en#card-text-tool" class="cta-button" style="display:inline-block; padding: 0.7rem 1.4rem;">Open Interactive Studio →</a>
       </div>
     </article>
 
     <aside class="affiliate-sidebar">
       <div class="offer-card" style="border-color:#10b981;background:linear-gradient(160deg,#0f172a 0%,#064e3b 100%);">
-        <span class="offer-badge">⚡ Pases sin Suscripción desde 2,99 €</span>
-        <h2>Limpia Metadatos C2PA / JUMBF + Lotes .ZIP + EXIF Cámara</h2>
-        <p>Procesa fotos y vídeos cortos MP4 por lotes (.ZIP), aplica perfiles técnicos EXIF JPEG y limpia caracteres invisibles Unicode. <strong>Pago único sin suscripción ni caducidad (IVA incluido)</strong>.</p>
-        <a href="clean-ai-studio.html" class="cta-button">Abrir PureAI Studio Gratis →</a>
+        <span class="offer-badge">⚡ One-Time Packs from €2.99 (No Subscription)</span>
+        <h2>Strip C2PA / MP4 Metadata + Batch .ZIP + Camera EXIF</h2>
+        <p>Batch-clean photos &amp; MP4 reels (.ZIP), write iPhone 16 Pro / Sony A7IV EXIF headers, and strip invisible Unicode watermarks. <strong>One-time credit packs never expire (VAT included)</strong>.</p>
+        <a href="clean-ai-studio.html" class="cta-button">Try PureAI Studio Free →</a>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:8px;">
-          <a href="https://buy.stripe.com/9B6cN6e669uZ4vmeTE0000f" target="_blank" rel="noopener" style="background:#00e5a3;color:#042f1e;text-decoration:none;padding:6px;border-radius:7px;font-size:0.75rem;font-weight:900;text-align:center;">⚡ 10 Usos: 2,99 €</a>
-          <a href="https://buy.stripe.com/eVq00k7HIfTn1jabHs0000h" target="_blank" rel="noopener" style="background:#1e293b;color:#93c5fd;border:1px solid #3b82f6;text-decoration:none;padding:6px;border-radius:7px;font-size:0.75rem;font-weight:800;text-align:center;">💎 Pro Anual: 39 €</a>
+          <a href="https://buy.stripe.com/9B6cN6e669uZ4vmeTE0000f" target="_blank" rel="noopener" style="background:#00e5a3;color:#042f1e;text-decoration:none;padding:6px;border-radius:7px;font-size:0.74rem;font-weight:900;text-align:center;">⚡ 10 Files: €2.99</a>
+          <a href="https://buy.stripe.com/3cIdRae66bD74vm6n80000g" target="_blank" rel="noopener" style="background:#a855f7;color:#fff;text-decoration:none;padding:6px;border-radius:7px;font-size:0.74rem;font-weight:900;text-align:center;">🔥 50 + .ZIP: €9.90</a>
         </div>
+        <a href="https://buy.stripe.com/eVq00k7HIfTn1jabHs0000h" target="_blank" rel="noopener" style="display:block;margin-top:6px;background:#1e293b;color:#93c5fd;border:1px solid #3b82f6;text-decoration:none;padding:6px;border-radius:7px;font-size:0.74rem;font-weight:800;text-align:center;">💎 Unlimited Studio: €39/yr</a>
       </div>
     </aside>
   </main>

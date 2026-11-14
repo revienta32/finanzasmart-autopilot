@@ -1815,6 +1815,34 @@ assert(cleanAiHtml.includes("terms.html") && cleanAiHtml.includes("Art. 103.m TR
   assert(getPaEl("pro-card-pack50").innerHTML.includes("9,90 €") && getPaEl("modal-card-pack10").innerHTML.includes("2,99 €") && getPaEl("modal-card-annual").innerHTML.includes("39 €/año"), "CRO-CUR-03: Visitante de España (ES) debe ver precios en EUR (2,99 € / 9,90 € / 39 €/año)");
   paSandbox.detectedVisitorCountry = "";
 
+  // 20f. AEO (llms.txt / robots.txt), pSEO Vídeo MP4 + ComfyUI + FAQPage, limpieza Google Ads AW-18550704085 y Contador Histórico Permanente
+  const llmsTxt = fs.readFileSync(path.join(__dirname, "llms.txt"), "utf8");
+  const llmsFullTxt = fs.readFileSync(path.join(__dirname, "llms-full.txt"), "utf8");
+  const robotsTxt = fs.readFileSync(path.join(__dirname, "robots.txt"), "utf8");
+  assert(llmsTxt.includes("clean-ai-studio.html") && llmsFullTxt.includes("MP4") && robotsTxt.includes("OAI-SearchBot") && robotsTxt.includes("PerplexityBot"), "SEO-AEO-01: llms.txt, llms-full.txt y robots.txt deben habilitar AEO para ChatGPT Search y Perplexity");
+  assert(!telemetriaCode.includes("AW-18550704085"), "SEO-ADS-01: telemetria-soporte.js no debe cargar la etiqueta bloqueada AW-18550704085");
+
+  const mp4SeoPage = fs.readFileSync(path.join(__dirname, "remove-c2pa-metadata-mp4-video-sora-runway-kling.html"), "utf8");
+  const comfySeoPage = fs.readFileSync(path.join(__dirname, "strip-comfyui-workflow-json-png-keep-prompts-private.html"), "utf8");
+  assert(mp4SeoPage.includes('"@type":"FAQPage"') && mp4SeoPage.includes('<html lang="en">') && comfySeoPage.includes('"@type":"FAQPage"') && !comfySeoPage.includes("4,99 €"), "SEO-PSEO-01: Nuevas landings pSEO de Vídeo MP4 y ComfyUI deben incluir FAQPage JSON-LD, idioma correcto y precios actualizados");
+  assert(fs.existsSync(path.join(__dirname, "comfyui-pureai-node", "nodes.py")), "SEO-NODE-01: El nodo open-source de ComfyUI debe estar generado y listo");
+
+  // Verificar que telemetry:lifetime_totals preserva el histórico aunque se vacíe telemetry:recent_events
+  await secEnv.PUREAI_LICENSES_KV.put("telemetry:lifetime_totals", JSON.stringify({ visits: 500, engaged15s: 210, photos: 180, texts: 25, demos: 12, paywalls: 40, checkouts: 15, paidSales: 4 }));
+  await secEnv.PUREAI_LICENSES_KV.put("telemetry:recent_events", JSON.stringify([{ type: "pageview", event_name: "session_start", ts: new Date().toISOString() }]));
+  const lifeDigestRes = await webhookEngine.handleWorkerHttpRequest(
+    {
+      method: "POST",
+      url: "https://pureai-stripe-webhook.pureaistudio-app.workers.dev/daily-digest",
+      headers: { get: (h) => (String(h).toLowerCase() === "authorization" ? "Bearer " + secEnv.ADMIN_DIGEST_TOKEN : "") },
+      text: async () => JSON.stringify({ force: true })
+    },
+    secEnv
+  );
+  const lifeDigestBody = JSON.parse(lifeDigestRes.body);
+  assert.strictEqual(lifeDigestBody.ok, true, "TG-LIFE-01: /daily-digest debe responder ok=true");
+  assert(lifeDigestBody.total.visits >= 500 && lifeDigestBody.total.paidSales === 4, "TG-LIFE-01b: El contador histórico permanente nunca debe bajar aunque rote la ventana reciente");
+
   console.log("✅ QA TEST SUITE PASSED (20 SECCIONES / 270+ ASERCIONES): 100% E2E VM + Hybrid Credit Packs (2,99 € / 9,90 € / 39 €) + Atomic Credit Ledger (/consume-credit) + Anti-Incognito Quota (/check-free-quota) + CRO Paywall Asset Preview + Round-2 Adversarial Security + Pre-Incorporation Gate + Mom-Test Scorer + 5 Core Validation Tests + 90-Day Bottleneck Diagnostics + Batch Mixto Foto/MP4 + Lossless JPEG + MP4 Camera Udta + EXIF GPS 0x8825 + Pagos/Webhooks KV + CFO + Legal/AI Act + Ciberseguridad verificadas sin errores.");
 })();
 

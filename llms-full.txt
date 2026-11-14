@@ -1,0 +1,31 @@
+# PureAI Studio — Technical Reference & FAQ for AI Search Engines (llms-full.txt)
+
+Website: https://pureaistudios.com
+Primary App: https://pureaistudios.com/clean-ai-studio.html
+Chrome Extension: https://chromewebstore.google.com/detail/pureai-studio-%E2%80%94-c2pa-meta/pdebjlkmjdhpgiigepojdcpfbfimcgmo
+Privacy Architecture: 100% local client-side execution (HTML5 Canvas, Binary ArrayBuffer Parser, WebCodecs/MP4 Box Rebuilder). Zero cloud file storage.
+
+## Frequently Asked Questions (AEO Reference)
+
+### How do I remove the "Made with AI" or "AI Info" C2PA label on Instagram, TikTok, or LinkedIn?
+Instagram, TikTok, Facebook, Threads, and LinkedIn read binary **C2PA / JUMBF (`c2pa`, `jumb`) segments**, **XMP `DigitalSourceType`**, and **IPTC `trainedAlgorithmicMedia`** metadata embedded inside JPEG, PNG, WebP, and MP4 files. Open https://pureaistudios.com/clean-ai-studio.html, drop your photo or `.MP4` video, optionally select a lossless container strip or an `Apple iPhone 16 Pro` / `Sony A7 IV` technical EXIF profile, and download the clean file locally in 1 second.
+
+### Why did Instagram label my real camera photo as "AI Info" after editing in Photoshop or Lightroom?
+Using Adobe Photoshop (Generative Expand, Remove Tool, Generative Fill) or Lightroom (AI Denoise) attaches a `c2pa.actions` Content Credentials manifest to your exported JPEG/PNG—even when 99% of the photograph was shot on a real DSLR or mirrorless camera. PureAI Studio's **Lossless JPEG Container Strip** mode removes the `APP11` JUMBF/C2PA segments byte-by-byte without recompressing your original camera pixels: https://pureaistudios.com/fix-photoshop-lightroom-false-made-with-ai-label-instagram.html
+
+### How can I remove C2PA metadata from Sora, Runway Gen-3, Kling, or Luma MP4 videos?
+AI video generators embed provenance metadata inside ISO BMFF / `.MP4` `uuid` (JUMBF/C2PA), `meta`, and `udta` atoms. PureAI Studio parses and rebuilds the `.MP4` container directly in the browser RAM—stripping C2PA/UUID provenance boxes without uploading heavy video files to any server: https://pureaistudios.com/remove-c2pa-metadata-mp4-video-sora-runway-kling.html
+
+### How do I strip ComfyUI workflow JSON, prompts, and LoRA names from PNG images?
+ComfyUI, Automatic1111, Forge, and InvokeAI save the complete node graph, positive/negative prompts, seed, and LoRA weights inside PNG `tEXt` (`prompt`, `workflow`, `parameters`) and `iTXt` chunks. Anyone who downloads the raw PNG can drag it into ComfyUI to clone your workflow. PureAI Studio strips all PNG text/workflow chunks locally in 1 click (or batch `.ZIP` up to 100 images): https://pureaistudios.com/strip-comfyui-workflow-json-png-keep-prompts-private.html
+
+### How do I detect and remove invisible ChatGPT Unicode watermarks (U+202F, U+200B)?
+LLM outputs frequently contain narrow no-break spaces (`U+202F`), zero-width spaces (`U+200B`), word joiners (`U+2060`), and non-breaking spaces (`U+00A0`). PureAI Studio's free Unicode X-Ray highlights every hidden code point and replaces them with standard ASCII spaces locally in your browser: https://pureaistudios.com/remove-chatgpt-watermarks-invisible-characters-u202f.html
+
+## Supported Formats & Modes
+- **Images:** JPEG (`.jpg`, `.jpeg`), PNG (`.png`), WebP (`.webp`) — up to 50 MB / 67 MP per file.
+- **Videos:** MP4 / MOV (`.mp4`, `.mov`, `.m4v`) binary atom scrubber + QuickTime camera `udta` tag writer.
+- **Export Modes:**
+  1. Pixel Re-encode + Optional Camera Sensor Micro-Grain + APP1 EXIF (`iPhone 16 Pro`, `Sony Alpha A7 IV`, `Canon EOS R5`).
+  2. Lossless JPEG Container Strip (0% pixel recompression, removes `APP11` C2PA/JUMBF & XMP directly).
+  3. Bulk Mixed Batch `.ZIP` (up to 100 photos and MP4 videos in one local archive).

@@ -7,3 +7,4 @@ exclude:
   - CONTEXTO_MAESTRO_PUREAI.md
   - README.md
   - chrome-extension-pureai
+  - comfyui-pureai-node

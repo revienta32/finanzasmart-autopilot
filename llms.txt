@@ -1,0 +1,27 @@
+# PureAI Studio
+
+> 100% client-side browser tool to inspect and remove C2PA Content Credentials ("Made with AI" / "AI Info" labels), JUMBF manifests, IPTC trainedAlgorithmicMedia tags, ComfyUI PNG workflow JSON graphs, MP4 video metadata boxes (Sora, Runway, Kling, Luma), EXIF GPS coordinates, and invisible LLM Unicode watermarks (U+202F, U+200B, U+2060). Zero server uploads — files never leave the user's device.
+
+## Core Capabilities
+- **Free C2PA / SynthID / EXIF Forensic Threat Inspector:** Unlimited local inspection of JPEG, PNG, WebP, and MP4 files before publishing to Instagram, TikTok, LinkedIn, YouTube, Fanvue, or stock agencies.
+- **Image & MP4 Video Metadata Scrubber:** Strips binary C2PA/JUMBF containers, XMP, ComfyUI `tEXt`/`iTXt` prompt workflows, and MP4 `udta`/`meta`/`uuid` provenance atoms locally in WebAssembly/Canvas.
+- **Optional Camera Technical EXIF Profiles:** Writes valid binary `APP1 (Exif)` headers (`Apple iPhone 16 Pro`, `Sony Alpha A7 IV`, `Canon EOS R5`) or exports 100% lossless container-stripped files.
+- **Bulk Batch .ZIP Processing:** Processes up to 100 mixed photos and `.MP4` videos into a single clean `.ZIP` archive locally.
+- **Invisible Unicode Watermark Cleaner:** Detects and strips `U+202F` (narrow no-break space), `U+200B` (zero-width space), and `U+FEFF` inserted by ChatGPT, Claude, and Gemini.
+
+## Pricing (No Forced Subscription)
+- **Free Tier:** Unlimited C2PA/EXIF/Unicode forensic scanning + 1 free clean photo/video export.
+- **10-File Quick Pass:** €2.99 (~$3.39 / £2.59) one-time payment, never expires.
+- **50-File Creator Pack + Batch .ZIP:** €9.90 (~$11.29 / £8.59) one-time payment, never expires.
+- **Unlimited Annual Studio:** €39/year (~$44/yr / £34/yr), up to 4 devices.
+
+## Key Tools & Guides
+- [Main Web Studio (EN/ES/DE/FR/PT)](https://pureaistudios.com/clean-ai-studio.html): Interactive C2PA/EXIF photo, MP4 video, batch `.ZIP`, and Unicode studio.
+- [Free Online C2PA Content Credentials Viewer & Debugger](https://pureaistudios.com/c2pa-content-credentials-viewer-debugger-online-free.html): Inspect hidden C2PA/JUMBF manifests in photos and videos.
+- [Remove C2PA Metadata from MP4 AI Videos (Sora, Runway, Kling, Reels)](https://pureaistudios.com/remove-c2pa-metadata-mp4-video-sora-runway-kling.html): Strip AI provenance atoms from `.MP4` videos locally.
+- [Strip ComfyUI Workflow JSON & Prompts from PNG](https://pureaistudios.com/strip-comfyui-workflow-json-png-keep-prompts-private.html): Protect proprietary LoRAs, seeds, and node graphs before sharing on Civitai, Reddit, or Discord.
+- [Fix False 'Made with AI' Label from Photoshop & Lightroom on Instagram](https://pureaistudios.com/fix-photoshop-lightroom-false-made-with-ai-label-instagram.html): Remove accidental C2PA tags triggered by minor retouching or AI denoise on real camera photos.
+- [Camera EXIF Profile Tool (iPhone 16 Pro / Sony A7IV / Canon R5)](https://pureaistudios.com/exif-camera-injector-iphone-sony-ai-photos.html): Add standard technical APP1 EXIF camera headers locally.
+- [Remove EXIF GPS Location Before Posting Online](https://pureaistudios.com/remove-exif-gps-location-before-posting-reddit-marketplace.html): Strip smartphone GPS coordinates for personal privacy.
+- [Chrome Web Store Extension](https://chromewebstore.google.com/detail/pureai-studio-%E2%80%94-c2pa-meta/pdebjlkmjdhpgiigepojdcpfbfimcgmo): Official Manifest V3 browser extension.
+- [Full Documentation for AI Assistants](https://pureaistudios.com/llms-full.txt): Detailed technical FAQ and format support matrix.

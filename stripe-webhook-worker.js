@@ -781,7 +781,7 @@ async function handleWorkerHttpRequest(req, env, sharedStore) {
           try {
             const rawList = await env.PUREAI_LICENSES_KV.get("telemetry:recent_events");
             const list = rawList ? JSON.parse(rawList) : [];
-            list.push({
+            const saleEv = {
               id: "sale_" + eventObj.id,
               type: "sale_verified_session",
               event_name: "purchase_verified",
@@ -790,8 +790,10 @@ async function handleWorkerHttpRequest(req, env, sharedStore) {
               partner: affPartner,
               planInterval: result.subscription && result.subscription.planInterval,
               ts: new Date().toISOString()
-            });
-            while (list.length > 250) list.shift();
+            };
+            await incrementLifetimeTelemetryCounter(env, saleEv, list);
+            list.push(saleEv);
+            while (list.length > 600) list.shift();
             await env.PUREAI_LICENSES_KV.put("telemetry:recent_events", JSON.stringify(list));
           } catch (_) {}
         }
@@ -1233,8 +1235,9 @@ async function handleWorkerHttpRequest(req, env, sharedStore) {
       try {
         const rawList = await env.PUREAI_LICENSES_KV.get("telemetry:recent_events");
         const list = rawList ? JSON.parse(rawList) : [];
+        await incrementLifetimeTelemetryCounter(env, evWithId, list);
         list.push(evWithId);
-        while (list.length > 250) list.shift();
+        while (list.length > 600) list.shift();
         await env.PUREAI_LICENSES_KV.put("telemetry:recent_events", JSON.stringify(list));
       } catch (_) {}
     }
@@ -1267,6 +1270,103 @@ async function handleWorkerHttpRequest(req, env, sharedStore) {
 }
 
 
+function createTelemetryBucket() {
+  return { visits: 0, engaged15s: 0, photos: 0, texts: 0, demos: 0, paywalls: 0, checkouts: 0, paidSales: 0 };
+}
+
+function applyEventToTelemetryBucket(b, e) {
+  if (!b || !e || e.channel === "test_verificacion_telegram") return;
+  if (e.type === "pageview" || e.event_name === "session_start") b.visits++;
+  if (e.target === "engaged_15s") b.engaged15s++;
+  if (!e.isDemo && (e.target === "image_scrub_download" || (e.event_name === "tool_completed" && (e.tool_id === "img_c2pa_scrubber" || e.tool_id === "video_c2pa_scrubber" || e.tool_id === "img_batch_zip")))) b.photos++;
+  if (!e.isDemo && (e.target === "text_watermark_scrub" || e.target === "pro_humanizer_click" || (e.event_name === "tool_completed" && (e.tool_id === "txt_invisible_cleaner" || e.tool_id === "txt_unicode_scrubber" || e.tool_id === "txt_deep_humanizer")))) b.texts++;
+  if (e.target === "demo_photo_tested" || e.target === "demo_text_tested" || e.isDemo === true) b.demos++;
+  if (e.event_name === "paywall_viewed") b.paywalls++;
+  if (e.type === "click_checkout" || e.event_name === "checkout_clicked") b.checkouts++;
+  if (e.event_name === "purchase_verified") b.paidSales++;
+}
+
+async function incrementLifetimeTelemetryCounter(env, newEv, existingRecentList) {
+  if (!env || !env.PUREAI_LICENSES_KV || typeof env.PUREAI_LICENSES_KV.get !== "function" || typeof env.PUREAI_LICENSES_KV.put !== "function") return;
+  if (!newEv || newEv.channel === "test_verificacion_telegram") return;
+  try {
+    let lifetime = null;
+    const rawLt = await env.PUREAI_LICENSES_KV.get("telemetry:lifetime_totals");
+    if (rawLt) {
+      lifetime = Object.assign(createTelemetryBucket(), JSON.parse(rawLt));
+    } else {
+      lifetime = createTelemetryBucket();
+      const seedList = Array.isArray(existingRecentList) ? existingRecentList : [];
+      for (const item of seedList) applyEventToTelemetryBucket(lifetime, item);
+    }
+    applyEventToTelemetryBucket(lifetime, newEv);
+    await env.PUREAI_LICENSES_KV.put("telemetry:lifetime_totals", JSON.stringify(lifetime));
+  } catch (_) {}
+}
+
+async function fetchWorkerTrafficRadar(env) {
+  if (typeof fetch !== "function") return [];
+  let seenUrls = [];
+  if (env && env.PUREAI_LICENSES_KV && typeof env.PUREAI_LICENSES_KV.get === "function") {
+    try {
+      const rawSeen = await env.PUREAI_LICENSES_KV.get("telemetry:seen_radar_urls");
+      if (rawSeen) seenUrls = JSON.parse(rawSeen);
+    } catch (_) {}
+  }
+  const seenSet = new Set(Array.isArray(seenUrls) ? seenUrls : []);
+  const fresh = [];
+  const fetchWithTimeout = (u, opts) => Promise.race([
+    fetch(u, opts),
+    new Promise((_, rej) => setTimeout(() => rej(new Error("timeout")), 3200))
+  ]);
+
+  try {
+    const rUrl = "https://www.reddit.com/search.json?q=%22Made+with+AI%22+Instagram+OR+C2PA+metadata+OR+ComfyUI+workflow+metadata+OR+%22AI+Info%22+Lightroom&sort=new&t=week&limit=6";
+    const rRes = await fetchWithTimeout(rUrl, { headers: { "User-Agent": "PureAIStudioRadar/1.0" } });
+    if (rRes && rRes.ok && typeof rRes.json === "function") {
+      const rJson = await rRes.json();
+      const children = (rJson && rJson.data && rJson.data.children) || [];
+      for (const c of children) {
+        const d = c && c.data;
+        if (d && d.title && d.permalink) {
+          const fullUrl = "https://www.reddit.com" + d.permalink;
+          if (!seenSet.has(fullUrl)) {
+            fresh.push({ src: "r/" + (d.subreddit || "reddit"), title: String(d.title).slice(0, 78), url: fullUrl });
+            seenSet.add(fullUrl);
+            if (fresh.length >= 2) break;
+          }
+        }
+      }
+    }
+  } catch (_) {}
+
+  try {
+    const hnUrl = "https://hn.algolia.com/api/v1/search_by_date?query=C2PA%20OR%20%22Made%20with%20AI%22%20OR%20%22Content%20Credentials%22%20OR%20SynthID&tags=story&hitsPerPage=4";
+    const hnRes = await fetchWithTimeout(hnUrl, {});
+    if (hnRes && hnRes.ok && typeof hnRes.json === "function") {
+      const hnJson = await hnRes.json();
+      for (const h of (hnJson && hnJson.hits) || []) {
+        if (h && h.objectID && h.title) {
+          const fullUrl = "https://news.ycombinator.com/item?id=" + h.objectID;
+          if (!seenSet.has(fullUrl)) {
+            fresh.push({ src: "HN", title: String(h.title).slice(0, 78), url: fullUrl });
+            seenSet.add(fullUrl);
+            if (fresh.length >= 3) break;
+          }
+        }
+      }
+    }
+  } catch (_) {}
+
+  if (fresh.length > 0 && env && env.PUREAI_LICENSES_KV && typeof env.PUREAI_LICENSES_KV.put === "function") {
+    try {
+      const nextSeen = Array.from(seenSet).slice(-50);
+      await env.PUREAI_LICENSES_KV.put("telemetry:seen_radar_urls", JSON.stringify(nextSeen));
+    } catch (_) {}
+  }
+  return fresh.slice(0, 3);
+}
+
 async function buildAndSendDailyTelegramDigest(env, options = {}) {
   const nowMs = Date.now();
   const todayIso = new Date(nowMs).toISOString().slice(0, 10);
@@ -1280,35 +1380,40 @@ async function buildAndSendDailyTelegramDigest(env, options = {}) {
   }
 
   let list = [];
+  let storedLifetime = null;
   if (env && env.PUREAI_LICENSES_KV && typeof env.PUREAI_LICENSES_KV.get === "function") {
     try {
       const rawList = await env.PUREAI_LICENSES_KV.get("telemetry:recent_events");
       if (rawList) list = JSON.parse(rawList);
     } catch (_) {}
+    try {
+      const rawLt = await env.PUREAI_LICENSES_KV.get("telemetry:lifetime_totals");
+      if (rawLt) storedLifetime = JSON.parse(rawLt);
+    } catch (_) {}
   }
 
-  function createBucket() {
-    return { visits: 0, engaged15s: 0, photos: 0, texts: 0, demos: 0, paywalls: 0, checkouts: 0, paidSales: 0 };
-  }
-  const last24h = createBucket();
-  const total = createBucket();
+  const last24h = createTelemetryBucket();
+  const windowTotal = createTelemetryBucket();
 
   for (const e of list) {
     if (e.channel === "test_verificacion_telegram") continue;
     const evMs = e.ts ? Date.parse(e.ts) : 0;
     const is24h = evMs > 0 && (nowMs - evMs) <= 24 * 3600 * 1000;
-    const buckets = is24h ? [total, last24h] : [total];
-    for (const b of buckets) {
-      if (e.type === "pageview" || e.event_name === "session_start") b.visits++;
-      if (e.target === "engaged_15s") b.engaged15s++;
-      if (!e.isDemo && (e.target === "image_scrub_download" || (e.event_name === "tool_completed" && (e.tool_id === "img_c2pa_scrubber" || e.tool_id === "video_c2pa_scrubber" || e.tool_id === "img_batch_zip")))) b.photos++;
-      if (!e.isDemo && (e.target === "text_watermark_scrub" || e.target === "pro_humanizer_click" || (e.event_name === "tool_completed" && (e.tool_id === "txt_invisible_cleaner" || e.tool_id === "txt_unicode_scrubber" || e.tool_id === "txt_deep_humanizer")))) b.texts++;
-      if (e.target === "demo_photo_tested" || e.target === "demo_text_tested" || e.isDemo === true) b.demos++;
-      if (e.event_name === "paywall_viewed") b.paywalls++;
-      if (e.type === "click_checkout" || e.event_name === "checkout_clicked") b.checkouts++;
-      if (e.event_name === "purchase_verified") b.paidSales++;
-    }
+    applyEventToTelemetryBucket(windowTotal, e);
+    if (is24h) applyEventToTelemetryBucket(last24h, e);
   }
+
+  const total = createTelemetryBucket();
+  for (const k of Object.keys(total)) {
+    total[k] = Math.max(windowTotal[k] || 0, (storedLifetime && Number(storedLifetime[k])) || 0);
+  }
+  if (!storedLifetime && env && env.PUREAI_LICENSES_KV && typeof env.PUREAI_LICENSES_KV.put === "function") {
+    try {
+      await env.PUREAI_LICENSES_KV.put("telemetry:lifetime_totals", JSON.stringify(total));
+    } catch (_) {}
+  }
+
+  const radarItems = (options.skipRadar || !(env && env.TELEGRAM_BOT_TOKEN)) ? [] : await fetchWorkerTrafficRadar(env);
 
   const msgLines = [
     "🕙 PureAI Studio — Resumen Diario (10:00 AM):",
@@ -1318,11 +1423,18 @@ async function buildAndSendDailyTelegramDigest(env, options = {}) {
     "• Uso real: " + last24h.photos + " Fotos/MP4 | " + last24h.texts + " Textos | " + last24h.demos + " Demos",
     "• Paywalls Pro abiertos: " + last24h.paywalls + " | Clics a Stripe: " + last24h.checkouts + " | Ventas pagadas: " + last24h.paidSales,
     "",
-    "📈 ACUMULADO RECIENTE:",
+    "🏛️ HISTÓRICO ACUMULADO (PERMANENTE):",
     "• Visitas: " + total.visits + " (Interés >15s: " + total.engaged15s + ")",
     "• Uso total: " + total.photos + " Fotos/MP4 | " + total.texts + " Textos | " + total.demos + " Demos",
     "• Paywalls Pro abiertos: " + total.paywalls + " | Clics a Stripe: " + total.checkouts + " | Ventas pagadas: " + total.paidSales
   ];
+
+  if (radarItems.length > 0) {
+    msgLines.push("", "🎯 RADAR DE CLIENTES HOY (Hilos nuevos para responder):");
+    for (const item of radarItems) {
+      msgLines.push("• [" + item.src + "] " + item.title + "\n  " + item.url);
+    }
+  }
 
   let sent = false;
   if (env && env.TELEGRAM_BOT_TOKEN && env.TELEGRAM_CHAT_ID && typeof fetch === "function") {
