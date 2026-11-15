@@ -835,7 +835,11 @@ assert(cleanAiHtml.includes("terms.html") && cleanAiHtml.includes("Art. 103.m TR
 
   paSandbox.sessionCleanCount = 2;
   const tipAfterSecondUse = paSandbox.buildPostCleanPartnerTipHtml();
-  assert(tipAfterSecondUse.includes("Hábito Creador") && tipAfterSecondUse.includes("installPwaApp()"), "Retención: Tras el 2º archivo procesado debe mostrarse el recordatorio de fijar PWA y preset guardado");
+  assert(
+    (tipAfterSecondUse.includes("Hábito Creador") || tipAfterSecondUse.includes("Creator Habit")) &&
+    tipAfterSecondUse.includes("installPwaApp()"),
+    "Retención: Tras el 2º archivo procesado debe mostrarse el recordatorio de fijar PWA y preset guardado"
+  );
 
   const retFunnel = autoDoctor.computeProductAnalyticsFunnel([
     { event_name: "session_start", isReturning: true, retentionBucket: "D1_48h", genuineReturn: true },
@@ -2787,7 +2791,162 @@ assert(cleanAiHtml.includes("terms.html") && cleanAiHtml.includes("Art. 103.m TR
     assert.strictEqual(zipLf, diskLf, `EXT-ZIP-01: chrome-extension-pureai.zip debe coincidir exactamente en contenido con ${extFile}`);
   }
 
-  console.log("✅ QA TEST SUITE PASSED (23 SECCIONES / 340+ ASERCIONES): 100% E2E VM + Embudo Checkout & Multi-divisa Stripe + BUG-01/02/03/06 + GDPR gtag Gate + Seguridad Open-Redirect + Cero Reclamos Obsoletos.");
+  // 24. ESTRATEGIA FASE 1: Post-1ª-limpieza EN/ES + Enlaces matriz 5 tools + Hidratación USD/GBP satélites + Extensión cuota 1 + Malla idioma + Telegra.ph dinámico (cap 2/run) + Separación QA/Ventas CFO
+  paSandbox.isPureAiPro = false;
+  paSandbox.sessionCleanCount = 1;
+  paSandbox.persistImgQuota(1);
+  try {
+    paSandbox.setLang("en");
+    const enUpsellHtml = paSandbox.buildPostCleanPartnerTipHtml();
+    assert(
+      enUpsellHtml.includes("1/1 Free Export Used") &&
+      enUpsellHtml.includes('data-surface="post_clean_upsell"') &&
+      enUpsellHtml.includes("Creator Habit") &&
+      !enUpsellHtml.includes("Complementos Creador"),
+      "STRAT-CRO-01a: Tras la 1ª exportación en EN debe mostrarse el hook post-limpieza en inglés con upsell Pro y cero textos en español"
+    );
+    paSandbox.setLang("es");
+    const esUpsellHtml = paSandbox.buildPostCleanPartnerTipHtml();
+    assert(
+      esUpsellHtml.includes("1/1 Exportación Gratis Usada") &&
+      esUpsellHtml.includes("Hábito Creador") &&
+      esUpsellHtml.includes("installPwaApp()"),
+      "STRAT-CRO-01b: Tras la 1ª exportación en ES debe conservar Hábito Creador + installPwaApp() y mostrar upsell post-limpieza"
+    );
+  } finally {
+    paSandbox.persistImgQuota(0);
+    paSandbox.sessionCleanCount = 0;
+  }
+  for (const matrixHubLink of [
+    "ai-photo-detector.html",
+    "png-prompt-inspector.html",
+    "photo-gps-remover.html",
+    "webp-png-to-jpg-clean.html",
+    "mp4-frame-extractor.html",
+    "embed-scanner.html"
+  ]) {
+    assert(cleanAiHtml.includes(`href="${matrixHubLink}"`), `STRAT-CRO-01c: #pa-seo-footer debe enlazar a ${matrixHubLink}`);
+  }
+
+  for (const [satLocale, expCur, expP10, expP50, expYr] of [
+    ["en-US", "usd", "$3.39", "$11.29", "$44/yr"],
+    ["en-GB", "gbp", "£2.59", "£8.59", "£34/yr"]
+  ]) {
+    const satLinks = [
+      { href: "https://buy.stripe.com/9B6cN6e669uZ4vmeTE0000f", textContent: "10 Files · €2.99" },
+      { href: "https://buy.stripe.com/3cIdRae66bD74vm6n80000g", textContent: "50 + .ZIP · €9.90" },
+      { href: "https://buy.stripe.com/eVq00k7HIfTn1jabHs0000h", textContent: "Annual · €39/yr" }
+    ];
+    const satSb = {
+      console, Math, Date, JSON, Array, Object, String, Boolean, Number, Promise, URL, encodeURIComponent,
+      setTimeout, clearTimeout,
+      localStorage: { _s: {}, getItem(k) { return this._s[k] ?? null; }, setItem(k, v) { this._s[k] = String(v); }, removeItem(k) { delete this._s[k]; } },
+      sessionStorage: { _m: {}, getItem(k) { return this._m[k] ?? null; }, setItem(k, v) { this._m[k] = String(v); } },
+      navigator: { language: satLocale },
+      location: { href: "https://pureaistudios.com/ai-photo-detector.html", pathname: "/ai-photo-detector.html", search: "", hostname: "pureaistudios.com" },
+      document: {
+        referrer: "",
+        documentElement: { lang: "en" },
+        body: { style: {}, appendChild() {} },
+        createElement: () => telElStub(),
+        getElementById: () => null,
+        querySelectorAll: (sel) => (String(sel).includes("buy.stripe.com") ? satLinks : []),
+        addEventListener() {}
+      },
+      fetch: async () => ({ ok: true, json: async () => ({ ok: true }) })
+    };
+    satSb.window = satSb;
+    vm.createContext(satSb);
+    vm.runInContext(telemetriaCode, satSb);
+    assert.strictEqual(satSb.__pureaiDisplayCurrency, expCur, `STRAT-CUR-01a (${satLocale}): Debe fijar __pureaiDisplayCurrency=${expCur}`);
+    assert(
+      satLinks[0].textContent.includes(expP10) &&
+      satLinks[1].textContent.includes(expP50) &&
+      satLinks[2].textContent.includes(expYr),
+      `STRAT-CUR-01b (${satLocale}): Debe hidratar enlaces Stripe satélite a ${expP10} / ${expP50} / ${expYr}`
+    );
+  }
+
+  const extContentCode = fs.readFileSync(path.join(__dirname, "chrome-extension-pureai", "content-chatgpt.js"), "utf8");
+  assert(
+    /const\s+MAX_DAILY_FREE\s*=\s*1\b/.test(extContentCode) && !extContentCode.includes("3/3"),
+    "STRAT-EXT-01: content-chatgpt.js debe alinear MAX_DAILY_FREE = 1 con la cuota corporativa sin textos 3/3 heredados"
+  );
+
+  const unlockedS24 = growthMatrix.getUnlockedMatrixPages(new Date());
+  const enDetectorS24 = unlockedS24.find((e) => e.lang === "en" && e.toolKey === "ai-photo-detector");
+  const enDetectorHtmlS24 = growthMatrix.buildMatrixToolHtml(enDetectorS24, unlockedS24);
+  assert(
+    enDetectorHtmlS24.includes('id="mtx-sibling-tools"') &&
+    enDetectorHtmlS24.includes("png-prompt-inspector.html") &&
+    enDetectorHtmlS24.includes("embed-scanner.html") &&
+    enDetectorHtmlS24.includes("__mtxRenderPostCleanUpsell"),
+    "STRAT-SEO-01a: buildMatrixToolHtml debe enlazar herramientas hermanas del mismo idioma e incluir upsell post-limpieza"
+  );
+  assert(
+    fs.readFileSync(path.join(__dirname, "embed-scanner.html"), "utf8").includes('id="w-aff-inp"'),
+    "STRAT-SEO-01b: embed-scanner.html debe incluir el campo opcional ?aff= de auto-servicio 40%"
+  );
+
+  let dynCreateCalls = 0;
+  const dynTgPrevFetch = global.fetch;
+  global.fetch = async (u) => {
+    const su = String(u);
+    if (su.includes("createAccount")) return { ok: true, json: async () => ({ ok: true, result: { access_token: "tok_dyn_1" } }) };
+    if (su.includes("createPage")) {
+      dynCreateCalls++;
+      return { ok: true, json: async () => ({ ok: true, result: { url: "https://telegra.ph/Dyn-Article-" + dynCreateCalls } }) };
+    }
+    return { ok: true, json: async () => ({ ok: true }) };
+  };
+  try {
+    const dynMap = {};
+    const firstDynBatch = await autopilotCeo.publishTelegraphArticles([], dynMap, unlockedS24, { maxNewDynamicPerRun: 2 });
+    assert.strictEqual(firstDynBatch.length, 7, "STRAT-SEO-01c: Primera ejecución con matriz debe publicar 5 canónicos + máximo 2 dinámicos (7)");
+    dynCreateCalls = 0;
+    const secondDynBatch = await autopilotCeo.publishTelegraphArticles([], dynMap, unlockedS24, { maxNewDynamicPerRun: 2 });
+    assert.strictEqual(secondDynBatch.length, 2, "STRAT-SEO-01d: Segunda ejecución debe publicar los siguientes 2 artículos dinámicos nuevos sin duplicar los 7 previos");
+  } finally {
+    global.fetch = dynTgPrevFetch;
+  }
+
+  assert.strictEqual(
+    webhookEngine.isOwnerQaSaleRecord({ id: "sale_evt_1Ubx5eJGMJW2ESycB5lSxQlW" }),
+    true,
+    "STRAT-CFO-01a: Debe identificar la compra QA histórica del dueño sin borrar el ledger"
+  );
+  const qaDigestKv = new Map();
+  const qaSaleId = "sale_evt_1Ubx5eJGMJW2ESycB5lSxQlW";
+  qaDigestKv.set("telemetry:recent_events", JSON.stringify([
+    { type: "sale_verified_session", event_name: "purchase_verified", id: qaSaleId, amountCents: 299, taxCents: 52, ts: new Date().toISOString() }
+  ]));
+  qaDigestKv.set("telemetry:lifetime_totals", JSON.stringify({ visits: 113, engaged15s: 15, photos: 60, texts: 0, demos: 3, paywalls: 7, checkouts: 5, paidSales: 1 }));
+  qaDigestKv.set("finance:ledger_events", JSON.stringify([
+    { id: qaSaleId, type: "SALE_PACK_10", amountCents: 299, taxCents: 52, feeCents: 32, ts: "2026-11-15T06:39:05.048Z" }
+  ]));
+  const qaDigestEnv = {
+    ADMIN_DIGEST_TOKEN: secEnv.ADMIN_DIGEST_TOKEN,
+    PUREAI_LICENSES_KV: {
+      get: async (k) => (qaDigestKv.has(k) ? qaDigestKv.get(k) : null),
+      put: async (k, v) => { qaDigestKv.set(k, String(v)); }
+    }
+  };
+  const qaDigestRes = await webhookEngine.handleWorkerHttpRequest(
+    {
+      method: "POST",
+      url: "https://pureai-stripe-webhook.pureaistudio-app.workers.dev/daily-digest",
+      headers: { get: (h) => (String(h).toLowerCase() === "authorization" ? "Bearer " + secEnv.ADMIN_DIGEST_TOKEN : "") },
+      text: async () => JSON.stringify({ force: true, skipRadar: true })
+    },
+    qaDigestEnv
+  );
+  const qaDigestBody = JSON.parse(qaDigestRes.body);
+  assert.strictEqual(qaDigestBody.externalSales, 0, "STRAT-CFO-01b: /daily-digest debe reportar 0 ventas externas cuando el único pago es QA del dueño");
+  assert.strictEqual(qaDigestBody.qaSales, 1, "STRAT-CFO-01c: /daily-digest debe contabilizar 1 test QA del dueño por separado");
+  assert.strictEqual(qaDigestBody.total.paidSales, 0, "STRAT-CFO-01d: Debe auto-corregir total.paidSales histórico restando el QA sin alterar finance:ledger_events");
+  assert.strictEqual(JSON.parse(qaDigestKv.get("finance:ledger_events")).length, 1, "STRAT-CFO-01e: finance:ledger_events permanente debe permanecer intacto");
+
+  console.log("✅ QA TEST SUITE PASSED (24 SECCIONES / 360+ ASERCIONES): 100% E2E VM + Embudo Checkout & Multi-divisa Stripe + BUG-01/02/03/06 + GDPR gtag Gate + Seguridad Open-Redirect + Estrategia Fase 1.");
 })();
 
 

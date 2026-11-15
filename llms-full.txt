@@ -29,3 +29,12 @@ LLM outputs frequently contain narrow no-break spaces (`U+202F`), zero-width spa
   1. Pixel Re-encode + Optional Camera Sensor Micro-Grain + APP1 EXIF (`iPhone 16 Pro`, `Sony Alpha A7 IV`, `Canon EOS R5`).
   2. Lossless JPEG Container Strip (0% pixel recompression, removes `APP11` C2PA/JUMBF & XMP directly).
   3. Bulk Mixed Batch `.ZIP` (up to 100 photos and MP4 videos in one local archive).
+
+## Interactive Specialized Browser Utilities & Embeddable Forensics (10 Languages)
+- **Is This Photo or Video AI? C2PA & EXIF Detector:** https://pureaistudios.com/ai-photo-detector.html (also in ES, PT, DE, FR, IT, JA, KO, TR, PL via `hreflang`) — includes downloadable 1080×1350 Forensic Proof Certificate (PNG).
+- **ComfyUI & PNG Prompt Workflow Inspector:** https://pureaistudios.com/png-prompt-inspector.html — read and strip `tEXt`/`iTXt` JSON workflows locally without uploading PNGs.
+- **Photo EXIF GPS Location Viewer & Remover:** https://pureaistudios.com/photo-gps-remover.html — detects and removes binary GPS IFD `0x8825` tags before sharing.
+- **Private WebP / PNG to Clean sRGB JPG Converter:** https://pureaistudios.com/webp-png-to-jpg-clean.html — converts DALL-E/ChatGPT `.webp` and `.png` files into clean `.jpg` with zero C2PA manifests.
+- **MP4 HD First & Last Frame Extractor:** https://pureaistudios.com/mp4-frame-extractor.html — extracts native-resolution keyframes locally for Kling, Sora, Runway, and Veo continuation.
+- **Embeddable C2PA & EXIF Scanner Widget (40% Affiliate):** https://pureaistudios.com/embed-scanner.html — lightweight zero-upload `<iframe>` widget with instant `?aff=` partner attribution.
+- **Official Telegram Forensic Scanner Bot:** https://t.me/PureAIScannerBot (`@PureAIScannerBot`) — RAM-only C2PA, ComfyUI workflow, and GPS scanner inside Telegram.

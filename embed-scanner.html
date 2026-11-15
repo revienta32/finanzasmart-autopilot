@@ -150,11 +150,12 @@
 
     <div class="actions">
       <a id="w-clean-link" class="btn-primary" href="https://pureaistudios.com/clean-ai-studio.html?utm_source=embed_widget" target="_blank" rel="noopener">⚡ Clean Metadata &amp; Add Camera EXIF →</a>
+      <input id="w-aff-inp" type="text" maxlength="36" placeholder="Optional: alias for 40% commission" style="padding:8px 10px;border-radius:9px;border:1px solid #334155;background:#020617;color:#f8fafc;font-size:0.76rem;width:210px;" />
       <button type="button" class="btn-ghost" id="w-copy-embed">📋 Embed on Your Site</button>
     </div>
 
     <div class="foot">
-      <span>Powered by <a href="https://pureaistudios.com/" target="_blank">PureAI Studio — Free Local C2PA &amp; EXIF Scrubber</a> · <a href="https://t.me/PureAIScannerBot" target="_blank" rel="noopener">Telegram Bot</a></span>
+      <span>Powered by <a href="https://pureaistudios.com/" target="_blank" rel="noopener">PureAI Studio — Free Local C2PA &amp; EXIF Scrubber</a> · <a href="https://t.me/PureAIScannerBot" target="_blank" rel="noopener">Telegram Bot</a></span>
       <span id="w-copied" style="color:#6ee7b7;font-weight:700;"></span>
     </div>
   </div>
@@ -174,6 +175,12 @@
       var studioUrl = "https://pureaistudios.com/clean-ai-studio.html?utm_source=embed_widget" + (rawAff ? "&aff=" + encodeURIComponent(rawAff) : "");
       var linkEl = document.getElementById("w-clean-link");
       if (linkEl) linkEl.href = studioUrl;
+
+      var affInpEl = document.getElementById("w-aff-inp");
+      if (affInpEl) {
+        if (rawAff) affInpEl.value = rawAff;
+        if (isEs) affInpEl.placeholder = "Opcional: tu alias (40% comisión)";
+      }
 
       if (isEs) {
         document.getElementById("w-badge").textContent = "🛡️ Escáner 100% Local · 0 Subidas";
@@ -225,11 +232,15 @@
       });
 
       document.getElementById("w-copy-embed").addEventListener("click", function () {
-        var snippet = '<iframe src="https://pureaistudios.com/embed-scanner.html' + (rawAff ? "?aff=" + encodeURIComponent(rawAff) : "") + '" width="100%" height="430" style="border:0;border-radius:16px;overflow:hidden;" loading="lazy"></iframe>';
+        var inpVal = affInpEl && affInpEl.value ? String(affInpEl.value) : "";
+        var customAff = (inpVal || rawAff || "").replace(/[^a-zA-Z0-9_.-]/g, "").slice(0, 36);
+        var snippet = '<iframe src="https://pureaistudios.com/embed-scanner.html' + (customAff ? "?aff=" + encodeURIComponent(customAff) : "") + '" width="100%" height="430" style="border:0;border-radius:16px;overflow:hidden;" loading="lazy"></iframe>';
         if (navigator.clipboard && navigator.clipboard.writeText) {
           navigator.clipboard.writeText(snippet).catch(function () {});
         }
-        document.getElementById("w-copied").textContent = isEs ? "¡Código <iframe> copiado!" : "<iframe> code copied!";
+        document.getElementById("w-copied").textContent = customAff
+          ? (isEs ? "¡<iframe> copiado con 40% afiliado!" : "<iframe> copied with 40% affiliate tag!")
+          : (isEs ? "¡Código <iframe> copiado!" : "<iframe> code copied!");
       });
     })();
   </script>

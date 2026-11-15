@@ -293,6 +293,30 @@
         }
       };
 
+      function __mtxRenderPostCleanUpsell() {
+        var pro = __mtxGetVerifiedPro();
+        var box = document.getElementById("mtx-audit-box");
+        if (!box || pro.active) return;
+        if (!window.__mtxPostCleanTracked) {
+          window.__mtxPostCleanTracked = true;
+          __mtxTrack({ type: "pricing_view", event_name: "pricing_view", trigger_tool: TOOL_ID, surface: "matrix_post_clean" });
+        }
+        box.style.display = "block";
+        var oldUp = document.getElementById("mtx-post-clean-upsell");
+        if (oldUp && oldUp.parentNode) oldUp.parentNode.removeChild(oldUp);
+        var wrap = document.createElement("div");
+        wrap.id = "mtx-post-clean-upsell";
+        wrap.style.cssText = "margin-top:10px;padding:9px 11px;background:rgba(168,85,247,0.14);border:1px solid rgba(168,85,247,0.5);border-radius:9px;";
+        wrap.innerHTML = "<div style='color:#e9d5ff;font-weight:800;font-size:0.8rem;margin-bottom:7px;'>✅ 1/1 Free Export Complete — Unlock 10/50 Files or Batch .ZIP (No Subscription):</div>" +
+          "<div style='display:flex;flex-wrap:wrap;gap:6px;'>" +
+          "<a href='https://buy.stripe.com/9B6cN6e669uZ4vmeTE0000f' target='_blank' rel='noopener noreferrer' data-plan='pack_10' data-surface='matrix_post_clean' style='background:#00e5a3;color:#042f1e;padding:5px 10px;border-radius:7px;font-weight:900;font-size:0.75rem;text-decoration:none;'>10 Files · €2.99</a>" +
+          "<a href='https://buy.stripe.com/3cIdRae66bD74vm6n80000g' target='_blank' rel='noopener noreferrer' data-plan='pack_50' data-surface='matrix_post_clean' style='background:#a855f7;color:#fff;padding:5px 10px;border-radius:7px;font-weight:900;font-size:0.75rem;text-decoration:none;'>50 + .ZIP · €9.90</a>" +
+          "<a href='https://buy.stripe.com/eVq00k7HIfTn1jabHs0000h' target='_blank' rel='noopener noreferrer' data-plan='annual_unlimited' data-surface='matrix_post_clean' style='background:#38bdf8;color:#082f49;padding:5px 10px;border-radius:7px;font-weight:900;font-size:0.75rem;text-decoration:none;'>Annual · €39/yr</a>" +
+          "</div>";
+        box.appendChild(wrap);
+        if (typeof window.hydrateSatelliteStripeLinks === "function") window.hydrateSatelliteStripeLinks();
+      }
+
       window.__mtxExportCleanImage = function(mime, quality) {
         if (!loadedImg || !currentFile) return;
         __mtxCheckAndConsumeQuota(function() {
@@ -309,6 +333,7 @@
             a.download = currentFile.name.replace(/\.[^.]+$/, "") + "-clean" + ext;
             a.click();
             __mtxTrack({ type: "app_action", event_name: "tool_completed", tool_id: TOOL_ID, isDemo: false });
+            __mtxRenderPostCleanUpsell();
           }, mime || "image/jpeg", quality || 0.94);
         });
       };
@@ -340,6 +365,7 @@
             a.download = (currentFile ? currentFile.name.replace(/\.[^.]+$/, "") : "video") + "-frame-hd.png";
             a.click();
             __mtxTrack({ type: "app_action", event_name: "tool_completed", tool_id: TOOL_ID, isDemo: false });
+            __mtxRenderPostCleanUpsell();
           }, "image/png");
         });
       };
@@ -397,6 +423,17 @@
         <div>
           <h3 style="font-size:0.98rem;color:#f8fafc;margin-bottom:0.3rem;">How can I share PNG artwork without leaking my workflow?</h3>
           <p style="color:#cbd5e1;font-size:0.92rem;">Use the local PNG chunk stripper above to remove all non-essential text, XMP, and C2PA chunks while preserving lossless RGB pixels.</p>
+        </div>
+      </section>
+
+      <section id="mtx-sibling-tools" style="margin-top:1.5rem;border-top:1px solid #1e293b;padding-top:1.15rem;">
+        <h2 style="font-size:1.05rem;margin-bottom:0.75rem;color:#6ee7b7;">🛠️ More Free 100% Local Tools (English)</h2>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:8px;">
+          <a href="ai-photo-detector.html" style="display:block;padding:0.7rem 0.85rem;background:#0f172a;border:1px solid #334155;border-radius:0.65rem;color:#e2e8f0;text-decoration:none;font-size:0.84rem;font-weight:700;">🔎 Is This Photo or Video AI? Instant C2PA, JUMBF &amp; EXIF Forensic Scanner</a>
+          <a href="photo-gps-remover.html" style="display:block;padding:0.7rem 0.85rem;background:#0f172a;border:1px solid #334155;border-radius:0.65rem;color:#e2e8f0;text-decoration:none;font-size:0.84rem;font-weight:700;">📍 Check &amp; Remove Hidden GPS Coordinates from Smartphone Photos Locally</a>
+          <a href="webp-png-to-jpg-clean.html" style="display:block;padding:0.7rem 0.85rem;background:#0f172a;border:1px solid #334155;border-radius:0.65rem;color:#e2e8f0;text-decoration:none;font-size:0.84rem;font-weight:700;">🖼️ Private WebP / PNG to Clean sRGB JPG Converter (0% C2PA Metadata)</a>
+          <a href="mp4-frame-extractor.html" style="display:block;padding:0.7rem 0.85rem;background:#0f172a;border:1px solid #334155;border-radius:0.65rem;color:#e2e8f0;text-decoration:none;font-size:0.84rem;font-weight:700;">🎞️ MP4 Last-Frame &amp; Keyframe HD Extractor (Zero C2PA Metadata)</a>
+          <a href="embed-scanner.html" style="display:block;padding:0.7rem 0.85rem;background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.4);border-radius:0.65rem;color:#a7f3d0;text-decoration:none;font-size:0.84rem;font-weight:700;">🔌 Embed Free C2PA Scanner Widget (40% Affiliate)</a>
         </div>
       </section>
     </article>

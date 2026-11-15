@@ -209,6 +209,59 @@
     window.sendPureAiAnalyticsEvent = sendTelemetry;
   }
 
+  function detectSatelliteCurrency() {
+    try {
+      if (typeof window !== "undefined" && window.__pureaiDisplayCurrency) {
+        return String(window.__pureaiDisplayCurrency).toLowerCase();
+      }
+      var cc = "";
+      try { cc = (sessionStorage.getItem("pa_cf_country") || "").toUpperCase(); } catch (_) {}
+      var tz = "";
+      try { tz = Intl.DateTimeFormat().resolvedOptions().timeZone || ""; } catch (_) {}
+      var navLang = (typeof navigator !== "undefined" && navigator.language) || "";
+      var docLang = (typeof document !== "undefined" && document.documentElement && document.documentElement.lang) || "";
+      var isEs = /^es\b/i.test(docLang) || /^es\b/i.test(navLang);
+      if (cc === "GB" || cc === "IM" || cc === "JE" || cc === "GG" || /^Europe\/(London|Belfast|Jersey|Guernsey|Isle_of_Man)$/i.test(tz) || /-GB\b/i.test(navLang)) {
+        return "gbp";
+      }
+      if (cc === "US" || cc === "PR" || cc === "VI" || cc === "GU" || cc === "AS" || /^(America\/(New_York|Chicago|Denver|Los_Angeles|Phoenix|Anchorage|Detroit|Indiana|Kentucky|Boise|Adak)|Pacific\/Honolulu|US\/)/i.test(tz) || /-US\b/i.test(navLang) || (!isEs && /^America\//i.test(tz))) {
+        return "usd";
+      }
+    } catch (_) {}
+    return "eur";
+  }
+
+  function hydrateSatelliteStripeLinks() {
+    try {
+      var cur = detectSatelliteCurrency();
+      if (typeof window !== "undefined" && !window.__pureaiDisplayCurrency) {
+        window.__pureaiDisplayCurrency = cur;
+      }
+      if (typeof document === "undefined" || !document.querySelectorAll) return cur;
+      if (document.getElementById("pro-card-pack10")) return cur;
+      if (cur !== "usd" && cur !== "gbp") return cur;
+      var p10 = cur === "gbp" ? "£2.59" : "$3.39";
+      var p50 = cur === "gbp" ? "£8.59" : "$11.29";
+      var pYr = cur === "gbp" ? "£34" : "$44";
+      document.querySelectorAll('a[href*="buy.stripe.com"]').forEach(function (a) {
+        if (a && a.textContent) {
+          a.textContent = a.textContent
+            .replace(/€\s*2\.99|2,99\s*€/g, p10)
+            .replace(/€\s*9\.90|9,90\s*€/g, p50)
+            .replace(/€\s*39\b|39\s*€/g, pYr);
+        }
+      });
+      return cur;
+    } catch (_) {
+      return "eur";
+    }
+  }
+
+  if (typeof window !== "undefined") {
+    window.detectSatelliteCurrency = detectSatelliteCurrency;
+    window.hydrateSatelliteStripeLinks = hydrateSatelliteStripeLinks;
+  }
+
   // 1. Atribución de Afiliados 40% (?aff=...)
   const affMatch = (window.location.search || "").match(/[?&]aff=([a-zA-Z0-9_.-]{2,36})/);
   if (affMatch && affMatch[1]) {
@@ -222,6 +275,7 @@
       }
     });
   }
+  hydrateSatelliteStripeLinks();
 
   const sessionKey = "fs_visited_" + pageName;
   if (!sessionStorage.getItem(sessionKey)) {

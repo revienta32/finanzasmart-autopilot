@@ -2131,6 +2131,15 @@ async function handlePublicTelegramBotMessage(botToken, chatId, msg, isEs) {
 }
 
 
+const KNOWN_OWNER_QA_SALE_IDS = new Set(["sale_evt_1Ubx5eJGMJW2ESycB5lSxQlW"]);
+function isOwnerQaSaleRecord(ev) {
+  if (!ev || typeof ev !== "object") return false;
+  if (ev.isOwnerQaTest === true) return true;
+  if (ev.id && KNOWN_OWNER_QA_SALE_IDS.has(String(ev.id))) return true;
+  if (ev.metadata && (ev.metadata.owner_qa === "1" || ev.metadata.owner_qa === "true")) return true;
+  return false;
+}
+
 function createTelemetryBucket() {
   return {
     visits: 0,
@@ -2141,6 +2150,7 @@ function createTelemetryBucket() {
     paywalls: 0,
     checkouts: 0,
     paidSales: 0,
+    qaSales: 0,
     pricingViews: 0,
     sessionsCreated: 0,
     checkoutCanceled: 0,
@@ -2155,12 +2165,29 @@ function applyEventToTelemetryBucket(b, e) {
   if (!b || !e || e.channel === "test_verificacion_telegram") return;
   if (e.type === "pageview" || e.event_name === "session_start") b.visits++;
   if (e.target === "engaged_15s") b.engaged15s++;
-  if (!e.isDemo && (e.target === "image_scrub_download" || (e.event_name === "tool_completed" && (e.tool_id === "img_c2pa_scrubber" || e.tool_id === "video_c2pa_scrubber" || e.tool_id === "img_batch_zip")))) b.photos++;
+  if (
+    !e.isDemo &&
+    (e.target === "image_scrub_download" ||
+      (e.event_name === "tool_completed" &&
+        (e.tool_id === "img_c2pa_scrubber" ||
+          e.tool_id === "video_c2pa_scrubber" ||
+          e.tool_id === "img_batch_zip" ||
+          e.tool_id === "ai-photo-detector" ||
+          e.tool_id === "png-prompt-inspector" ||
+          e.tool_id === "photo-gps-remover" ||
+          e.tool_id === "webp-png-to-jpg-clean" ||
+          e.tool_id === "mp4-frame-extractor")))
+  ) {
+    b.photos++;
+  }
   if (!e.isDemo && (e.target === "text_watermark_scrub" || e.target === "pro_humanizer_click" || (e.event_name === "tool_completed" && (e.tool_id === "txt_invisible_cleaner" || e.tool_id === "txt_unicode_scrubber" || e.tool_id === "txt_deep_humanizer")))) b.texts++;
   if (e.target === "demo_photo_tested" || e.target === "demo_text_tested" || e.isDemo === true) b.demos++;
   if (e.event_name === "paywall_viewed") b.paywalls++;
   if (e.type === "click_checkout" || e.event_name === "checkout_clicked") b.checkouts++;
-  if (e.event_name === "purchase_verified") b.paidSales++;
+  if (e.event_name === "purchase_verified") {
+    if (isOwnerQaSaleRecord(e)) b.qaSales = (b.qaSales || 0) + 1;
+    else b.paidSales++;
+  }
   if (e.event_name === "pricing_view" || e.type === "pricing_view") b.pricingViews = (b.pricingViews || 0) + 1;
   if (e.event_name === "checkout_session_created" || e.type === "checkout_session_created") b.sessionsCreated = (b.sessionsCreated || 0) + 1;
   if (e.event_name === "checkout_abandoned_back" || e.type === "checkout_abandoned_back") b.checkoutCanceled = (b.checkoutCanceled || 0) + 1;
@@ -2305,21 +2332,50 @@ async function buildAndSendDailyTelegramDigest(env, options = {}) {
   for (const k of Object.keys(total)) {
     total[k] = Math.max(windowTotal[k] || 0, (storedLifetime && Number(storedLifetime[k])) || 0);
   }
-  if (!storedLifetime && env && env.PUREAI_LICENSES_KV && typeof env.PUREAI_LICENSES_KV.put === "function") {
+  if (storedLifetime && windowTotal.qaSales > 0 && storedLifetime.qaSales === undefined) {
+    total.paidSales = Math.max(windowTotal.paidSales || 0, Math.max(0, Number(storedLifetime.paidSales || 0) - windowTotal.qaSales));
+    total.qaSales = windowTotal.qaSales;
+    if (env && env.PUREAI_LICENSES_KV && typeof env.PUREAI_LICENSES_KV.put === "function") {
+      try {
+        await env.PUREAI_LICENSES_KV.put("telemetry:lifetime_totals", JSON.stringify(total));
+      } catch (_) {}
+    }
+  } else if (!storedLifetime && env && env.PUREAI_LICENSES_KV && typeof env.PUREAI_LICENSES_KV.put === "function") {
     try {
       await env.PUREAI_LICENSES_KV.put("telemetry:lifetime_totals", JSON.stringify(total));
     } catch (_) {}
   }
 
-  let ledgerSalesCount = 0;
-  let ledgerGrossCents = 0;
+  let ledgerExternalSalesCount = 0;
+  let ledgerExternalGrossCents = 0;
+  let ledgerExternalNetCents = 0;
+  let ledgerQaSalesCount = 0;
+  let ledgerQaGrossCents = 0;
+  let activeRecurringCount = 0;
+  let mrrNetCents = 0;
   let ledgerRefundsCount = 0;
   let ledgerDisputesCount = 0;
   for (const fin of (Array.isArray(ledgerList) ? ledgerList : [])) {
     if (!fin || !fin.type) continue;
     if (fin.type === "SALE_MONTHLY" || fin.type === "SALE_ANNUAL" || fin.type === "SALE_PACK_10" || fin.type === "SALE_PACK_50") {
-      ledgerSalesCount++;
-      ledgerGrossCents += Number(fin.amountCents) || 0;
+      const gross = Number(fin.amountCents) || 0;
+      const tax = Number(fin.taxCents) || 0;
+      const fee = Number(fin.feeCents) || 0;
+      const net = Math.max(0, gross - tax - fee);
+      if (isOwnerQaSaleRecord(fin)) {
+        ledgerQaSalesCount++;
+        ledgerQaGrossCents += gross;
+      } else {
+        ledgerExternalSalesCount++;
+        ledgerExternalGrossCents += gross;
+        ledgerExternalNetCents += net;
+        if (fin.type === "SALE_MONTHLY" || fin.type === "SALE_ANNUAL") {
+          activeRecurringCount++;
+          mrrNetCents += fin.type === "SALE_ANNUAL" ? Math.round(net / 12) : net;
+        }
+      }
+    } else if (fin.type === "SUBSCRIPTION_CANCELED") {
+      activeRecurringCount = Math.max(0, activeRecurringCount - 1);
     } else if (fin.type === "REFUND") {
       ledgerRefundsCount++;
     } else if (fin.type === "DISPUTE") {
@@ -2327,6 +2383,10 @@ async function buildAndSendDailyTelegramDigest(env, options = {}) {
     }
   }
 
+  const fmtPct = (num, den) => (den > 0 ? Math.round((num / den) * 100) + "%" : "0%");
+  const totalToolsUsed = (total.photos || 0) + (total.texts || 0);
+  const totalOffersSeen = (total.paywalls || 0) + (total.pricingViews || 0);
+  const mrrNetEur = Number((mrrNetCents / 100).toFixed(2));
   const radarItems = (options.skipRadar || !(env && env.TELEGRAM_BOT_TOKEN)) ? [] : await fetchWorkerTrafficRadar(env);
 
   const seoPagesCount = opsState && Number.isFinite(Number(opsState.seoPagesCount)) ? Number(opsState.seoPagesCount) : 0;
@@ -2337,15 +2397,18 @@ async function buildAndSendDailyTelegramDigest(env, options = {}) {
     "🟢 ÚLTIMAS 24 HORAS (HOY):",
     "• Visitas: " + last24h.visits + " (Interés >15s: " + last24h.engaged15s + ")",
     "• Uso real: " + last24h.photos + " Fotos/MP4 | " + last24h.texts + " Textos | " + last24h.demos + " Demos",
-    "• Paywalls Pro abiertos: " + last24h.paywalls + " | Clics a Stripe: " + last24h.checkouts + " | Ventas pagadas: " + last24h.paidSales,
+    "• Paywalls Pro: " + last24h.paywalls + " | Pricing visto: " + (last24h.pricingViews || 0) + " | Stripe: " + last24h.checkouts + " | Ventas externas: " + last24h.paidSales,
     "",
     "🏛️ HISTÓRICO ACUMULADO (PERMANENTE):",
     "• Visitas: " + total.visits + " (Interés >15s: " + total.engaged15s + ")",
     "• Uso total: " + total.photos + " Fotos/MP4 | " + total.texts + " Textos | " + total.demos + " Demos",
-    "• Paywalls Pro abiertos: " + total.paywalls + " | Clics a Stripe: " + total.checkouts + " | Ventas pagadas: " + total.paidSales,
+    "• Embudo: Uso/Visita " + fmtPct(totalToolsUsed, total.visits) + " | Oferta Pro/Uso " + fmtPct(totalOffersSeen, totalToolsUsed) + " | Checkout/Oferta " + fmtPct(total.checkouts, totalOffersSeen),
+    "• Paywalls Pro: " + total.paywalls + " | Stripe clics: " + total.checkouts + " | Ventas externas: " + total.paidSales + " (QA dueño: " + (total.qaSales || 0) + ")",
     "",
     "💼 FINOPS PERMANENTE (KV):",
-    "• Ledger Stripe: " + ledgerSalesCount + " ventas (" + (ledgerGrossCents / 100).toFixed(2) + " € bruto) | Reembolsos: " + ledgerRefundsCount + " | Disputas: " + ledgerDisputesCount,
+    "• Ventas clientes externos: " + ledgerExternalSalesCount + " (" + (ledgerExternalGrossCents / 100).toFixed(2) + " € bruto / " + (ledgerExternalNetCents / 100).toFixed(2) + " € neto) | Tests QA dueño: " + ledgerQaSalesCount,
+    "• Reembolsos: " + ledgerRefundsCount + " | Disputas: " + ledgerDisputesCount,
+    "• Hito Pre-Societario: " + mrrNetEur.toFixed(2) + " € / 350.00 € MRR neto | " + activeRecurringCount + " / 15 clientes recurrentes",
     "🏢 DEPARTAMENTOS AUTÓNOMOS:",
     "• Growth/SEO: " + seoPagesCount + " URLs | Telegra.ph únicos: " + tgPublishedCount + " | Soporte humano pendiente: " + pendingSupportApprovals
   ];
@@ -2375,7 +2438,18 @@ async function buildAndSendDailyTelegramDigest(env, options = {}) {
       }
     } catch (_) {}
   }
-  return { ok: true, sent, last24h, total };
+  return {
+    ok: true,
+    sent,
+    last24h,
+    total,
+    externalSales: ledgerExternalSalesCount,
+    qaSales: ledgerQaSalesCount,
+    mrrNetEur,
+    activeRecurringClients: activeRecurringCount,
+    goalMrrTargetEur: 350,
+    goalActiveClientsTarget: 15
+  };
 }
 
 const workerDefaultExport = {
@@ -2420,6 +2494,7 @@ module.exports = {
   processStripeWebhookEvent,
   classifyWorkerSupportMessage,
   appendFinancialLedgerEvent,
+  isOwnerQaSaleRecord,
   buildAndSendDailyTelegramDigest,
   handleWorkerHttpRequest,
   inspectBinaryHeaderForTelegram,

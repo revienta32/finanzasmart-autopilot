@@ -570,16 +570,16 @@ function buildSeoPageHtml(page) {
         <p>${isEsPage ? "Procesa fotos y vídeos cortos MP4 por lotes (.ZIP), aplica perfiles técnicos EXIF JPEG y limpia caracteres invisibles Unicode. <strong>Pago único sin suscripción ni caducidad (IVA incluido)</strong>." : "Batch-clean photos &amp; MP4 reels (.ZIP), write iPhone 16 Pro / Sony A7IV EXIF headers, and strip invisible Unicode watermarks. <strong>One-time credit packs never expire (VAT included)</strong>."}</p>
         <a href="clean-ai-studio.html" class="cta-button">${isEsPage ? "Abrir PureAI Studio Gratis →" : "Try PureAI Studio Free →"}</a>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:8px;">
-          <a href="https://buy.stripe.com/9B6cN6e669uZ4vmeTE0000f" target="_blank" rel="noopener" style="background:#00e5a3;color:#042f1e;text-decoration:none;padding:6px;border-radius:7px;font-size:0.74rem;font-weight:900;text-align:center;">${isEsPage ? "⚡ 10 Usos: 2,99 €" : "⚡ 10 Files: €2.99"}</a>
-          <a href="https://buy.stripe.com/3cIdRae66bD74vm6n80000g" target="_blank" rel="noopener" style="background:#a855f7;color:#fff;text-decoration:none;padding:6px;border-radius:7px;font-size:0.74rem;font-weight:900;text-align:center;">${isEsPage ? "🔥 50 + .ZIP: 9,90 €" : "🔥 50 + .ZIP: €9.90"}</a>
+          <a href="https://buy.stripe.com/9B6cN6e669uZ4vmeTE0000f" target="_blank" rel="noopener" data-plan="pack_10" data-surface="seo_sidebar" style="background:#00e5a3;color:#042f1e;text-decoration:none;padding:6px;border-radius:7px;font-size:0.74rem;font-weight:900;text-align:center;">${isEsPage ? "⚡ 10 Usos: 2,99 €" : "⚡ 10 Files: €2.99"}</a>
+          <a href="https://buy.stripe.com/3cIdRae66bD74vm6n80000g" target="_blank" rel="noopener" data-plan="pack_50" data-surface="seo_sidebar" style="background:#a855f7;color:#fff;text-decoration:none;padding:6px;border-radius:7px;font-size:0.74rem;font-weight:900;text-align:center;">${isEsPage ? "🔥 50 + .ZIP: 9,90 €" : "🔥 50 + .ZIP: €9.90"}</a>
         </div>
-        <a href="https://buy.stripe.com/eVq00k7HIfTn1jabHs0000h" target="_blank" rel="noopener" style="display:block;margin-top:6px;background:#1e293b;color:#93c5fd;border:1px solid #3b82f6;text-decoration:none;padding:6px;border-radius:7px;font-size:0.74rem;font-weight:800;text-align:center;">${isEsPage ? "💎 Estudio Anual Ilimitado: 39 €/año" : "💎 Unlimited Studio: €39/yr"}</a>
+        <a href="https://buy.stripe.com/eVq00k7HIfTn1jabHs0000h" target="_blank" rel="noopener" data-plan="annual_unlimited" data-surface="seo_sidebar" style="display:block;margin-top:6px;background:#1e293b;color:#93c5fd;border:1px solid #3b82f6;text-decoration:none;padding:6px;border-radius:7px;font-size:0.74rem;font-weight:800;text-align:center;">${isEsPage ? "💎 Estudio Anual Ilimitado: 39 €/año" : "💎 Unlimited Studio: €39/yr"}</a>
       </div>
     </aside>
   </main>
 
   <footer class="footer container">
-    <p>© 2026 PureAI Studio — <a href="clean-ai-studio.html" style="color:#10b981;">C2PA &amp; EXIF Metadata Suite</a> | <a href="directorio-guias.html" style="color:#10b981;">AI Guides Directory</a> | <a href="terms.html" style="color:#94a3b8;">Terms</a> | <a href="privacy-policy.html" style="color:#94a3b8;">Privacy</a></p>
+    <p>© 2026 PureAI Studio — <a href="clean-ai-studio.html" style="color:#10b981;">C2PA &amp; EXIF Studio</a> | <a href="ai-photo-detector.html" style="color:#10b981;">AI Photo Detector</a> | <a href="png-prompt-inspector.html" style="color:#10b981;">ComfyUI PNG Inspector</a> | <a href="photo-gps-remover.html" style="color:#10b981;">GPS Remover</a> | <a href="webp-png-to-jpg-clean.html" style="color:#10b981;">WebP to JPG</a> | <a href="mp4-frame-extractor.html" style="color:#10b981;">MP4 Frame Extractor</a> | <a href="embed-scanner.html" style="color:#38bdf8;">Embed Widget (40%)</a> | <a href="https://t.me/PureAIScannerBot" target="_blank" rel="noopener" style="color:#38bdf8;">@PureAIScannerBot</a> | <a href="directorio-guias.html" style="color:#10b981;">Directory</a> | <a href="terms.html" style="color:#94a3b8;">Terms</a> | <a href="privacy-policy.html" style="color:#94a3b8;">Privacy</a></p>
   </footer>
   <script src="telemetria-soporte.js"></script>
 </body>
@@ -595,7 +595,7 @@ function normalizeSlugMatch(s) {
     .replace(/^-+|-+$/g, "");
 }
 
-async function publishTelegraphArticles(prevArticles = [], telegraphBySlug = {}) {
+async function publishTelegraphArticles(prevArticles = [], telegraphBySlug = {}, dynamicMatrixEntries = [], options = {}) {
   const accRes = await fetch(
     "https://api.telegra.ph/createAccount?short_name=PureAIStudio&author_name=PureAI+Studio&author_url=" +
       encodeURIComponent(SITE_URL)
@@ -604,7 +604,7 @@ async function publishTelegraphArticles(prevArticles = [], telegraphBySlug = {})
   if (!accRes.ok) return [];
   const token = accRes.result.access_token;
 
-  const articles = [
+  const canonicalArticles = [
     {
       slugKey: "Remove-Made-With-AI-Label-Instagram-TikTok-C2PA-iPhone-EXIF",
       title: "How to Remove 'Made with AI' Label on Instagram & TikTok (C2PA Scrubber + iPhone 16 Pro EXIF Injector)",
@@ -654,8 +654,29 @@ async function publishTelegraphArticles(prevArticles = [], telegraphBySlug = {})
     }
   ];
 
+  const dynamicPool = Array.isArray(dynamicMatrixEntries)
+    ? dynamicMatrixEntries.map((m) => ({
+        isDynamic: true,
+        slugKey: "Matrix-Guide-" + String(m.slug || "").replace(/\.html$/i, ""),
+        title: String(m.title || "PureAI Studio Tool") + " (100% Local Browser Tool)",
+        nodes: [
+          { tag: "p", children: [String(m.lead || "")] },
+          { tag: "p", children: [String(m.q1 || "") + " " + String(m.a1 || "")] },
+          { tag: "p", children: [String(m.q2 || "") + " " + String(m.a2 || "")] },
+          { tag: "p", children: [{ tag: "a", attrs: { href: `${SITE_URL}/${m.slug}` }, children: ["⚡ Open Free 100% Local Tool: " + String(m.h1 || m.slug)] }] },
+          { tag: "p", children: [{ tag: "a", attrs: { href: `${SITE_URL}/embed-scanner.html` }, children: ["🔌 Embed Free C2PA Scanner Widget on Your Site (40% Affiliate)"] }] },
+          { tag: "p", children: [{ tag: "a", attrs: { href: "https://t.me/PureAIScannerBot" }, children: ["✈️ Instant Telegram Forensic Bot (@PureAIScannerBot)"] }] }
+        ]
+      }))
+    : [];
+
+  const maxNewDynamic = Number(options && options.maxNewDynamicPerRun) > 0 ? Number(options.maxNewDynamicPerRun) : 2;
+  let dynamicPublishedCount = 0;
+  const articles = [...canonicalArticles, ...dynamicPool];
+
   const publishedUrls = [];
   for (const art of articles) {
+    if (art.isDynamic && dynamicPublishedCount >= maxNewDynamic) break;
     const normSlugPrefix = normalizeSlugMatch(art.slugKey).slice(0, 18);
     const normTitlePrefix = normalizeSlugMatch(art.title).slice(0, 28);
     const matchedPrev = prevArticles.find((u) => {
@@ -685,6 +706,7 @@ async function publishTelegraphArticles(prevArticles = [], telegraphBySlug = {})
     }).then((r) => r.json());
     if (res.ok && res.result && res.result.url) {
       publishedUrls.push(res.result.url);
+      if (art.isDynamic) dynamicPublishedCount++;
       if (telegraphBySlug && typeof telegraphBySlug === "object") {
         telegraphBySlug[art.slugKey] = res.result.url;
       }
@@ -693,9 +715,8 @@ async function publishTelegraphArticles(prevArticles = [], telegraphBySlug = {})
   return publishedUrls;
 }
 
-async function run() {
-  loadPrivateEnvIfPresent();
-  fs.writeFileSync(path.join(__dirname, `${INDEXNOW_KEY}.txt`), INDEXNOW_KEY);
+function buildLocalStaticFiles(baseDir = __dirname) {
+  fs.writeFileSync(path.join(baseDir, `${INDEXNOW_KEY}.txt`), INDEXNOW_KEY);
 
   const allUrls = [
     `${SITE_URL}/`,
@@ -703,7 +724,7 @@ async function run() {
   ];
 
   for (const page of SEO_PAGES) {
-    fs.writeFileSync(path.join(__dirname, page.slug), buildSeoPageHtml(page));
+    fs.writeFileSync(path.join(baseDir, page.slug), buildSeoPageHtml(page));
     allUrls.push(`${SITE_URL}/${page.slug}`);
   }
 
@@ -711,7 +732,7 @@ async function run() {
   const unlockedMatrixEntries = growthMatrix.getUnlockedMatrixPages(new Date());
   for (const mEntry of unlockedMatrixEntries) {
     fs.writeFileSync(
-      path.join(__dirname, mEntry.slug),
+      path.join(baseDir, mEntry.slug),
       growthMatrix.buildMatrixToolHtml(mEntry, unlockedMatrixEntries)
     );
     allUrls.push(`${SITE_URL}/${mEntry.slug}`);
@@ -740,11 +761,11 @@ async function run() {
       description: m.lead
     }))
   ];
-  fs.writeFileSync(path.join(__dirname, "feed.xml"), growthMatrix.buildRssFeedXml(rssItems, new Date()));
+  fs.writeFileSync(path.join(baseDir, "feed.xml"), growthMatrix.buildRssFeedXml(rssItems, new Date()));
 
   const NON_AI_FINANCE_PATTERN = /^(cfo-control-financiero|panel-reclutamiento|kit-marca-canal)/i;
   const allHtmlFiles = fs
-    .readdirSync(__dirname)
+    .readdirSync(baseDir)
     .filter((f) => f.endsWith(".html") && !f.startsWith("google") && !NON_AI_FINANCE_PATTERN.test(f))
     .sort();
   const dirLinks = allHtmlFiles
@@ -759,10 +780,10 @@ async function run() {
     calcLink: "clean-ai-studio.html",
     bodyHtml: `<ul style="margin: 1rem 0 1.5rem 1.25rem;">\n${dirLinks}\n</ul>`
   });
-  fs.writeFileSync(path.join(__dirname, "directorio-guias.html"), dirHtml);
+  fs.writeFileSync(path.join(baseDir, "directorio-guias.html"), dirHtml);
 
   const fullUrlList = [`${SITE_URL}/`, ...allHtmlFiles.filter((f) => f !== "index.html").map((f) => `${SITE_URL}/${f}`)];
-  fs.writeFileSync(path.join(__dirname, "sitemap.txt"), fullUrlList.join("\n"));
+  fs.writeFileSync(path.join(baseDir, "sitemap.txt"), fullUrlList.join("\n"));
 
   const sitemapXml = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
@@ -776,7 +797,14 @@ ${fullUrlList
   )
   .join("\n")}
 </urlset>`;
-  fs.writeFileSync(path.join(__dirname, "sitemap.xml"), sitemapXml);
+  fs.writeFileSync(path.join(baseDir, "sitemap.xml"), sitemapXml);
+
+  return { unlockedMatrixEntries, fullUrlList, allUrls };
+}
+
+async function run() {
+  loadPrivateEnvIfPresent();
+  const { unlockedMatrixEntries, fullUrlList } = buildLocalStaticFiles(__dirname);
 
   let prevArticles = [];
   let telegraphBySlug = {};
@@ -816,7 +844,7 @@ ${fullUrlList
     } catch (_) {}
   }
 
-  const telegraphUrls = await publishTelegraphArticles(prevArticles, telegraphBySlug);
+  const telegraphUrls = await publishTelegraphArticles(prevArticles, telegraphBySlug, unlockedMatrixEntries, { maxNewDynamicPerRun: 2 });
   console.log("Published Telegraph Cloud Articles:", telegraphUrls);
 
   try {
@@ -972,5 +1000,5 @@ async function sendDailyMobilePushDigest(opportunities, telegraphUrls) {
 if (require.main === module) {
   run().catch(console.error);
 } else {
-  module.exports = { SEO_PAGES, buildSeoPageHtml, publishTelegraphArticles, normalizeSlugMatch };
+  module.exports = { SEO_PAGES, buildSeoPageHtml, buildLocalStaticFiles, publishTelegraphArticles, normalizeSlugMatch };
 }

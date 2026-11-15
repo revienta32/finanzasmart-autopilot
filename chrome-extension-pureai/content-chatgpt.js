@@ -3,7 +3,7 @@
  * Includes 1 Free Use + Soft Paywall to Stripe (€2.99 / €9.90 Packs & €39/yr Annual) + Multi-Device Key (PRO-XXXX-YYYY) Unlock
  */
 (function () {
-  const MAX_DAILY_FREE = 3;
+  const MAX_DAILY_FREE = 1;
   const CLICHE_LIST = [
     { re: /\ben conclusión\b/gi, rep: "en definitiva" },
     { re: /\bcabe destacar que\b/gi, rep: "además" },
@@ -206,14 +206,14 @@
       "display:flex;gap:6px;align-items:center;flex-wrap:wrap;background:#140e26;border:1px solid #a855f7;border-radius:10px;padding:6px 10px;font-size:11px;color:#f8fafc;";
     box.innerHTML = isEsExt
       ? `
-      <span>🔒 <strong>3/3 textos gratis hoy agotados:</strong></span>
+      <span>🔒 <strong>${MAX_DAILY_FREE}/${MAX_DAILY_FREE} textos gratis hoy agotados:</strong></span>
       <a href="https://buy.stripe.com/9B6cN6e669uZ4vmeTE0000f" target="_blank" rel="noopener" style="background:#00e5a3;color:#042f1e;padding:3px 8px;border-radius:6px;font-weight:800;text-decoration:none;">⚡ 10 Usos (2,99 €)</a>
       <a href="https://buy.stripe.com/3cIdRae66bD74vm6n80000g" target="_blank" rel="noopener" style="background:#a855f7;color:#fff;padding:3px 8px;border-radius:6px;font-weight:800;text-decoration:none;">🔥 50 Usos (9,90 €)</a>
       <a href="https://buy.stripe.com/eVq00k7HIfTn1jabHs0000h" target="_blank" rel="noopener" style="background:#38bdf8;color:#082f49;padding:3px 8px;border-radius:6px;font-weight:800;text-decoration:none;">💎 Anual (39 €)</a>
       <button type="button" class="pureai-key-btn" style="background:#1e293b;color:#cbd5e1;border:1px solid #475569;padding:3px 7px;border-radius:6px;cursor:pointer;font-size:11px;">🔑 Activar Clave Pro</button>
     `
       : `
-      <span>🔒 <strong>3/3 free daily texts used:</strong></span>
+      <span>🔒 <strong>${MAX_DAILY_FREE}/${MAX_DAILY_FREE} free daily texts used:</strong></span>
       <a href="https://buy.stripe.com/9B6cN6e669uZ4vmeTE0000f" target="_blank" rel="noopener" style="background:#00e5a3;color:#042f1e;padding:3px 8px;border-radius:6px;font-weight:800;text-decoration:none;">⚡ 10 Pass (€2.99)</a>
       <a href="https://buy.stripe.com/3cIdRae66bD74vm6n80000g" target="_blank" rel="noopener" style="background:#a855f7;color:#fff;padding:3px 8px;border-radius:6px;font-weight:800;text-decoration:none;">🔥 50 Pack (€9.90)</a>
       <a href="https://buy.stripe.com/eVq00k7HIfTn1jabHs0000h" target="_blank" rel="noopener" style="background:#38bdf8;color:#082f49;padding:3px 8px;border-radius:6px;font-weight:800;text-decoration:none;">💎 Unlimited (€39/yr)</a>
@@ -275,7 +275,7 @@
       } catch (_) {}
     }
     return String(msgEl.innerText || msgEl.textContent || "")
-      .replace(/\s*(✨ Copiar Texto Limpio|✅ ¡Copiado[^\n]*|🔒 3\/3 textos gratis hoy agotados:[\s\S]*)$/u, "");
+      .replace(/\s*(✨ Copiar Texto Limpio|✅ ¡Copiado[^\n]*|🔒 \d+\/\d+ (?:textos gratis hoy agotados|free daily texts used):[\s\S]*)$/u, "");
   }
 
   function injectPureAiButtons() {
