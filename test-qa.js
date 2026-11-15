@@ -2946,6 +2946,44 @@ assert(cleanAiHtml.includes("terms.html") && cleanAiHtml.includes("Art. 103.m TR
   assert.strictEqual(qaDigestBody.total.paidSales, 0, "STRAT-CFO-01d: Debe auto-corregir total.paidSales histórico restando el QA sin alterar finance:ledger_events");
   assert.strictEqual(JSON.parse(qaDigestKv.get("finance:ledger_events")).length, 1, "STRAT-CFO-01e: finance:ledger_events permanente debe permanecer intacto");
 
+  const sampleKeyBackup = paSandbox.downloadProLicenseBackup({
+    key: "PRO-ABCD-2345",
+    stripeSessionId: "cs_live_test_backup_key_1234567890",
+    unlimited: false,
+    creditsRemaining: 10
+  });
+  assert(
+    sampleKeyBackup &&
+    sampleKeyBackup.fileName === "PureAI-License-PRO-ABCD-2345.txt" &&
+    sampleKeyBackup.content.includes("PRO-ABCD-2345") &&
+    sampleKeyBackup.content.includes("https://pureaistudios.com/clean-ai-studio.html"),
+    "STRAT-KEY-01a: downloadProLicenseBackup debe generar el archivo .txt descargable con la clave Pro e instrucciones PC/móvil"
+  );
+  paSandbox.renderCheckoutSuccessBanner({
+    key: "PRO-ABCD-2345",
+    status: "ACTIVE",
+    verifiedByServer: true,
+    unlimited: false,
+    creditsRemaining: 10
+  });
+  assert(
+    getPaEl("pa-checkout-success-banner").innerHTML.includes("pa-banner-download-btn") &&
+    getPaEl("pa-checkout-success-banner").innerHTML.includes(".txt"),
+    "STRAT-KEY-01b: El banner post-compra debe mostrar el botón directo de descarga .txt"
+  );
+  paSandbox.saveSubscriptionRecord({
+    key: "PRO-ABCD-2345",
+    status: "ACTIVE",
+    verifiedByServer: true,
+    unlimited: false,
+    creditsRemaining: 10,
+    expiresAt: Date.now() + 86400000
+  });
+  assert.strictEqual(getPaEl("pa-active-license-bar").style.display, "block", "STRAT-KEY-01c: Con licencia activa debe mostrarse permanentemente #pa-active-license-bar con opción de descarga .txt");
+  assert(getPaEl("pa-active-license-bar").innerHTML.includes("pa-active-download-btn"), "STRAT-KEY-01d: #pa-active-license-bar debe incluir el botón Guardar Clave (.txt)");
+  paSandbox.saveSubscriptionRecord({ key: "PRO-ABCD-2345", status: "EXPIRED", verifiedByServer: true, expiresAt: 0 });
+  assert.strictEqual(getPaEl("pa-active-license-bar").style.display, "none", "STRAT-KEY-01e: Al expirar o revocar debe ocultarse #pa-active-license-bar");
+
   console.log("✅ QA TEST SUITE PASSED (24 SECCIONES / 360+ ASERCIONES): 100% E2E VM + Embudo Checkout & Multi-divisa Stripe + BUG-01/02/03/06 + GDPR gtag Gate + Seguridad Open-Redirect + Estrategia Fase 1.");
 })();
 

@@ -565,6 +565,8 @@
         ⚖️ <strong>Información precontractual:</strong> Pases de 10 usos (2,99 € IVA incl.) y 50 usos (9,90 € IVA incl.) de pago único sin renovación automática ni caducidad. Plan Anual Ilimitado (39,00 €/año IVA incl.) con renovación anual cancelable en 1 clic en cualquier momento conservando el acceso hasta fin del periodo abonado. Activación automática inmediata al volver de Stripe sin registro ni contraseñas. Al activar el software digital de forma inmediata, consientes expresamente el inicio de la ejecución y reconoces la excepción al derecho de desistimiento (Art. 103.m TRLGDCU). Uso exclusivo para obras propias conforme a los <a href="terms.html" style="color:#6ee7b7;text-decoration:underline;">Términos de Servicio</a> y <a href="privacy-policy.html" style="color:#6ee7b7;text-decoration:underline;">Política de Privacidad</a>.
       </div>
 
+      <div id="pa-active-license-bar" style="display:none;margin-top:10px;padding:10px 12px;background:rgba(16,185,129,0.13);border:1px solid #10b981;border-radius:9px;"></div>
+
       <div style="display:flex;gap:8px;align-items:center;margin-top:10px;flex-wrap:wrap;">
         <input type="text" id="pa-pro-code" placeholder="¿Ya compraste un Pack o Plan Anual? Pega tu clave (PRO-XXXX-XXXX) o sesión (cs_live_...)" style="flex:1;min-width:220px;padding:8px 12px;background:#0b0f19;border:1px solid #2d3748;color:#fff;border-radius:8px;font-size:0.78rem;" />
         <button id="btn-activate-pro" onclick="activatePureAiPro()" class="pa-btn pa-btn-green" style="width:auto;margin:0;padding:8px 16px;font-size:0.78rem;">Activar Pro</button>
@@ -852,6 +854,7 @@
       const affEleven = document.getElementById("aff-card-eleven"); if (affEleven) affEleven.innerHTML = isEs ? '<strong style="color:#6ee7b7;font-size:0.78rem;">🎙️ ElevenLabs (Voz IA Realista)</strong><div style="font-size:0.71rem;color:#94a3b8;line-height:1.35;margin-top:2px;">Dobla tus Reels, TikToks y vídeos de Sora/Runway con voces humanas indetectables.</div>' : '<strong style="color:#6ee7b7;font-size:0.78rem;">🎙️ ElevenLabs (Realistic AI Voice)</strong><div style="font-size:0.71rem;color:#94a3b8;line-height:1.35;margin-top:2px;">Dub your Reels, TikToks &amp; Sora/Runway videos with lifelike human voices.</div>';
       const affHey = document.getElementById("aff-card-heygen"); if (affHey) affHey.innerHTML = isEs ? '<strong style="color:#fcd34d;font-size:0.78rem;">🎬 HeyGen (Avatares &amp; Vídeo IA)</strong><div style="font-size:0.71rem;color:#94a3b8;line-height:1.35;margin-top:2px;">Crea presentadores e influencers IA en vídeo HD listos para limpiar en PureAI.</div>' : '<strong style="color:#fcd34d;font-size:0.78rem;">🎬 HeyGen (AI Video Avatars)</strong><div style="font-size:0.71rem;color:#94a3b8;line-height:1.35;margin-top:2px;">Create HD AI presenters ready to scrub with PureAI before posting.</div>';
       if (typeof updateFreeImgQuotaUi === "function") updateFreeImgQuotaUi();
+      if (typeof renderProStatusUi === "function") renderProStatusUi();
       const cfg = LANGS[l] || LANGS.en;
       ["en", "es", "de", "fr", "pt"].forEach((k) => {
         document.getElementById("lang-" + k).classList.toggle("active", k === l);
@@ -971,6 +974,7 @@
         }
       } catch (_) {}
       if (typeof updateFreeImgQuotaUi === "function") updateFreeImgQuotaUi();
+      if (typeof renderProStatusUi === "function") renderProStatusUi();
       return evalRes;
     }
 
@@ -3311,6 +3315,9 @@
       }
       var codeInp = document.getElementById("pa-pro-code");
       if (codeInp && !codeInp.value) codeInp.value = myProKey;
+      if (typeof renderCheckoutSuccessBanner === "function") {
+        try { renderCheckoutSuccessBanner(loadStoredSubscriptionRecord()); } catch (_) {}
+      }
       if (typeof history !== "undefined" && history.replaceState && typeof location !== "undefined") {
         var cleanSearchUrl = (location.pathname || "/") + (location.search || "").replace(/[?&]session_id=[^&]+/g, "").replace(/^&/, "?");
         if (typeof setTimeout === "function") { setTimeout(function () { history.replaceState(null, "", cleanSearchUrl); }, 4000); } else { history.replaceState(null, "", cleanSearchUrl); }
@@ -3625,6 +3632,122 @@
       } catch (_) {}
     }
 
+    function downloadProLicenseBackup(optionalRec) {
+      var rec = optionalRec || loadStoredSubscriptionRecord();
+      var rawKey = String((rec && rec.key) || localStorage.getItem("pureai_pro_key") || "").trim();
+      if (!rawKey) return null;
+      var isEs = typeof currentUiLang !== "undefined" && currentUiLang === "es";
+      var safeFileKey = rawKey.replace(/[^a-zA-Z0-9_-]/g, "").slice(0, 28) || "PRO";
+      var fileName = "PureAI-License-" + safeFileKey + ".txt";
+      var isAnnual = rec && rec.unlimited !== false;
+      var planLine = isAnnual
+        ? (isEs ? "Estudio Anual Ilimitado (hasta 4 dispositivos)" : "Annual Unlimited Studio (up to 4 devices)")
+        : (isEs
+          ? ("Pack de Créditos Pro (" + Number((rec && rec.creditsRemaining) || 0) + " usos disponibles · sin caducidad)")
+          : ("Pro Credit Pack (" + Number((rec && rec.creditsRemaining) || 0) + " clean exports available · never expires)"));
+      var lines = isEs
+        ? [
+            "==========================================================",
+            "  PUREAI STUDIO — ARCHIVO DE LICENCIA PRO (PC Y MÓVIL)",
+            "==========================================================",
+            "",
+            "Clave Multi-Dispositivo: " + rawKey,
+            (rec && rec.stripeSessionId ? ("Referencia de pago Stripe: " + rec.stripeSessionId) : ""),
+            "Plan activo: " + planLine,
+            "Fecha de respaldo: " + new Date().toISOString().slice(0, 10),
+            "",
+            "CÓMO ACTIVAR EN TU ORDENADOR, MÓVIL O EXTENSIÓN CHROME:",
+            "1. Abre https://pureaistudios.com/clean-ai-studio.html",
+            "2. Pega tu clave (" + rawKey + ") en la casilla Pro.",
+            "3. Pulsa 'Activar Pro'.",
+            "",
+            "Gestión de suscripción anual (si aplica):",
+            "https://billing.stripe.com/p/login/9B64gA5zA22x5zq3aW00000",
+            "=========================================================="
+          ]
+        : [
+            "==========================================================",
+            "  PUREAI STUDIO — PRO LICENSE BACKUP FILE (PC & MOBILE)",
+            "==========================================================",
+            "",
+            "Multi-Device License Key: " + rawKey,
+            (rec && rec.stripeSessionId ? ("Stripe Payment Reference: " + rec.stripeSessionId) : ""),
+            "Active Plan: " + planLine,
+            "Backup Date: " + new Date().toISOString().slice(0, 10),
+            "",
+            "HOW TO ACTIVATE ON YOUR PC, PHONE, OR CHROME EXTENSION:",
+            "1. Open https://pureaistudios.com/clean-ai-studio.html",
+            "2. Paste your key (" + rawKey + ") into the Pro license box.",
+            "3. Click 'Activate Pro'.",
+            "",
+            "Manage Annual Subscription (if applicable):",
+            "https://billing.stripe.com/p/login/9B64gA5zA22x5zq3aW00000",
+            "=========================================================="
+          ];
+      var content = lines.filter(function (x) { return x !== null && x !== undefined; }).join("\r\n");
+      try {
+        if (typeof Blob === "function" && typeof URL !== "undefined" && typeof URL.createObjectURL === "function" && typeof document !== "undefined") {
+          var blob = new Blob([content], { type: "text/plain;charset=utf-8" });
+          var dlUrl = URL.createObjectURL(blob);
+          var a = document.createElement("a");
+          a.href = dlUrl;
+          a.download = fileName;
+          a.click();
+          if (typeof setTimeout === "function" && URL.revokeObjectURL) {
+            setTimeout(function () { URL.revokeObjectURL(dlUrl); }, 2000);
+          }
+        }
+      } catch (_) {}
+      return { fileName: fileName, content: content, key: rawKey };
+    }
+
+    function renderProStatusUi() {
+      if (typeof document === "undefined") return false;
+      var bar = document.getElementById("pa-active-license-bar");
+      if (!bar) return false;
+      var rec = loadStoredSubscriptionRecord();
+      var access = evaluateSubscriptionAccess(rec, Date.now());
+      var keyText = String((rec && rec.key) || "").trim();
+      if (!access || !access.hasAccess || !keyText) {
+        bar.style.display = "none";
+        bar.innerHTML = "";
+        return false;
+      }
+      var isEs = typeof currentUiLang !== "undefined" && currentUiLang === "es";
+      var isAnnual = rec.unlimited !== false;
+      var statusBadge = isAnnual
+        ? (isEs ? "Anual Ilimitado activo" : "Annual Unlimited active")
+        : (isEs ? (Number(rec.creditsRemaining || 0) + " usos Pro disponibles") : (Number(rec.creditsRemaining || 0) + " Pro exports left"));
+      var lblTitle = isEs ? "🔑 Tu Clave Pro activa (guárdala para PC/móvil):" : "🔑 Your Active Pro Key (save for PC/mobile):";
+      var copyTxt = isEs ? "📋 Copiar" : "📋 Copy";
+      var saveTxt = isEs ? "💾 Guardar Clave (.txt)" : "💾 Save Key (.txt)";
+      bar.innerHTML =
+        "<div style=\"display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;\">" +
+          "<div style=\"font-size:0.77rem;color:#d1fae5;\">" +
+            "<strong>" + escapePureAiHtml(lblTitle) + "</strong> " +
+            "<code style=\"background:#042f1e;border:1px solid #10b981;color:#6ee7b7;padding:3px 8px;border-radius:6px;font-weight:900;font-size:0.8rem;\">" + escapePureAiHtml(keyText) + "</code> " +
+            "<span style=\"color:#6ee7b7;font-size:0.73rem;font-weight:700;\">· " + escapePureAiHtml(statusBadge) + "</span>" +
+          "</div>" +
+          "<div style=\"display:flex;gap:6px;flex-wrap:wrap;\">" +
+            "<button type=\"button\" id=\"pa-active-copy-btn\" style=\"background:#065f46;color:#ecfdf5;border:1px solid #10b981;border-radius:7px;padding:5px 10px;font-size:0.74rem;font-weight:800;cursor:pointer;\">" + escapePureAiHtml(copyTxt) + "</button>" +
+            "<button type=\"button\" id=\"pa-active-download-btn\" style=\"background:#10b981;color:#022c22;border:none;border-radius:7px;padding:5px 11px;font-size:0.74rem;font-weight:900;cursor:pointer;\">" + escapePureAiHtml(saveTxt) + "</button>" +
+          "</div>" +
+        "</div>";
+      bar.style.display = "block";
+      var cBtn = document.getElementById("pa-active-copy-btn");
+      if (cBtn) {
+        cBtn.onclick = function () {
+          try { if (navigator.clipboard) navigator.clipboard.writeText(keyText); } catch (_) {}
+          cBtn.textContent = isEs ? "✅ ¡Copiada!" : "✅ Copied!";
+        };
+      }
+      var dBtn = document.getElementById("pa-active-download-btn");
+      if (dBtn) {
+        dBtn.onclick = function () { downloadProLicenseBackup(rec); };
+      }
+      return true;
+    }
+
     function renderCheckoutSuccessBanner(rec) {
       if (typeof document === "undefined" || !rec) return;
       var banner = document.getElementById("pa-checkout-success-banner");
@@ -3644,9 +3767,10 @@
         ? (isEs ? "⏳ Procesando activación automática..." : "⏳ Finalizing Automatic Unlock...")
         : (isEs ? "🎉 ¡Compra verificada y licencia activada automáticamente!" : "🎉 Purchase Verified & Unlocked Automatically!");
       var copyLbl = isEs ? "📋 Copiar Clave" : "📋 Copy Key";
+      var dlLbl = isEs ? "💾 Guardar Clave (.txt)" : "💾 Save Key (.txt)";
       var noteTxt = isEs
-        ? "No necesitas cuenta ni contraseña. Guarda o copia esta clave para usarla también en tu ordenador, móvil o Extensión Chrome:"
-        : "No account or password needed. Copy this key to also unlock on your other browser tabs, mobile, or Chrome Extension:";
+        ? "Sin cuenta ni contraseña. Descarga el archivo .txt o copia esta clave para conservarla en tu PC, móvil o Extensión Chrome:"
+        : "No account or password needed. Download the .txt backup file or copy this key to keep it on your PC, phone, or Chrome Extension:";
       banner.style.background = "rgba(16,185,129,0.14)";
       banner.style.borderColor = "#10b981";
       banner.innerHTML =
@@ -3658,11 +3782,19 @@
           "</div>" +
           "<div style=\"display:flex;align-items:center;gap:8px;flex-wrap:wrap;\">" +
             "<code id=\"pa-banner-key-code\" style=\"background:#042f1e;border:1px solid #10b981;color:#6ee7b7;padding:6px 10px;border-radius:8px;font-weight:900;font-size:0.84rem;\">" + escapePureAiHtml(keyText) + "</code>" +
-            "<button type=\"button\" id=\"pa-banner-copy-btn\" style=\"background:#10b981;color:#022c22;border:none;border-radius:8px;padding:7px 12px;font-weight:900;font-size:0.78rem;cursor:pointer;\">" + escapePureAiHtml(copyLbl) + "</button>" +
+            "<button type=\"button\" id=\"pa-banner-download-btn\" style=\"background:#10b981;color:#022c22;border:none;border-radius:8px;padding:7px 12px;font-weight:900;font-size:0.78rem;cursor:pointer;\">" + escapePureAiHtml(dlLbl) + "</button>" +
+            "<button type=\"button\" id=\"pa-banner-copy-btn\" style=\"background:#065f46;color:#ecfdf5;border:1px solid #10b981;border-radius:8px;padding:7px 11px;font-weight:800;font-size:0.78rem;cursor:pointer;\">" + escapePureAiHtml(copyLbl) + "</button>" +
             "<button type=\"button\" id=\"pa-banner-dismiss-btn\" style=\"background:transparent;color:#94a3b8;border:1px solid rgba(255,255,255,0.2);border-radius:8px;padding:6px 10px;font-size:0.76rem;cursor:pointer;\">✕</button>" +
           "</div>" +
         "</div>";
       banner.style.display = "block";
+      var dlBtn = document.getElementById("pa-banner-download-btn");
+      if (dlBtn) {
+        dlBtn.onclick = function () {
+          downloadProLicenseBackup(rec);
+          dlBtn.textContent = isEs ? "✅ Archivo guardado" : "✅ File Saved";
+        };
+      }
       var copyBtn = document.getElementById("pa-banner-copy-btn");
       if (copyBtn) {
         copyBtn.onclick = function () {
@@ -3722,6 +3854,10 @@
         };
         syncDisplayCurFromDom();
         if (typeof window !== "undefined") window.syncPureAiDisplayCurrency = syncDisplayCurFromDom;
+      } catch (_) {}
+
+      try {
+        renderProStatusUi();
       } catch (_) {}
 
       try {
