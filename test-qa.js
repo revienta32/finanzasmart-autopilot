@@ -2539,7 +2539,7 @@ assert(cleanAiHtml.includes("terms.html") && cleanAiHtml.includes("Art. 103.m TR
       method: "POST",
       url: "https://pureai-stripe-webhook.pureaistudio-app.workers.dev/create-checkout-session",
       headers: { get: (h) => (String(h).toLowerCase() === "origin" ? "https://pureaistudios.com" : "") },
-      text: async () => JSON.stringify({ plan: "pack_10", currency: "usd", lang: "en", returnPath: "//evil.com/phish", extClaimToken: "ext_claim_token_abcdef123456" })
+      text: async () => JSON.stringify({ plan: "pack_10", currency: "usd", lang: "en", aff: "creator.ai", returnPath: "//evil.com/phish", extClaimToken: "ext_claim_token_abcdef123456" })
     }, s23Env);
     const chkBody = JSON.parse(chkRes.body);
     assert.strictEqual(chkRes.status, 200, "CHK-01: /create-checkout-session USD debe devolver HTTP 200");
@@ -2547,6 +2547,7 @@ assert(cleanAiHtml.includes("terms.html") && cleanAiHtml.includes("Art. 103.m TR
     assert(lastStripeFormSent.includes("success_url=https%3A%2F%2Fpureaistudios.com%2Fclean-ai-studio.html%3Fsession_id%3D"), "SEC-OPENRED-01: returnPath '//evil.com/phish' debe sanearse hacia /clean-ai-studio.html");
     assert(!lastStripeFormSent.includes("evil.com"), "SEC-OPENRED-02: Dominio atacante nunca debe llegar a success_url ni cancel_url");
     assert(lastStripeFormSent.includes("currency=usd") && lastStripeFormSent.includes("price_1UbxSGJGMJW2ESycnHyuZnMe"), "CHK-03: Debe enviar currency=usd y Price multi-divisa de pack_10");
+    assert(lastStripeFormSent.includes("client_reference_id=aff_creator.ai"), "AFF-CHK-01: client_reference_id debe conservar el prefijo aff_ y puntos en el alias");
     const recAfterSession = JSON.parse(s23KvMap.get("telemetry:recent_events") || "[]");
     assert(recAfterSession.some((e) => e.event_name === "checkout_session_created" && e.displayCurrency === "usd"), "FUNNEL-04: checkout_session_created debe quedar registrado en KV");
 
@@ -2618,7 +2619,7 @@ assert(cleanAiHtml.includes("terms.html") && cleanAiHtml.includes("Art. 103.m TR
       id: "evt_s23_ext_paid",
       type: "checkout.session.completed",
       created: Math.floor(Date.now() / 1000),
-      data: { object: { id: "cs_ext_paid_1", customer: "cus_ext_1", payment_status: "paid", mode: "payment", amount_total: 299, currency: "eur", metadata: { plan_type: "pack_10", ext_claim_token: claimTok } } }
+      data: { object: { id: "cs_ext_paid_1", customer: "cus_ext_1", payment_status: "paid", mode: "payment", amount_total: 299, currency: "eur", client_reference_id: "aff_creator.ai", metadata: { plan_type: "pack_10", aff: "creator.ai", ext_claim_token: claimTok } } }
     });
     assert.strictEqual(extCsWh.status, 200, "EXT-CLAIM-01: checkout.session.completed con ext_claim_token debe procesarse OK");
     const extClaimRes = await webhookEngine.handleWorkerHttpRequest({
@@ -2630,6 +2631,14 @@ assert(cleanAiHtml.includes("terms.html") && cleanAiHtml.includes("Art. 103.m TR
     assert.strictEqual(extClaimRes.status, 200, "EXT-CLAIM-02: GET /claim-extension-license debe responder 200");
     assert.strictEqual(extClaimBody.claimed, true, "EXT-CLAIM-03: Debe confirmar claimed=true");
     assert(/^PRO-/.test(extClaimBody.proKey || ""), "EXT-CLAIM-04: Debe devolver clave PRO-... sin PII del comprador");
+    const s23Ledger = JSON.parse(s23KvMap.get("finance:ledger_events") || "[]");
+    const extLedgerRow = s23Ledger.find((x) => x && x.affiliatePartner === "creator.ai");
+    assert(
+      extLedgerRow &&
+      extLedgerRow.currency === "eur" &&
+      extLedgerRow.affiliateStatus === "ON_HOLD_30_DAYS",
+      "AFF-LEDGER-01: finance:ledger_events debe registrar currency, affiliatePartner y affiliateStatus ON_HOLD_30_DAYS"
+    );
   } finally {
     global.fetch = prevS23Fetch;
   }

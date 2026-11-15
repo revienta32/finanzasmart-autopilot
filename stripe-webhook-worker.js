@@ -457,9 +457,12 @@ function processStripeWebhookEvent(store, event, nowMs, options) {
         if (obj.payment_intent) {
           existing.lastPaymentIntentId = String(obj.payment_intent);
         }
+        const rawMetaAff = String((obj.metadata && obj.metadata.aff) || "").trim().replace(/^aff_/i, "");
         const ref = String(obj.client_reference_id || "");
-        if (ref.startsWith("aff_")) {
-          const affId = ref.slice(4);
+        const affId = ref.startsWith("aff_")
+          ? ref.slice(4)
+          : (/^[a-zA-Z0-9_.-]{2,40}$/.test(rawMetaAff) ? rawMetaAff : "");
+        if (affId) {
           const defaultGross =
             existing.planType === "pack_10"
               ? 299
@@ -468,10 +471,18 @@ function processStripeWebhookEvent(store, event, nowMs, options) {
                 : existing.planInterval === "year"
                   ? 3900
                   : 499;
+          const objCurrency = String(obj.currency || "eur").toLowerCase();
+          const rawGross = Number(obj.amount_total) || 0;
+          const grossEur = rawGross > 0 ? normalizeCheckoutAmountToEurCents(rawGross, objCurrency) : defaultGross;
+          const rawTax = obj.total_details && obj.total_details.amount_tax ? Number(obj.total_details.amount_tax) || 0 : 0;
+          const taxEur = rawTax > 0 ? normalizeCheckoutAmountToEurCents(rawTax, objCurrency) : 0;
+          const feeEur = obj.stripe_fee_cents
+            ? normalizeCheckoutAmountToEurCents(Number(obj.stripe_fee_cents) || 0, objCurrency)
+            : Math.round(grossEur * 0.025 + 25);
           const comm = calculateAffiliateNetCommission(
-            obj.amount_total || defaultGross,
-            obj.total_details && obj.total_details.amount_tax ? obj.total_details.amount_tax : 0,
-            obj.stripe_fee_cents || Math.round((obj.amount_total || defaultGross) * 0.025 + 25),
+            grossEur,
+            taxEur,
+            feeEur,
             affId,
             obj.customer_email,
             obj.affiliate_email
@@ -951,7 +962,10 @@ async function handleWorkerHttpRequest(req, env, sharedStore) {
         const taxCents = normalizeCheckoutAmountToEurCents(rawTaxCents, paidCurrency);
         const amountEur = (amountCents / 100).toFixed(2);
         const rawRef = String(objPaid.client_reference_id || "");
-        const affPartner = rawRef.startsWith("aff_") ? rawRef.slice(4) : "organic";
+        const rawPaidMetaAff = String((objPaid.metadata && objPaid.metadata.aff) || "").trim().replace(/^aff_/i, "");
+        const affPartner = rawRef.startsWith("aff_")
+          ? rawRef.slice(4)
+          : (/^[a-zA-Z0-9_.-]{2,40}$/.test(rawPaidMetaAff) ? rawPaidMetaAff : "organic");
         const planType = (result.subscription && result.subscription.planType) || (result.subscription && result.subscription.planInterval === "year" ? "annual_unlimited" : "monthly_unlimited");
         const ledgerType = planType === "pack_10" ? "SALE_PACK_10" : planType === "pack_50" ? "SALE_PACK_50" : (result.subscription && result.subscription.planInterval === "year" ? "SALE_ANNUAL" : "SALE_MONTHLY");
         const saleId = "sale_" + (eventObj.id || Date.now());
@@ -982,7 +996,11 @@ async function handleWorkerHttpRequest(req, env, sharedStore) {
           type: ledgerType,
           amountCents,
           taxCents,
+          feeCents: Math.round(amountCents * 0.025 + 25),
+          currency: paidCurrency,
           affiliateId: affPartner,
+          affiliatePartner: affPartner,
+          affiliateStatus: affPartner !== "organic" ? "ON_HOLD_30_DAYS" : null,
           planType,
           planInterval: result.subscription && result.subscription.planInterval,
           ts: new Date().toISOString()
@@ -1002,15 +1020,28 @@ async function handleWorkerHttpRequest(req, env, sharedStore) {
       } else if (eventObj.type === "invoice.paid" && result.state === SUBSCRIPTION_STATES.ACTIVE) {
         const objInv = (eventObj.data && eventObj.data.object) || {};
         if (objInv.billing_reason === "subscription_cycle") {
-          const amountCents = Number(objInv.amount_paid || objInv.amount_total) || 0;
-          const taxCents = Number(objInv.tax) || (objInv.total_details && Number(objInv.total_details.amount_tax)) || 0;
+          const invCurrency = String(objInv.currency || "eur").toLowerCase();
+          const rawInvAmount = Number(objInv.amount_paid || objInv.amount_total) || 0;
+          const rawInvTax = Number(objInv.tax) || (objInv.total_details && Number(objInv.total_details.amount_tax)) || 0;
+          const amountCents = normalizeCheckoutAmountToEurCents(rawInvAmount, invCurrency);
+          const taxCents = normalizeCheckoutAmountToEurCents(rawInvTax, invCurrency);
+          const rawInvAff = String(
+            (objInv.subscription_details && objInv.subscription_details.metadata && objInv.subscription_details.metadata.aff) ||
+            (objInv.metadata && objInv.metadata.aff) ||
+            ""
+          ).trim().replace(/^aff_/i, "");
+          const invAffPartner = /^[a-zA-Z0-9_.-]{2,40}$/.test(rawInvAff) ? rawInvAff : "organic";
           const isAnnual = Boolean(result.subscription && result.subscription.planInterval === "year");
           await appendFinancialLedgerEvent(env, {
             id: "inv_" + (eventObj.id || Date.now()),
             type: isAnnual ? "SALE_ANNUAL" : "SALE_MONTHLY",
             amountCents,
             taxCents,
-            affiliateId: "organic",
+            feeCents: Math.round(amountCents * 0.025 + 25),
+            currency: invCurrency,
+            affiliateId: invAffPartner,
+            affiliatePartner: invAffPartner,
+            affiliateStatus: invAffPartner !== "organic" ? "ON_HOLD_30_DAYS" : null,
             planType: isAnnual ? "annual_unlimited" : "monthly_unlimited",
             planInterval: isAnnual ? "year" : "month",
             billingReason: "subscription_cycle",
@@ -1672,8 +1703,8 @@ async function handleWorkerHttpRequest(req, env, sharedStore) {
     const safeReturnPath = sanitizeCheckoutReturnPath(body && body.returnPath);
     const surface = String((body && body.surface) || "pricing_box").replace(/[^a-zA-Z0-9_-]/g, "_").slice(0, 48) || "pricing_box";
     const triggerTool = String((body && body.triggerTool) || "direct_pricing_box").replace(/[^a-zA-Z0-9_-]/g, "_").slice(0, 48) || "direct_pricing_box";
-    const affRaw = String((body && body.aff) || "").trim();
-    const aff = /^[a-zA-Z0-9_-]{2,40}$/.test(affRaw) ? affRaw : "";
+    const affRaw = String((body && body.aff) || "").trim().replace(/^aff_/i, "");
+    const aff = /^[a-zA-Z0-9_.-]{2,40}$/.test(affRaw) ? affRaw : "";
     const extTokenRaw = String((body && body.extClaimToken) || "").trim();
     const extClaimToken = /^[a-zA-Z0-9_-]{16,64}$/.test(extTokenRaw) ? extTokenRaw : "";
     const attemptId = "att_" + Date.now().toString(36) + "_" + Math.random().toString(36).slice(2, 8);
@@ -1705,7 +1736,7 @@ async function handleWorkerHttpRequest(req, env, sharedStore) {
       locale: stripeLocale,
       success_url: successUrl,
       cancel_url: cancelUrl,
-      client_reference_id: aff || attemptId,
+      client_reference_id: aff ? `aff_${aff}` : attemptId,
       "custom_text[submit][message]": plan.submitMessage,
       "metadata[plan_type]": plan.key,
       "metadata[attempt_id]": attemptId,

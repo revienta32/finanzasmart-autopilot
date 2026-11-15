@@ -124,7 +124,7 @@
     try {
       if (localStorage.getItem("pureai_studio_pro") === "true") {
         userTier = "pro_active";
-      } else if (parseInt(localStorage.getItem("pureai_img_used") || "0", 10) >= 3) {
+      } else if (parseInt(localStorage.getItem("pureai_img_used") || "0", 10) >= 1) {
         userTier = "free_exhausted";
       }
     } catch (_) {}
@@ -281,7 +281,7 @@
         : (link.textContent && link.textContent.includes("$") ? "usd" : (link.textContent && link.textContent.includes("£") ? "gbp" : "eur"));
       const surface = (link.dataset && link.dataset.surface)
         ? link.dataset.surface
-        : (link.closest && link.closest("#pro-modal-box"))
+        : (link.closest && link.closest("#pro-modal-overlay, #pro-modal-box"))
           ? "pro_modal"
           : (link.closest && link.closest("#pa-pro-box"))
             ? "pricing_box"
@@ -385,13 +385,16 @@
     </div>
   `;
 
+  const isEmbedWidget = /embed-scanner\.html/i.test(pageName);
   const container = document.createElement("div");
   container.className = "no-print";
   container.innerHTML = widgetHtml;
   if (document.body) {
-    document.body.appendChild(container);
-    if (document.getElementById("pa-sticky-seo-bar")) {
-      document.body.style.paddingBottom = "72px";
+    if (!isEmbedWidget) {
+      document.body.appendChild(container);
+      if (document.getElementById("pa-sticky-seo-bar")) {
+        document.body.style.paddingBottom = "72px";
+      }
     }
     try {
       const queued = Array.isArray(window.__pureaiPendingTelemetryQueue)
@@ -473,7 +476,7 @@
   }
 
   // 4. Barra Flotante de Conversión (Sticky CTA) en las Landings SEO (Idioma adaptativo EN/ES + Lotes de Pago Único y Anual 39 €)
-  const isMainStudio = /clean-ai-studio\.html|index\.html/i.test(pageName);
+  const isMainStudio = /clean-ai-studio\.html|index\.html|embed-scanner\.html/i.test(pageName);
   if (!isMainStudio && typeof document !== "undefined" && document.body && !document.getElementById("pa-sticky-seo-bar")) {
     const isEsNav = typeof navigator !== "undefined" && /^es\b/i.test(navigator.language || "");
     const stickyTz = (() => { try { return Intl.DateTimeFormat().resolvedOptions().timeZone || ""; } catch (_) { return ""; } })();
