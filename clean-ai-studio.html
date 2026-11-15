@@ -1135,6 +1135,8 @@
             }
           } catch (_) {}
           try {
+            var verCodeInp = document.getElementById("pa-pro-code");
+            if (verCodeInp && !verCodeInp.value && srvRec.key) verCodeInp.value = srvRec.key;
             if (typeof renderCheckoutSuccessBanner === "function" && typeof window !== "undefined" && window.location && window.location.search && window.location.search.indexOf("session_id=") !== -1) {
               renderCheckoutSuccessBanner(srvRec);
             }
@@ -1281,10 +1283,19 @@
         fetch("https://pureai-stripe-webhook.pureaistudio-app.workers.dev/consume-credit", {
           method: "POST",
           headers: { "Content-Type": "application/json", Accept: "application/json" },
-          body: JSON.stringify({ code: targetCode, count: deduct, opId: opId })
+          body: JSON.stringify({ code: targetCode, count: deduct, opId: opId, mode: opTag || "single" })
         })
           .then(function (r) { return r.json().then(function (d) { return { s: r.status, d: d }; }); })
           .then(function (x) {
+            if (x && (x.s === 403 || x.s === 404) && x.d && (x.d.reason === "insufficient_credits" || x.d.reason === "license_not_found" || x.d.reason === "inactive_license")) {
+              var rev = loadStoredSubscriptionRecord();
+              if (rev) {
+                rev.creditsRemaining = 0;
+                rev.status = SUBSCRIPTION_STATES.EXPIRED;
+                saveSubscriptionRecord(rev);
+              }
+              return;
+            }
             if (x && x.d && typeof x.d.creditsRemaining === "number") {
               var cur = loadStoredSubscriptionRecord();
               if (cur && cur.unlimited === false) {
@@ -1301,8 +1312,8 @@
     function hasServerVerifiedBatchAccess() {
       if (!isPureAiPro) return false;
       var rec = loadStoredSubscriptionRecord();
-      if (!rec) return true;
-      if (rec.verifiedByServer !== true) return false;
+      if (!rec || rec.verifiedByServer !== true) return false;
+      if (rec.planType === "pack_10") return false;
       if (rec.unlimited === false && typeof rec.creditsRemaining === "number" && rec.creditsRemaining < 2) return false;
       return true;
     }
@@ -1317,7 +1328,15 @@
         }
         batchQueue = files;
         var bPr = getPureAiPriceLabels(currentUiLang === "es");
-        showProModal(currentUiLang === "es" ? ("🔒 Modo Lote .ZIP (" + files.length + " archivos seleccionados — fotos y vídeos .MP4) disponible desde 🔥 " + bPr.p50 + " (Pack 50 Usos + .ZIP, pago único) o " + bPr.pYrSlash + " Ilimitado. Cargando el 1er archivo en vista previa.") : ("🔒 Bulk Batch .ZIP Mode (" + files.length + " files selected — photos & .MP4 videos) unlocks with the 🔥 " + bPr.p50 + " 50-File Creator Pack (one-time) or " + bPr.pYrSlash + " Unlimited Studio. Loading the 1st file in preview."), "img_batch_zip");
+        var isPack10Upgrade = Boolean(pendingRec && pendingRec.verifiedByServer === true && pendingRec.planType === "pack_10");
+        var batchMsg = isPack10Upgrade
+          ? (currentUiLang === "es"
+              ? ("🔒 Tu Pack Puntual de 10 Usos procesa archivos de 1 en 1 (" + Number(pendingRec.creditsRemaining || 0) + " restantes). Para procesar Lotes .ZIP masivos (" + files.length + " archivos seleccionados), desbloquea 🔥 " + bPr.p50 + " (Pack 50 Usos + .ZIP) o 💎 " + bPr.pYrSlash + " Ilimitado. Cargando el 1er archivo.")
+              : ("🔒 Your 10-File Starter Pass cleans files 1 by 1 (" + Number(pendingRec.creditsRemaining || 0) + " left). To process Bulk Batch .ZIPs (" + files.length + " files selected), unlock the 🔥 " + bPr.p50 + " 50-File + .ZIP Pack or 💎 " + bPr.pYrSlash + " Unlimited Studio. Loading the 1st file."))
+          : (currentUiLang === "es"
+              ? ("🔒 Modo Lote .ZIP (" + files.length + " archivos seleccionados — fotos y vídeos .MP4) disponible desde 🔥 " + bPr.p50 + " (Pack 50 Usos + .ZIP, pago único) o " + bPr.pYrSlash + " Ilimitado. Cargando el 1er archivo en vista previa.")
+              : ("🔒 Bulk Batch .ZIP Mode (" + files.length + " files selected — photos & .MP4 videos) unlocks with the 🔥 " + bPr.p50 + " 50-File Creator Pack (one-time) or " + bPr.pYrSlash + " Unlimited Studio. Loading the 1st file in preview."));
+        showProModal(batchMsg, "img_batch_zip");
       }
       batchQueue = canUseBatch ? files : [files[0]];
       if (isVideoFile(files[0])) {
@@ -3309,12 +3328,13 @@
             }
           }, 15000);
           setTimeout(function () {
-            revalidateStoredSubscriptionState();
+            if (!revalidateStoredSubscriptionState()) {
+              var bEl = document.getElementById("pa-checkout-success-banner");
+              if (bEl) bEl.style.display = "none";
+            }
           }, CHECKOUT_GRACE_WINDOW_MS + 1500);
         }
       }
-      var codeInp = document.getElementById("pa-pro-code");
-      if (codeInp && !codeInp.value) codeInp.value = myProKey;
       if (typeof renderCheckoutSuccessBanner === "function") {
         try { renderCheckoutSuccessBanner(loadStoredSubscriptionRecord()); } catch (_) {}
       }
@@ -3632,19 +3652,40 @@
       } catch (_) {}
     }
 
+    function describeVerifiedPlanLabel(rec, isEs) {
+      if (!rec) return "";
+      var rem = Math.max(0, Number(rec.creditsRemaining || 0));
+      if (rec.planType === "pack_10") {
+        return isEs
+          ? ("Pack Puntual 10 Usos (" + rem + " archivos individuales disponibles · sin caducidad)")
+          : ("10-File Starter Pass (" + rem + " single exports left · never expires)");
+      }
+      if (rec.planType === "pack_50") {
+        return isEs
+          ? ("Pack Creador 50 Usos + Lotes .ZIP (" + rem + " usos disponibles · sin caducidad)")
+          : ("50-File Creator Pack + Batch .ZIP (" + rem + " exports left · never expires)");
+      }
+      if (rec.unlimited === false) {
+        return isEs
+          ? ("Pack de Créditos Pro (" + rem + " usos disponibles · sin caducidad)")
+          : ("Pro Credit Pack (" + rem + " clean exports left · never expires)");
+      }
+      return isEs
+        ? "Estudio Anual Ilimitado + Lotes .ZIP (hasta 4 dispositivos)"
+        : "Annual Unlimited Studio + Batch .ZIP (up to 4 devices)";
+    }
+
     function downloadProLicenseBackup(optionalRec) {
       var rec = optionalRec || loadStoredSubscriptionRecord();
-      var rawKey = String((rec && rec.key) || localStorage.getItem("pureai_pro_key") || "").trim();
+      if (!rec || rec.verifiedByServer !== true) return null;
+      var access = evaluateSubscriptionAccess(rec, Date.now());
+      if (!access || !access.hasAccess) return null;
+      var rawKey = String(rec.key || "").trim();
       if (!rawKey) return null;
       var isEs = typeof currentUiLang !== "undefined" && currentUiLang === "es";
       var safeFileKey = rawKey.replace(/[^a-zA-Z0-9_-]/g, "").slice(0, 28) || "PRO";
       var fileName = "PureAI-License-" + safeFileKey + ".txt";
-      var isAnnual = rec && rec.unlimited !== false;
-      var planLine = isAnnual
-        ? (isEs ? "Estudio Anual Ilimitado (hasta 4 dispositivos)" : "Annual Unlimited Studio (up to 4 devices)")
-        : (isEs
-          ? ("Pack de Créditos Pro (" + Number((rec && rec.creditsRemaining) || 0) + " usos disponibles · sin caducidad)")
-          : ("Pro Credit Pack (" + Number((rec && rec.creditsRemaining) || 0) + " clean exports available · never expires)"));
+      var planLine = describeVerifiedPlanLabel(rec, isEs);
       var lines = isEs
         ? [
             "==========================================================",
@@ -3653,7 +3694,7 @@
             "",
             "Clave Multi-Dispositivo: " + rawKey,
             (rec && rec.stripeSessionId ? ("Referencia de pago Stripe: " + rec.stripeSessionId) : ""),
-            "Plan activo: " + planLine,
+            "Plan contratado: " + planLine,
             "Fecha de respaldo: " + new Date().toISOString().slice(0, 10),
             "",
             "CÓMO ACTIVAR EN TU ORDENADOR, MÓVIL O EXTENSIÓN CHROME:",
@@ -3672,7 +3713,7 @@
             "",
             "Multi-Device License Key: " + rawKey,
             (rec && rec.stripeSessionId ? ("Stripe Payment Reference: " + rec.stripeSessionId) : ""),
-            "Active Plan: " + planLine,
+            "Purchased Plan: " + planLine,
             "Backup Date: " + new Date().toISOString().slice(0, 10),
             "",
             "HOW TO ACTIVATE ON YOUR PC, PHONE, OR CHROME EXTENSION:",
@@ -3708,16 +3749,13 @@
       var rec = loadStoredSubscriptionRecord();
       var access = evaluateSubscriptionAccess(rec, Date.now());
       var keyText = String((rec && rec.key) || "").trim();
-      if (!access || !access.hasAccess || !keyText) {
+      if (!rec || rec.verifiedByServer !== true || !access || !access.hasAccess || !keyText) {
         bar.style.display = "none";
         bar.innerHTML = "";
         return false;
       }
       var isEs = typeof currentUiLang !== "undefined" && currentUiLang === "es";
-      var isAnnual = rec.unlimited !== false;
-      var statusBadge = isAnnual
-        ? (isEs ? "Anual Ilimitado activo" : "Annual Unlimited active")
-        : (isEs ? (Number(rec.creditsRemaining || 0) + " usos Pro disponibles") : (Number(rec.creditsRemaining || 0) + " Pro exports left"));
+      var statusBadge = describeVerifiedPlanLabel(rec, isEs);
       var lblTitle = isEs ? "🔑 Tu Clave Pro activa (guárdala para PC/móvil):" : "🔑 Your Active Pro Key (save for PC/mobile):";
       var copyTxt = isEs ? "📋 Copiar" : "📋 Copy";
       var saveTxt = isEs ? "💾 Guardar Clave (.txt)" : "💾 Save Key (.txt)";
@@ -3753,19 +3791,32 @@
       var banner = document.getElementById("pa-checkout-success-banner");
       if (!banner) return;
       var isEs = typeof currentUiLang !== "undefined" && currentUiLang === "es";
+      var isVerified = rec.verifiedByServer === true;
+      if (!isVerified) {
+        if (rec.verifiedByServer !== "CHECKOUT_GRACE") {
+          banner.style.display = "none";
+          banner.innerHTML = "";
+          return;
+        }
+        banner.style.background = "rgba(16,185,129,0.10)";
+        banner.style.borderColor = "rgba(16,185,129,0.45)";
+        var waitTitle = isEs ? "⏳ Verificando tu pago con Stripe (1-3s)..." : "⏳ Confirming your payment with Stripe (1-3s)...";
+        var waitSub = isEs
+          ? "Tu clave y el archivo .txt aparecerán automáticamente en cuanto el servidor valide el cobro."
+          : "Your license key and .txt backup file will appear automatically as soon as the server confirms payment.";
+        banner.innerHTML =
+          "<div style=\"display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;\">" +
+            "<div>" +
+              "<div style=\"font-weight:900;font-size:0.9rem;color:#6ee7b7;\">" + escapePureAiHtml(waitTitle) + "</div>" +
+              "<div style=\"font-size:0.75rem;color:#a7f3d0;margin-top:2px;\">" + escapePureAiHtml(waitSub) + "</div>" +
+            "</div>" +
+          "</div>";
+        banner.style.display = "block";
+        return;
+      }
       var keyText = String(rec.key || "");
-      var isPendingSync = rec.verifiedByServer === "CHECKOUT_GRACE";
-      var isAnnual = rec.unlimited !== false;
-      var planDesc = isPendingSync
-        ? (isEs ? "Sincronizando confirmación de pago con Stripe (1-3s)..." : "Confirming Stripe payment automatically (1-3s)...")
-        : (isAnnual
-          ? (isEs ? "Estudio Anual Ilimitado activo (4 dispositivos)" : "Annual Unlimited Studio Active (up to 4 devices)")
-          : (isEs
-            ? ("Pack activo: " + Number(rec.creditsRemaining || 0) + " créditos restantes")
-            : ("Pack Active: " + Number(rec.creditsRemaining || 0) + " clean credits remaining")));
-      var titleTxt = isPendingSync
-        ? (isEs ? "⏳ Procesando activación automática..." : "⏳ Finalizing Automatic Unlock...")
-        : (isEs ? "🎉 ¡Compra verificada y licencia activada automáticamente!" : "🎉 Purchase Verified & Unlocked Automatically!");
+      var planDesc = describeVerifiedPlanLabel(rec, isEs);
+      var titleTxt = isEs ? "🎉 ¡Compra verificada y licencia activada automáticamente!" : "🎉 Purchase Verified & Unlocked Automatically!";
       var copyLbl = isEs ? "📋 Copiar Clave" : "📋 Copy Key";
       var dlLbl = isEs ? "💾 Guardar Clave (.txt)" : "💾 Save Key (.txt)";
       var noteTxt = isEs

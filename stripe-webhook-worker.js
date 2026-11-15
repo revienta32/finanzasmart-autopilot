@@ -233,6 +233,17 @@ function normalizeCheckoutAmountToEurCents(rawCents, currency) {
   if (c === "eur") return Math.round(n);
   if (c === "usd") return Math.round(n * 0.882);
   if (c === "gbp") return Math.round(n * 1.154);
+  if (c === "chf") return Math.round(n * 1.06);
+  if (c === "cad") return Math.round(n * 0.65);
+  if (c === "aud") return Math.round(n * 0.59);
+  if (c === "pln") return Math.round(n * 0.23);
+  if (c === "sek") return Math.round(n * 0.088);
+  if (c === "nok") return Math.round(n * 0.085);
+  if (c === "dkk") return Math.round(n * 0.134);
+  if (c === "mxn") return Math.round(n * 0.046);
+  if (c === "brl") return Math.round(n * 0.16);
+  if (c === "jpy") return Math.round(n * 0.62);
+  if (c === "krw") return Math.round(n * 0.067);
   return Math.round(n);
 }
 
@@ -252,23 +263,38 @@ function resolveSubscriptionPeriod(obj, nowMs, previousPlanInterval) {
 
   const metaPlanType = String((obj && obj.metadata && obj.metadata.plan_type) || "").trim().toLowerCase();
   const metaInterval = obj && obj.metadata && obj.metadata.plan_interval;
-  const lineInterval =
+  const linePriceObj =
     obj &&
     obj.lines &&
     obj.lines.data &&
     obj.lines.data[0] &&
-    obj.lines.data[0].price &&
-    obj.lines.data[0].price.recurring &&
-    obj.lines.data[0].price.recurring.interval;
+    obj.lines.data[0].price;
+  const linePriceId = String((linePriceObj && linePriceObj.id) || (obj && obj.price_id) || "").trim();
+  const lineInterval = linePriceObj && linePriceObj.recurring && linePriceObj.recurring.interval;
   const amountCents = Number((obj && (obj.amount_total || obj.amount_paid || obj.amount_due)) || 0);
   const currency = String((obj && obj.currency) || "").trim().toLowerCase();
-  const isMajorCurrency = !currency || currency === "eur" || currency === "usd" || currency === "gbp" || currency === "chf";
-  const isOneTimeMode = Boolean(obj && obj.mode === "payment");
+  const normEurCents = amountCents > 0 ? normalizeCheckoutAmountToEurCents(amountCents, currency) : 0;
+  const hasExplicitPeriodEnd = Boolean(
+    obj && (
+      (typeof obj.PeriodEndMs === "number" && obj.PeriodEndMs > 0) ||
+      (typeof obj.current_period_end === "number" && obj.current_period_end > 0) ||
+      (typeof obj.period_end === "number" && obj.period_end > 0)
+    )
+  );
+  const isOneTimeMode = Boolean(
+    obj &&
+    obj.mode === "payment" &&
+    amountCents > 0 &&
+    !hasExplicitPeriodEnd &&
+    !lineInterval &&
+    metaInterval !== "year" &&
+    metaInterval !== "month"
+  );
 
   if (
     metaPlanType === "pack_10" ||
-    (isMajorCurrency && amountCents >= 200 && amountCents <= 390) ||
-    (isOneTimeMode && isMajorCurrency && amountCents > 0 && amountCents <= 450)
+    linePriceId === STRIPE_CHECKOUT_CATALOG.pack_10.priceId ||
+    (!hasExplicitPeriodEnd && normEurCents >= 180 && normEurCents <= 390)
   ) {
     return {
       planInterval: "one_time",
@@ -281,8 +307,8 @@ function resolveSubscriptionPeriod(obj, nowMs, previousPlanInterval) {
 
   if (
     metaPlanType === "pack_50" ||
-    (isMajorCurrency && amountCents === 990) ||
-    (isOneTimeMode && isMajorCurrency && amountCents >= 700 && amountCents <= 2500)
+    linePriceId === STRIPE_CHECKOUT_CATALOG.pack_50.priceId ||
+    (!hasExplicitPeriodEnd && normEurCents >= 950 && normEurCents <= 1050)
   ) {
     return {
       planInterval: "one_time",
@@ -293,12 +319,24 @@ function resolveSubscriptionPeriod(obj, nowMs, previousPlanInterval) {
     };
   }
 
+  if (isOneTimeMode) {
+    const isPack50ByAmount = normEurCents >= 600;
+    return {
+      planInterval: "one_time",
+      planType: isPack50ByAmount ? "pack_50" : "pack_10",
+      unlimited: false,
+      creditsGranted: isPack50ByAmount ? 50 : 10,
+      expiresAt: nowMs + 10 * 365 * 24 * 3600 * 1000
+    };
+  }
+
   const isAnnual =
     metaPlanType === "annual_unlimited" ||
+    linePriceId === STRIPE_CHECKOUT_CATALOG.annual_unlimited.priceId ||
     metaInterval === "year" ||
     (obj && obj.plan_interval === "year") ||
     lineInterval === "year" ||
-    (isMajorCurrency && amountCents >= 3300) ||
+    normEurCents >= 3300 ||
     (!amountCents && previousPlanInterval === "year");
 
   const planInterval = isAnnual ? "year" : "month";
@@ -1266,6 +1304,7 @@ async function handleWorkerHttpRequest(req, env, sharedStore) {
     }
     const count = Math.max(1, Math.min(100, Math.trunc(Number(parsed && parsed.count) || 1)));
     const cleanOpId = typeof (parsed && parsed.opId) === "string" ? parsed.opId.trim().slice(0, 80) : "";
+    const opMode = typeof (parsed && parsed.mode) === "string" ? parsed.mode.trim().toLowerCase() : "";
 
     let subRecord = null;
     const kvKey = code.startsWith("cs_")
@@ -1287,6 +1326,19 @@ async function handleWorkerHttpRequest(req, env, sharedStore) {
     }
     if (!subRecord) {
       return { status: 404, headers, body: JSON.stringify({ ok: false, reason: "license_not_found" }) };
+    }
+
+    if (opMode === "batch" && subRecord.planType === "pack_10") {
+      return {
+        status: 403,
+        headers,
+        body: JSON.stringify({
+          ok: false,
+          reason: "batch_requires_pack_50_or_annual",
+          planType: "pack_10",
+          creditsRemaining: Math.max(0, Number(subRecord.creditsRemaining) || 0)
+        })
+      };
     }
 
     const now = Date.now();

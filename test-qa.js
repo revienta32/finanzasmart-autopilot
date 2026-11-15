@@ -2949,42 +2949,146 @@ assert(cleanAiHtml.includes("terms.html") && cleanAiHtml.includes("Art. 103.m TR
   const sampleKeyBackup = paSandbox.downloadProLicenseBackup({
     key: "PRO-ABCD-2345",
     stripeSessionId: "cs_live_test_backup_key_1234567890",
+    status: "ACTIVE",
+    verifiedByServer: true,
+    planType: "pack_10",
     unlimited: false,
-    creditsRemaining: 10
+    creditsRemaining: 10,
+    expiresAt: Date.now() + 86400000
   });
   assert(
     sampleKeyBackup &&
     sampleKeyBackup.fileName === "PureAI-License-PRO-ABCD-2345.txt" &&
     sampleKeyBackup.content.includes("PRO-ABCD-2345") &&
     sampleKeyBackup.content.includes("https://pureaistudios.com/clean-ai-studio.html"),
-    "STRAT-KEY-01a: downloadProLicenseBackup debe generar el archivo .txt descargable con la clave Pro e instrucciones PC/móvil"
+    "STRAT-KEY-01a: downloadProLicenseBackup debe generar el archivo .txt descargable con la clave Pro verificada e instrucciones PC/móvil"
   );
   paSandbox.renderCheckoutSuccessBanner({
     key: "PRO-ABCD-2345",
     status: "ACTIVE",
     verifiedByServer: true,
+    planType: "pack_10",
     unlimited: false,
-    creditsRemaining: 10
+    creditsRemaining: 10,
+    expiresAt: Date.now() + 86400000
   });
   assert(
     getPaEl("pa-checkout-success-banner").innerHTML.includes("pa-banner-download-btn") &&
     getPaEl("pa-checkout-success-banner").innerHTML.includes(".txt"),
-    "STRAT-KEY-01b: El banner post-compra debe mostrar el botón directo de descarga .txt"
+    "STRAT-KEY-01b: El banner post-compra verificado debe mostrar el botón directo de descarga .txt"
   );
   paSandbox.saveSubscriptionRecord({
     key: "PRO-ABCD-2345",
     status: "ACTIVE",
     verifiedByServer: true,
+    planType: "pack_10",
     unlimited: false,
     creditsRemaining: 10,
     expiresAt: Date.now() + 86400000
   });
-  assert.strictEqual(getPaEl("pa-active-license-bar").style.display, "block", "STRAT-KEY-01c: Con licencia activa debe mostrarse permanentemente #pa-active-license-bar con opción de descarga .txt");
+  assert.strictEqual(getPaEl("pa-active-license-bar").style.display, "block", "STRAT-KEY-01c: Con licencia activa verificada debe mostrarse permanentemente #pa-active-license-bar con opción de descarga .txt");
   assert(getPaEl("pa-active-license-bar").innerHTML.includes("pa-active-download-btn"), "STRAT-KEY-01d: #pa-active-license-bar debe incluir el botón Guardar Clave (.txt)");
   paSandbox.saveSubscriptionRecord({ key: "PRO-ABCD-2345", status: "EXPIRED", verifiedByServer: true, expiresAt: 0 });
   assert.strictEqual(getPaEl("pa-active-license-bar").style.display, "none", "STRAT-KEY-01e: Al expirar o revocar debe ocultarse #pa-active-license-bar");
 
-  console.log("✅ QA TEST SUITE PASSED (24 SECCIONES / 360+ ASERCIONES): 100% E2E VM + Embudo Checkout & Multi-divisa Stripe + BUG-01/02/03/06 + GDPR gtag Gate + Seguridad Open-Redirect + Estrategia Fase 1.");
+  // STRAT-KEY-01f: Seguridad anti-spoofing — sin pago verificado por servidor NUNCA se revela clave ni se descarga .txt
+  const unverifiedBackup = paSandbox.downloadProLicenseBackup({
+    key: "PRO-FAKE-9999",
+    status: "ACTIVE",
+    verifiedByServer: "CHECKOUT_GRACE",
+    checkoutGraceUntil: Date.now() + 60000
+  });
+  assert.strictEqual(unverifiedBackup, null, "STRAT-KEY-01f1: Sin verifiedByServer===true, downloadProLicenseBackup debe devolver null");
+  paSandbox.saveSubscriptionRecord({
+    key: "PRO-FAKE-9999",
+    status: "ACTIVE",
+    verifiedByServer: "CHECKOUT_GRACE",
+    checkoutGraceUntil: Date.now() + 60000
+  });
+  assert.strictEqual(getPaEl("pa-active-license-bar").style.display, "none", "STRAT-KEY-01f2: Durante CHECKOUT_GRACE sin pago verificado #pa-active-license-bar debe permanecer oculta");
+  paSandbox.renderCheckoutSuccessBanner({
+    key: "PRO-FAKE-9999",
+    status: "ACTIVE",
+    verifiedByServer: "CHECKOUT_GRACE",
+    checkoutGraceUntil: Date.now() + 60000
+  });
+  assert(
+    !getPaEl("pa-checkout-success-banner").innerHTML.includes("PRO-FAKE-9999") &&
+    !getPaEl("pa-checkout-success-banner").innerHTML.includes("pa-banner-download-btn"),
+    "STRAT-KEY-01f3: El banner en espera de verificación jamás debe mostrar clave ni botón .txt antes de confirmar el pago"
+  );
+
+  // STRAT-PLAN-01: Aislamiento estricto por plan (pack_10 vs pack_50 vs annual_unlimited) en Web, Worker y Extensión
+  paSandbox.saveSubscriptionRecord({
+    key: "PRO-PK10-2345",
+    status: "ACTIVE",
+    verifiedByServer: true,
+    planType: "pack_10",
+    unlimited: false,
+    creditsRemaining: 10,
+    expiresAt: Date.now() + 86400000
+  });
+  assert.strictEqual(paSandbox.hasServerVerifiedBatchAccess(), false, "STRAT-PLAN-01a: Pack 10 (2,99 €) NO debe desbloquear Lotes .ZIP (exclusivo Pack 50 y Anual)");
+
+  paSandbox.saveSubscriptionRecord({
+    key: "PRO-PK50-2345",
+    status: "ACTIVE",
+    verifiedByServer: true,
+    planType: "pack_50",
+    unlimited: false,
+    creditsRemaining: 50,
+    expiresAt: Date.now() + 86400000
+  });
+  assert.strictEqual(paSandbox.hasServerVerifiedBatchAccess(), true, "STRAT-PLAN-01b: Pack 50 (9,90 €) con créditos verificados SÍ debe desbloquear Lotes .ZIP");
+
+  paSandbox.saveSubscriptionRecord({
+    key: "PRO-YEAR-2345",
+    status: "ACTIVE",
+    verifiedByServer: true,
+    planType: "annual_unlimited",
+    unlimited: true,
+    creditsRemaining: null,
+    expiresAt: Date.now() + 86400000
+  });
+  assert.strictEqual(paSandbox.hasServerVerifiedBatchAccess(), true, "STRAT-PLAN-01c: Anual Ilimitado (39 €/año) verificado SÍ debe desbloquear Lotes .ZIP");
+
+  const planBatchStore = webhookEngine.createInMemoryStore ? webhookEngine.createInMemoryStore() : hybridStore;
+  planBatchStore.subscriptionsByCustomer.set("cs_live_pack10_batch_block_test", {
+    status: "ACTIVE",
+    planType: "pack_10",
+    unlimited: false,
+    creditsRemaining: 10,
+    expiresAt: Date.now() + 86400000
+  });
+  const pack10BatchBlockRes = await webhookEngine.handleWorkerHttpRequest(
+    {
+      method: "POST",
+      url: "https://api.pureaistudios.com/consume-credit",
+      headers: { get: (h) => (h.toLowerCase() === "origin" ? "https://pureaistudios.com" : "") },
+      text: async () => JSON.stringify({ code: "cs_live_pack10_batch_block_test", count: 3, opId: "op_pack10_batch_block", mode: "batch" })
+    },
+    secEnv,
+    planBatchStore
+  );
+  assert.strictEqual(pack10BatchBlockRes.status, 403, "STRAT-PLAN-01d1: Worker /consume-credit debe bloquear mode=batch en pack_10 con HTTP 403");
+  assert.strictEqual(JSON.parse(pack10BatchBlockRes.body).reason, "batch_requires_pack_50_or_annual", "STRAT-PLAN-01d2: Worker debe devolver reason=batch_requires_pack_50_or_annual");
+
+  const adaptiveSekPack10 = webhookEngine.resolveSubscriptionPeriod({ mode: "payment", amount_total: 3500, currency: "sek" }, Date.now());
+  assert.strictEqual(adaptiveSekPack10.unlimited, false, "STRAT-PLAN-01e1: Un pago único Adaptive Pricing (ej. SEK) NUNCA debe clasificarse como ilimitado");
+  assert.strictEqual(adaptiveSekPack10.planType, "pack_10", "STRAT-PLAN-01e2: 35 SEK (mode=payment) debe resolverse como pack_10 (10 créditos)");
+  assert.strictEqual(adaptiveSekPack10.creditsGranted, 10, "STRAT-PLAN-01e3: 35 SEK (mode=payment) debe otorgar exactamente 10 créditos");
+
+  const adaptiveCadPack50 = webhookEngine.resolveSubscriptionPeriod({ mode: "payment", amount_total: 1590, currency: "cad" }, Date.now());
+  assert.strictEqual(adaptiveCadPack50.unlimited, false, "STRAT-PLAN-01e4: 15.90 CAD (mode=payment) NUNCA debe ser ilimitado");
+  assert.strictEqual(adaptiveCadPack50.planType, "pack_50", "STRAT-PLAN-01e5: 15.90 CAD (mode=payment) debe resolverse como pack_50 (50 créditos)");
+
+  const extPlanCheckCode = fs.readFileSync(path.join(__dirname, "chrome-extension-pureai", "content-chatgpt.js"), "utf8");
+  assert(
+    extPlanCheckCode.includes("CONSUME_PUREAI_CREDIT") && extPlanCheckCode.includes("creditsRemaining"),
+    "STRAT-PLAN-01f: content-chatgpt.js debe descontar créditos reales de servidor para pases pack_10/pack_50"
+  );
+
+  console.log("✅ QA TEST SUITE PASSED (24 SECCIONES / 375+ ASERCIONES): 100% E2E VM + Embudo Checkout & Multi-divisa Stripe + BUG-01/02/03/06 + GDPR gtag Gate + Seguridad Open-Redirect + Aislamiento Estricto por Plan.");
 })();
 
 
