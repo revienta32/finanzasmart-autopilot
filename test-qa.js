@@ -855,6 +855,7 @@ assert(cleanAiHtml.includes("terms.html") && cleanAiHtml.includes("Art. 103.m TR
     cleanAiHtml.includes("https://buy.stripe.com/eVq00k7HIfTn1jabHs0000h"),
     "Checkout Friction Zero: Los 3 enlaces híbridos de Stripe deben usar precios directos con IVA incluido sin códigos promocionales"
   );
+  paSandbox.setLang("es");
   paSandbox.showProModal("🔒 Tienes 12 fotos y vídeos en lote listos para descargar en .ZIP", "img_batch_zip");
   assert(getPaEl("pro-modal-title").textContent.includes("Lotes .ZIP Mixtos"), "Paywall Contextual: showProModal debe adaptar #pro-modal-title a la función que disparó el bloqueo");
   assert(getPaEl("pro-modal-desc").textContent.includes("12 fotos y vídeos"), "Paywall Contextual: showProModal debe inyectar el mensaje específico msg en #pro-modal-desc");
@@ -2345,7 +2346,439 @@ assert(cleanAiHtml.includes("terms.html") && cleanAiHtml.includes("Art. 103.m TR
     );
   }
 
-  console.log("✅ QA TEST SUITE PASSED (22 SECCIONES / 315+ ASERCIONES): 100% E2E VM + Gobernanza Corporativa (Plugin & Guardrails) + Separación ADMIN_DIGEST_TOKEN + Ledger KV Permanente + Triaje Soporte + Cero Duplicados + Hybrid Credit Packs + Anti-Bypass + Ciberseguridad verificadas sin errores.");
+  // 23. AUDITORÍA DE CHECKOUT & EMBUDOS (BUG-01, BUG-02, BUG-03, MULTIDIVISA, /create-checkout-session, /claim-extension-license, CONSENTIMIENTO GTAG, DE/FR/PT FALLBACK & CERO RECLAMOS OBSOLETOS)
+  // 23a. BUG-01: processStripeCheckoutReturn encola checkout_return_client si telemetria-soporte.js aún no cargó, y verifyLicenseWithServer emite subscription_activated + banner al confirmar 200
+  if (!paSandbox.window) paSandbox.window = paSandbox;
+  if (!paSandbox.sessionStorage) {
+    paSandbox.sessionStorage = { _s: {}, getItem(k) { return this._s[k] || null; }, setItem(k, v) { this._s[k] = String(v); }, removeItem(k) { delete this._s[k]; } };
+  }
+  const savedAnalyticsFn = paSandbox.window.sendPureAiAnalyticsEvent;
+  const savedPaFetch = paSandbox.fetch;
+  const savedGtagFn = paSandbox.window.gtag;
+  const paGtagCalls = [];
+  const emittedPaEvents = [];
+  try {
+    paSandbox.window.sendPureAiAnalyticsEvent = undefined;
+    paSandbox.window.__pureaiPendingTelemetryQueue = [];
+    const s23SessId = "cs_live_s23_bug01_session_abcdef123456";
+    paSandbox.localStorage.removeItem(`pureai_stripe_ret_${s23SessId}`);
+    paSandbox.localStorage.removeItem(`pureai_processed_sess_${s23SessId}`);
+    paSandbox.localStorage.removeItem("pureai_unverified_grace_abused");
+    paSandbox.localStorage.removeItem("pureai_grace_uses");
+    paSandbox.localStorage.removeItem("pureai_last_checkout_session");
+    paSandbox.localStorage.removeItem("pureai_studio_pro");
+    paSandbox.localStorage.removeItem(`pureai_sub_act_${s23SessId}`);
+    paSandbox.localStorage.removeItem("pureai_telemetry_optin");
+
+    paSandbox.fetch = async (reqUrl) => {
+      if (String(reqUrl).includes("/verify-license")) {
+        return {
+          status: 200,
+          ok: true,
+          json: async () => ({
+            valid: true,
+            status: "ACTIVE",
+            planInterval: "one_time",
+            planType: "pack_10",
+            unlimited: false,
+            creditsRemaining: 10,
+            proKey: "PRO-S23A-9999",
+            stripeSessionId: s23SessId,
+            expiresAt: Date.now() + 365 * 24 * 3600 * 1000
+          })
+        };
+      }
+      return { status: 200, ok: true, json: async () => ({ ok: true }) };
+    };
+
+    const bug01Ret = paSandbox.processStripeCheckoutReturn(`?session_id=${s23SessId}`);
+    assert.strictEqual(bug01Ret.activated, true, "BUG-01a: Retorno de sesión nueva debe activarse");
+    assert(
+      Array.isArray(paSandbox.window.__pureaiPendingTelemetryQueue) &&
+      paSandbox.window.__pureaiPendingTelemetryQueue.some((e) => e.type === "checkout_return_client"),
+      "BUG-01b: checkout_return_client debe encolarse si telemetria-soporte.js aún no cargó"
+    );
+
+    // Probar gate GDPR de gtag + emisión de subscription_activated tras 200
+    paSandbox.window.gtag = (...args) => paGtagCalls.push(args);
+    paSandbox.window.sendPureAiAnalyticsEvent = (ev) => emittedPaEvents.push(ev);
+    const prevLocSearch = paSandbox.location.search;
+    paSandbox.location.search = `?session_id=${s23SessId}`;
+    const validDemoKey = paSandbox.generateMultiDeviceProKey();
+    paSandbox.fetch = async (reqUrl) => {
+      if (String(reqUrl).includes("/verify-license")) {
+        return {
+          status: 200,
+          ok: true,
+          json: async () => ({
+            valid: true,
+            status: "ACTIVE",
+            planInterval: "one_time",
+            planType: "pack_10",
+            unlimited: false,
+            creditsRemaining: 10,
+            proKey: validDemoKey,
+            stripeSessionId: s23SessId,
+            expiresAt: Date.now() + 365 * 24 * 3600 * 1000
+          })
+        };
+      }
+      return { status: 200, ok: true, json: async () => ({ ok: true }) };
+    };
+    const v200 = await paSandbox.verifyLicenseWithServer(s23SessId);
+    assert.strictEqual(v200.valid, true, "BUG-01c: verifyLicenseWithServer 200 debe confirmar licencia activa");
+    assert.strictEqual(paGtagCalls.length, 0, "GDPR-GTAG-01: window.gtag NO debe disparar conversión sin opt-in pureai_telemetry_optin==='1'");
+    assert(
+      emittedPaEvents.some((e) => e.event_name === "subscription_activated" && e.maskedProKey),
+      "FUNNEL-09: subscription_activated debe emitirse tras 200 valid:true"
+    );
+    assert(
+      getPaEl("pa-checkout-success-banner").style.display === "block" &&
+      getPaEl("pa-checkout-success-banner").innerHTML.includes(validDemoKey),
+      "UX-BANNER-01: #pa-checkout-success-banner debe mostrarse con la clave PRO tras retorno verificado"
+    );
+
+    // Con opt-in explícito, conversión AW-18550704085 sí debe enviarse
+    paSandbox.localStorage.setItem("pureai_telemetry_optin", "1");
+    paSandbox.localStorage.removeItem(`pureai_ads_conv_${s23SessId}`);
+    await paSandbox.verifyLicenseWithServer(s23SessId);
+    assert.strictEqual(paGtagCalls.length, 1, "GDPR-GTAG-02: Con opt-in==='1' window.gtag debe registrar conversión única");
+
+    // 23b. BUG-02: Carrera multi-pestaña (200 -> SERVER_VERIFIED, seguido de 404 eventual en ventana de 90s NO revoca acceso)
+    paSandbox.fetch = async () => ({ status: 404, ok: false, headers: { get: () => "application/json" }, json: async () => ({ valid: false, reason: "not_found" }) });
+    const bug02Grace = await paSandbox.verifyLicenseWithServer(validDemoKey);
+    assert.strictEqual(bug02Grace.valid, true, "BUG-02a: Un 404 eventual de KV dentro de los 90s tras compra verificada NO debe revocar acceso");
+    assert.strictEqual(bug02Grace.pendingWebhookSync, true, "BUG-02b: Debe marcar pendingWebhookSync durante la ventana de gracia multi-pestaña");
+    assert(paSandbox.localStorage.getItem("pureai_studio_pro"), "BUG-02c: pureai_studio_pro debe conservarse en localStorage");
+
+    // Contraste: clave manual sin verificación previa (PENDING, verifiedByServer=false) con 404 SÍ se revoca
+    paSandbox.localStorage.setItem("pureai_studio_pro", JSON.stringify({
+      key: "PRO-FAKE-TEST",
+      status: "PENDING",
+      verifiedByServer: false,
+      activatedAt: Date.now()
+    }));
+    const manualRevoked = await paSandbox.verifyLicenseWithServer("PRO-FAKE-TEST");
+    assert.strictEqual(manualRevoked.valid, false, "BUG-02d: Clave manual no verificada con 404 debe seguir revocándose");
+    assert.strictEqual(paSandbox.localStorage.getItem("pureai_studio_pro"), null, "BUG-02e: pureai_studio_pro debe eliminarse al revocar clave no verificada");
+    paSandbox.location.search = prevLocSearch;
+  } finally {
+    paSandbox.window.sendPureAiAnalyticsEvent = savedAnalyticsFn;
+    paSandbox.fetch = savedPaFetch;
+    paSandbox.window.gtag = savedGtagFn;
+    paSandbox.localStorage.removeItem("pureai_telemetry_optin");
+  }
+
+  // 23c. BUG-03: Llegada fuera de orden invoice.paid (299 céntimos manual) antes que checkout.session.completed + GBP/USD packs
+  const bug03Store = webhookEngine.createWebhookProcessorStore();
+  const bug03Now = 1793440000000;
+  const invFirstRes = webhookEngine.processStripeWebhookEvent(bug03Store, {
+    id: "evt_bug03_inv_first",
+    type: "invoice.paid",
+    created: 5000,
+    data: { object: { id: "in_bug03_1", customer: "cus_bug03", payment_intent: "pi_bug03_1", amount_paid: 299, currency: "eur", billing_reason: "manual" } }
+  }, bug03Now);
+  assert.strictEqual(invFirstRes.subscription.planType, "pack_10", "BUG-03a: invoice.paid (299 EUR manual) debe inicializar planType==='pack_10'");
+  assert.strictEqual(invFirstRes.subscription.unlimited, false, "BUG-03b: invoice.paid de Pack 10 debe mantener unlimited===false");
+  assert.strictEqual(invFirstRes.subscription.creditsRemaining, 10, "BUG-03c: invoice.paid de Pack 10 debe asignar 10 créditos");
+
+  const csSecondRes = webhookEngine.processStripeWebhookEvent(bug03Store, {
+    id: "evt_bug03_cs_second",
+    type: "checkout.session.completed",
+    created: 5001,
+    data: { object: { id: "cs_bug03_1", customer: "cus_bug03", payment_intent: "pi_bug03_1", invoice: "in_bug03_1", mode: "payment", payment_status: "paid", amount_total: 299, currency: "eur" } }
+  }, bug03Now + 1000);
+  assert.strictEqual(csSecondRes.subscription.creditsRemaining, 10, "BUG-03d: checkout.session.completed posterior para el mismo payment_intent NO debe duplicar a 20 créditos");
+
+  const gbpAnnualPeriod = webhookEngine.resolveSubscriptionPeriod({ amount_total: 3400, currency: "gbp", mode: "subscription" }, bug03Now);
+  assert.strictEqual(gbpAnnualPeriod.planInterval, "year", "MC-01: GBP Anual (£34.00 = 3400) debe resolverse como suscripción anual (year)");
+  const usdPack50Period = webhookEngine.resolveSubscriptionPeriod({ amount_total: 1129, currency: "usd", mode: "payment" }, bug03Now);
+  assert.strictEqual(usdPack50Period.planType, "pack_50", "MC-02: USD Pack 50 ($11.29 = 1129) debe resolverse como pack_50");
+  assert.strictEqual(usdPack50Period.creditsGranted, 50, "MC-03: USD Pack 50 debe acreditar 50 usos");
+
+  // 23d. POST /create-checkout-session (Open-Redirect guard, Managed Payments retry, fallback 502) + Webhook failures + /claim-extension-license + /telemetry guard
+  const s23KvMap = new Map();
+  const s23Env = {
+    STRIPE_SECRET_KEY: "rk_test_mock_s23_key_only_for_vm",
+    STRIPE_WEBHOOK_SECRET: "whsec_test_s23_hmac_secret_12345",
+    PUREAI_LICENSES_KV: {
+      get: async (k) => (s23KvMap.has(k) ? s23KvMap.get(k) : null),
+      put: async (k, v) => { s23KvMap.set(k, String(v)); }
+    }
+  };
+  let lastStripeFormSent = "";
+  let stripeCallCount = 0;
+  let forceStripeFailMode = "none";
+  const prevS23Fetch = global.fetch;
+  global.fetch = async (reqUrl, opts) => {
+    const u = String(reqUrl);
+    if (u === "https://api.stripe.com/v1/checkout/sessions") {
+      stripeCallCount++;
+      lastStripeFormSent = String((opts && opts.body) || "");
+      if (forceStripeFailMode === "managed_payments" && lastStripeFormSent.includes("custom_text")) {
+        return {
+          ok: false,
+          status: 400,
+          text: async () => JSON.stringify({ error: { message: "You cannot use custom_text with Managed Payments." } })
+        };
+      }
+      if (forceStripeFailMode === "fail_500") {
+        return { ok: false, status: 500, text: async () => JSON.stringify({ error: { message: "upstream_err" } }) };
+      }
+      return {
+        ok: true,
+        status: 200,
+        text: async () => JSON.stringify({ id: "cs_test_s23_session_abc", url: "https://checkout.stripe.com/c/pay/cs_test_s23_session_abc" })
+      };
+    }
+    return { ok: true, status: 200, text: async () => "{}" };
+  };
+  try {
+    // 1) Open-redirect blocked + USD Pack 10 session creation
+    const chkRes = await webhookEngine.handleWorkerHttpRequest({
+      method: "POST",
+      url: "https://pureai-stripe-webhook.pureaistudio-app.workers.dev/create-checkout-session",
+      headers: { get: (h) => (String(h).toLowerCase() === "origin" ? "https://pureaistudios.com" : "") },
+      text: async () => JSON.stringify({ plan: "pack_10", currency: "usd", lang: "en", returnPath: "//evil.com/phish", extClaimToken: "ext_claim_token_abcdef123456" })
+    }, s23Env);
+    const chkBody = JSON.parse(chkRes.body);
+    assert.strictEqual(chkRes.status, 200, "CHK-01: /create-checkout-session USD debe devolver HTTP 200");
+    assert.strictEqual(chkBody.url, "https://checkout.stripe.com/c/pay/cs_test_s23_session_abc", "CHK-02: Debe devolver URL oficial de Stripe Checkout");
+    assert(lastStripeFormSent.includes("success_url=https%3A%2F%2Fpureaistudios.com%2Fclean-ai-studio.html%3Fsession_id%3D"), "SEC-OPENRED-01: returnPath '//evil.com/phish' debe sanearse hacia /clean-ai-studio.html");
+    assert(!lastStripeFormSent.includes("evil.com"), "SEC-OPENRED-02: Dominio atacante nunca debe llegar a success_url ni cancel_url");
+    assert(lastStripeFormSent.includes("currency=usd") && lastStripeFormSent.includes("price_1UbxSGJGMJW2ESycnHyuZnMe"), "CHK-03: Debe enviar currency=usd y Price multi-divisa de pack_10");
+    const recAfterSession = JSON.parse(s23KvMap.get("telemetry:recent_events") || "[]");
+    assert(recAfterSession.some((e) => e.event_name === "checkout_session_created" && e.displayCurrency === "usd"), "FUNNEL-04: checkout_session_created debe quedar registrado en KV");
+
+    // 2) Reintento automático si Stripe rechaza custom_text por Managed Payments
+    stripeCallCount = 0;
+    forceStripeFailMode = "managed_payments";
+    const mpRetryRes = await webhookEngine.handleWorkerHttpRequest({
+      method: "POST",
+      url: "https://pureai-stripe-webhook.pureaistudio-app.workers.dev/create-checkout-session",
+      headers: { get: (h) => (String(h).toLowerCase() === "origin" ? "https://pureaistudios.com" : "") },
+      text: async () => JSON.stringify({ plan: "annual_unlimited", currency: "gbp", lang: "de", returnPath: "/index.html" })
+    }, s23Env);
+    assert.strictEqual(mpRetryRes.status, 200, "CHK-MP-01: Ante error custom_text Managed Payments debe reintentar limpiamente sin custom_text y responder 200");
+    assert.strictEqual(stripeCallCount, 2, "CHK-MP-02: Debió ejecutar exactamente 1 reintento limpio sin custom_text");
+
+    // 3) Fallback seguro a buy.stripe.com ante fallo 500
+    forceStripeFailMode = "fail_500";
+    const fallbackRes = await webhookEngine.handleWorkerHttpRequest({
+      method: "POST",
+      url: "https://pureai-stripe-webhook.pureaistudio-app.workers.dev/create-checkout-session",
+      headers: { get: (h) => (String(h).toLowerCase() === "origin" ? "https://pureaistudios.com" : "") },
+      text: async () => JSON.stringify({ plan: "pack_10", currency: "eur" })
+    }, s23Env);
+    assert.strictEqual(fallbackRes.status, 502, "CHK-FB-01: Fallo Stripe debe devolver 502 con fallbackUrl");
+    assert.strictEqual(JSON.parse(fallbackRes.body).fallbackUrl, "https://buy.stripe.com/9B6cN6e669uZ4vmeTE0000f", "CHK-FB-02: fallbackUrl debe apuntar al Payment Link oficial");
+
+    // 4) POST /telemetry bloquea falsificación cliente de eventos server-only
+    const forgedTelRes = await webhookEngine.handleWorkerHttpRequest({
+      method: "POST",
+      url: "https://pureai-stripe-webhook.pureaistudio-app.workers.dev/telemetry",
+      headers: { get: (h) => (String(h).toLowerCase() === "origin" ? "https://pureaistudios.com" : "") },
+      text: async () => JSON.stringify({ event_name: "checkout_session_created", plan_selected: "PACK_10_299" })
+    }, s23Env);
+    assert.strictEqual(forgedTelRes.status, 403, "SEC-TEL-01: /telemetry debe rechazar con 403 eventos exclusivos de servidor (checkout_session_created/payment_failed)");
+
+    // 5) Webhooks HMAC payment_intent.payment_failed + checkout.session.expired + ext_claim_token
+    const sendSignedWebhook = async (evPayload) => {
+      const raw = JSON.stringify(evPayload);
+      const ts = Math.floor(Date.now() / 1000);
+      const sigHex = crypto.createHmac("sha256", s23Env.STRIPE_WEBHOOK_SECRET).update(`${ts}.${raw}`).digest("hex");
+      return webhookEngine.handleWorkerHttpRequest({
+        method: "POST",
+        url: "https://pureai-stripe-webhook.pureaistudio-app.workers.dev/webhook/stripe",
+        headers: { get: (h) => (String(h).toLowerCase() === "stripe-signature" ? `t=${ts},v1=${sigHex}` : "") },
+        text: async () => raw
+      }, s23Env);
+    };
+    const pfWh = await sendSignedWebhook({
+      id: "evt_s23_pf_1",
+      type: "payment_intent.payment_failed",
+      created: Math.floor(Date.now() / 1000),
+      data: { object: { id: "pi_fail_1", currency: "usd", metadata: { plan_type: "pack_10" }, last_payment_error: { decline_code: "insufficient_funds" } } }
+    });
+    assert.strictEqual(pfWh.status, 200, "WH-FAIL-01: Webhook payment_intent.payment_failed debe procesarse con HTTP 200");
+    const expWh = await sendSignedWebhook({
+      id: "evt_s23_exp_1",
+      type: "checkout.session.expired",
+      created: Math.floor(Date.now() / 1000),
+      data: { object: { id: "cs_exp_1", currency: "eur", metadata: { plan_type: "pack_50" } } }
+    });
+    assert.strictEqual(expWh.status, 200, "WH-EXP-01: Webhook checkout.session.expired debe procesarse con HTTP 200");
+    const postWhEvents = JSON.parse(s23KvMap.get("telemetry:recent_events") || "[]");
+    assert(postWhEvents.some((e) => e.event_name === "payment_failed" && e.declineCode === "insufficient_funds"), "FUNNEL-07: payment_failed debe registrar declineCode anónimo");
+    assert(postWhEvents.some((e) => e.event_name === "checkout_expired"), "FUNNEL-05: checkout_expired debe quedar registrado");
+
+    // 6) ext_claim_token persisted in webhook -> GET /claim-extension-license returns proKey cleanly without PII
+    const claimTok = "ext_claim_tok_1234567890abcdef";
+    const extCsWh = await sendSignedWebhook({
+      id: "evt_s23_ext_paid",
+      type: "checkout.session.completed",
+      created: Math.floor(Date.now() / 1000),
+      data: { object: { id: "cs_ext_paid_1", customer: "cus_ext_1", payment_status: "paid", mode: "payment", amount_total: 299, currency: "eur", metadata: { plan_type: "pack_10", ext_claim_token: claimTok } } }
+    });
+    assert.strictEqual(extCsWh.status, 200, "EXT-CLAIM-01: checkout.session.completed con ext_claim_token debe procesarse OK");
+    const extClaimRes = await webhookEngine.handleWorkerHttpRequest({
+      method: "GET",
+      url: `https://pureai-stripe-webhook.pureaistudio-app.workers.dev/claim-extension-license?token=${claimTok}`,
+      headers: { get: (h) => (String(h).toLowerCase() === "origin" ? "chrome-extension://pdebjlkmjdhpgiigepojdcpfbfimcgmo" : "") }
+    }, s23Env);
+    const extClaimBody = JSON.parse(extClaimRes.body);
+    assert.strictEqual(extClaimRes.status, 200, "EXT-CLAIM-02: GET /claim-extension-license debe responder 200");
+    assert.strictEqual(extClaimBody.claimed, true, "EXT-CLAIM-03: Debe confirmar claimed=true");
+    assert(/^PRO-/.test(extClaimBody.proKey || ""), "EXT-CLAIM-04: Debe devolver clave PRO-... sin PII del comprador");
+  } finally {
+    global.fetch = prevS23Fetch;
+  }
+
+  // 23e. telemetria-soporte.js: Consentimiento estricto gtag, preservación referrer checkout.stripe.com y flush de cola diferida
+  const telGtagCalls = [];
+  const telFetchPayloads = [];
+  const telStore = { pureai_session_channel: "organic_search" };
+  const telElStub = () => ({ id: "", style: {}, hidden: true, checked: false, value: "", textContent: "", innerHTML: "", addEventListener() {} });
+  const telBodyStub = { style: {}, appendChild() {} };
+  const telSandbox = {
+    console, Math, Date, JSON, Array, Object, String, Boolean, Number, Promise, URL, encodeURIComponent,
+    setTimeout, clearTimeout,
+    IntersectionObserver: function (cb) { return { observe() {}, disconnect() {}, _cb: cb }; },
+    localStorage: { getItem: (k) => telStore[k] ?? null, setItem: (k, v) => { telStore[k] = String(v); }, removeItem: (k) => { delete telStore[k]; } },
+    sessionStorage: { _m: {}, getItem(k) { return this._m[k] ?? null; }, setItem(k, v) { this._m[k] = String(v); } },
+    navigator: { language: "en-US" },
+    location: { href: "https://pureaistudios.com/clean-ai-studio.html", pathname: "/clean-ai-studio.html", search: "", hostname: "pureaistudios.com" },
+    document: {
+      referrer: "https://checkout.stripe.com/",
+      documentElement: { lang: "en" },
+      body: telBodyStub,
+      createElement: () => telElStub(),
+      getElementById: () => telElStub(),
+      addEventListener() {}
+    },
+    fetch: async (_u, opts) => {
+      if (opts && opts.body) telFetchPayloads.push(JSON.parse(opts.body));
+      return { ok: true, json: async () => ({ ok: true }) };
+    }
+  };
+  telSandbox.window = telSandbox;
+  telSandbox.gtag = (...args) => telGtagCalls.push(args);
+  telSandbox.__pureaiPendingTelemetryQueue = [{ type: "checkout_return_client", event_name: "checkout_return_client" }];
+  vm.createContext(telSandbox);
+  vm.runInContext(telemetriaCode, telSandbox);
+  assert.strictEqual(telGtagCalls.length, 0, "GDPR-TEL-01: telemetria-soporte.js NO debe invocar window.gtag sin pureai_telemetry_optin==='1'");
+  assert(
+    telFetchPayloads.some((p) => p.type === "checkout_return_client" && p.channel === "organic_search"),
+    "ATTR-01: Al volver desde checkout.stripe.com debe preservar channel==='organic_search' y drenar la cola diferida"
+  );
+  telStore.pureai_telemetry_optin = "1";
+  telSandbox.sendPureAiAnalyticsEvent({ type: "app_action", event_name: "tool_completed", tool_id: "img_c2pa_scrubber" });
+  assert.strictEqual(telGtagCalls.length, 1, "GDPR-TEL-02: Con pureai_telemetry_optin==='1' sí debe invocar window.gtag");
+
+  // 23f. DE/FR/PT Fallback inglés en modales/badges + Gating de #pro-modal-downsell + Cero textos obsoletos/NIF ficticio en todo el repo
+  try {
+    paSandbox.isPureAiPro = false;
+    paSandbox.persistImgQuota(0);
+    for (const nonEsLang of ["de", "fr", "pt"]) {
+      paSandbox.setLang(nonEsLang);
+      paSandbox.updateFreeImgQuotaUi();
+      const bTxt = String(getPaEl("free-img-quota-badge").textContent || "");
+      assert(!/Foto Gratis|Usos Restantes|Gratis Restante/i.test(bTxt), `BUG-06a (${nonEsLang}): El badge de cuota NO debe caer al español ('${bTxt}')`);
+      paSandbox.showProModal("", "img_c2pa_scrubber");
+      const mTitle = String(getPaEl("pro-modal-title").textContent || "");
+      assert(!/Desbloquea/i.test(mTitle), `BUG-06b (${nonEsLang}): El título del paywall NO debe caer al español ('${mTitle}')`);
+    }
+
+    paSandbox.window.__pureaiModalDismissCount = 0;
+    if (paSandbox.sessionStorage && typeof paSandbox.sessionStorage.removeItem === "function") {
+      paSandbox.sessionStorage.removeItem("pureai_modal_dismissed_once");
+    }
+    paSandbox.showProModal("Unlock export", "img_c2pa_scrubber");
+    assert.strictEqual(getPaEl("pro-modal-downsell").style.display, "none", "CRO-DOWN-01: En la 1ª apertura del Paywall #pro-modal-downsell debe estar oculto (display:none)");
+    paSandbox.closeProModal();
+    paSandbox.showProModal("Unlock export", "img_c2pa_scrubber");
+    assert.strictEqual(getPaEl("pro-modal-downsell").style.display, "block", "CRO-DOWN-02: Tras cerrar el Paywall una vez, la 2ª apertura puede mostrar #pro-modal-downsell");
+    getPaEl("modal-lead-email").value = "a@b.co";
+    assert.strictEqual(paSandbox.claimFreeExtraUnlockByEmail(), false, "CRO-DOWN-03: Emails de 1 carácter tipo a@b.co deben ser rechazados en el downsell");
+  } finally {
+    paSandbox.setLang("es");
+  }
+
+  const publicFilesToScan = [
+    "clean-ai-studio.html",
+    "index.html",
+    "terms.html",
+    "privacy-policy.html",
+    "free-c2pa-chatgpt-watermark-inspector-online.html",
+    "stealthwriter-vs-pureai-studio.html",
+    "undetectable-ai-alternative-free.html",
+    "chrome-extension-pureai/content-chatgpt.js",
+    "chrome-extension-pureai/popup.html",
+    "chrome-extension-pureai/popup.js"
+  ];
+  for (const relF of publicFilesToScan) {
+    const txt = fs.readFileSync(path.join(__dirname, relF), "utf8");
+    assert(
+      !/(B-72948102|PureAI Studio Digital|3 Free Photos|4,99\s*€|€\s*4\.99)/i.test(txt),
+      `HYG-01: ${relF} no debe contener NIF/entidad ficticia ni precios/promesas obsoletas (4,99 € / 3 Free Photos)`
+    );
+  }
+
+  assert(!/<script[^>]+src=["'][^"']*googletagmanager\.com\/gtag\/js/i.test(cleanAiHtml), "GDPR-HEAD-01: clean-ai-studio.html NO debe cargar googletagmanager.com/gtag/js incondicionalmente en <head>");
+  const headGtagMatch = cleanAiHtml.match(/<script id="google-ads-gtag">([\s\S]*?)<\/script>/);
+  assert(headGtagMatch && headGtagMatch[1], "GDPR-HEAD-02a: Debe existir el bloque <script id='google-ads-gtag'>");
+  const headAppended = [];
+  const headLs = { _s: {}, getItem(k) { return this._s[k] || null; }, setItem(k, v) { this._s[k] = String(v); }, removeItem(k) { delete this._s[k]; } };
+  const headSb = {
+    Date,
+    localStorage: headLs,
+    document: {
+      createElement: (t) => ({ tagName: String(t).toUpperCase(), async: false, src: "" }),
+      head: { appendChild: (el) => { headAppended.push(el); } },
+      documentElement: { appendChild: (el) => { headAppended.push(el); } }
+    }
+  };
+  headSb.window = headSb;
+  vm.createContext(headSb);
+  vm.runInContext(headGtagMatch[1], headSb);
+  assert.strictEqual(headAppended.length, 0, "GDPR-HEAD-02b: Sin opt-in NO debe inyectarse googletagmanager.com/gtag/js en <head>");
+  assert.strictEqual(typeof headSb.gtag, "undefined", "GDPR-HEAD-02c: Sin opt-in window.gtag no debe inicializarse en <head>");
+  headLs.setItem("pureai_telemetry_consent", "granted");
+  assert.strictEqual(headSb.initPureAiGtagIfConsented(), true, "GDPR-HEAD-02d: Con opt-in explícito debe permitir inicializar gtag");
+  assert.strictEqual(headAppended.length, 1, "GDPR-HEAD-02e: Con opt-in debe inyectar exactamente 1 <script async>");
+  assert(headAppended[0].src.includes("googletagmanager.com/gtag/js?id=AW-18550704085"), "GDPR-HEAD-02f: El script inyectado debe ser gtag.js oficial");
+  assert.strictEqual(typeof headSb.gtag, "function", "GDPR-HEAD-02g: Con opt-in window.gtag debe quedar definido");
+
+  const zlib = require("zlib");
+  const zipBuf = fs.readFileSync(path.join(__dirname, "chrome-extension-pureai.zip"));
+  const zipContents = {};
+  let zOff = 0;
+  while (zOff <= zipBuf.length - 46) {
+    if (zipBuf.readUInt32LE(zOff) === 0x02014b50) {
+      const compMethod = zipBuf.readUInt16LE(zOff + 10);
+      const compSize = zipBuf.readUInt32LE(zOff + 20);
+      const nameLen = zipBuf.readUInt16LE(zOff + 28);
+      const extraLen = zipBuf.readUInt16LE(zOff + 30);
+      const commentLen = zipBuf.readUInt16LE(zOff + 32);
+      const localOff = zipBuf.readUInt32LE(zOff + 42);
+      const entryName = zipBuf.toString("utf8", zOff + 46, zOff + 46 + nameLen).replace(/\\/g, "/");
+      const locNameLen = zipBuf.readUInt16LE(localOff + 26);
+      const locExtraLen = zipBuf.readUInt16LE(localOff + 28);
+      const dataStart = localOff + 30 + locNameLen + locExtraLen;
+      const rawSlice = zipBuf.subarray(dataStart, dataStart + compSize);
+      zipContents[entryName] = compMethod === 8 ? zlib.inflateRawSync(rawSlice) : rawSlice;
+      zOff += 46 + nameLen + extraLen + commentLen;
+    } else {
+      zOff++;
+    }
+  }
+  for (const extFile of ["background.js", "popup.js", "content-chatgpt.js", "manifest.json", "popup.html"]) {
+    const diskLf = fs.readFileSync(path.join(__dirname, "chrome-extension-pureai", extFile), "utf8").replace(/\r\n/g, "\n");
+    const zipLf = Buffer.isBuffer(zipContents[extFile]) ? zipContents[extFile].toString("utf8").replace(/\r\n/g, "\n") : "";
+    assert.strictEqual(zipLf, diskLf, `EXT-ZIP-01: chrome-extension-pureai.zip debe coincidir exactamente en contenido con ${extFile}`);
+  }
+
+  console.log("✅ QA TEST SUITE PASSED (23 SECCIONES / 340+ ASERCIONES): 100% E2E VM + Embudo Checkout & Multi-divisa Stripe + BUG-01/02/03/06 + GDPR gtag Gate + Seguridad Open-Redirect + Cero Reclamos Obsoletos.");
 })();
 
 

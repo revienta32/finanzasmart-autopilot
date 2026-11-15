@@ -173,3 +173,81 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
   })();
   return true;
 });
+
+function pollExtensionClaimToken(claimToken, attempt = 0) {
+  if (!claimToken || attempt > 24) return;
+  setTimeout(async () => {
+    try {
+      const r = await fetch(
+        `https://pureai-stripe-webhook.pureaistudio-app.workers.dev/claim-extension-license?token=${encodeURIComponent(claimToken)}`
+      );
+      const data = await r.json().catch(() => null);
+      if (data && data.ok === true && data.claimed === true && data.proKey) {
+        const record = {
+          valid: true,
+          key: data.proKey,
+          status: data.status || "ACTIVE",
+          planType: data.planType || null,
+          unlimited: data.unlimited !== false,
+          creditsRemaining: typeof data.creditsRemaining === "number" ? data.creditsRemaining : null,
+          expiresAt: data.expiresAt || (Date.now() + 32 * 24 * 3600 * 1000),
+          verifiedAt: Date.now()
+        };
+        chrome.storage.local.set({ pureai_ext_license_v2: record, pureai_ext_pro: false });
+        return;
+      }
+    } catch (_) {}
+    pollExtensionClaimToken(claimToken, attempt + 1);
+  }, 5000);
+}
+
+chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
+  if (!msg || msg.type !== "CREATE_PUREAI_EXT_CHECKOUT") return;
+  (async () => {
+    const plan = String(msg.plan || "pack_10");
+    const currency = String(msg.currency || "eur").toLowerCase();
+    const fallbackUrl = String(msg.fallbackUrl || "https://buy.stripe.com/9B6cN6e669uZ4vmeTE0000f");
+    const extClaimToken =
+      "ext_" + Date.now().toString(36) + "_" + Math.random().toString(36).slice(2, 12) + Math.random().toString(36).slice(2, 8);
+    try {
+      fetch("https://pureai-stripe-webhook.pureaistudio-app.workers.dev/telemetry", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          type: "click_checkout",
+          event_name: "checkout_clicked",
+          target: "stripe_checkout",
+          plan_selected: plan === "annual_unlimited" ? "PRO_ANNUAL_3900" : plan === "pack_50" ? "PACK_50_990" : "PACK_10_299",
+          displayCurrency: currency,
+          surface: msg.surface || "chrome_extension_popup",
+          trigger_tool: "chrome_extension",
+          page: "chrome_extension"
+        })
+      }).catch(() => {});
+
+      const resp = await fetch("https://pureai-stripe-webhook.pureaistudio-app.workers.dev/create-checkout-session", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          plan,
+          currency,
+          lang: "en",
+          surface: msg.surface || "chrome_extension_popup",
+          triggerTool: "chrome_extension",
+          returnPath: "/clean-ai-studio.html",
+          extClaimToken
+        })
+      });
+      const data = await resp.json().catch(() => null);
+      if (data && data.ok === true && data.url && String(data.url).indexOf("https://checkout.stripe.com/") === 0) {
+        pollExtensionClaimToken(extClaimToken, 0);
+        sendResponse({ ok: true, url: data.url, extClaimToken });
+        return;
+      }
+      sendResponse({ ok: false, url: (data && data.fallbackUrl) || fallbackUrl });
+    } catch (_) {
+      sendResponse({ ok: false, url: fallbackUrl });
+    }
+  })();
+  return true;
+});

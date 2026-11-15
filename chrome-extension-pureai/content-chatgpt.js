@@ -1,6 +1,6 @@
 /**
  * PureAI Studio Content Script (v1.2.1) — 1-Click "✨ Copiar Humanizado" inside ChatGPT & Claude
- * Includes 3 Free Daily Uses + Soft Paywall to Stripe (4,99 € Monthly FRIEND50 / 39 €/yr Annual) + Multi-Device Key (PRO-XXXX-YYYY) Unlock
+ * Includes 1 Free Use + Soft Paywall to Stripe (€2.99 / €9.90 Packs & €39/yr Annual) + Multi-Device Key (PRO-XXXX-YYYY) Unlock
  */
 (function () {
   const MAX_DAILY_FREE = 3;
@@ -235,6 +235,30 @@
       } else if (k) {
         alert("⚠️ Clave inválida. Introduce una clave legítima PRO-XXXX-YYYY o tu session_id de Stripe (cs_live_...).");
       }
+    });
+    if (typeof box.querySelectorAll === "function") box.querySelectorAll('a[href*="buy.stripe.com"]').forEach((link) => {
+      link.addEventListener("click", (e) => {
+        if (typeof chrome === "undefined" || !chrome.runtime || typeof chrome.runtime.sendMessage !== "function") return;
+        e.preventDefault();
+        const plan = link.href.includes("eVq00k7HIfTn1jabHs0000h")
+          ? "annual_unlimited"
+          : link.href.includes("3cIdRae66bD74vm6n80000g")
+            ? "pack_50"
+            : "pack_10";
+        let cur = "eur";
+        try {
+          const tz = (Intl.DateTimeFormat().resolvedOptions().timeZone || "").toLowerCase();
+          if (/america|us|canada|pacific|eastern|central|mountain/.test(tz)) cur = "usd";
+          else if (/london/.test(tz)) cur = "gbp";
+        } catch (_) {}
+        chrome.runtime.sendMessage(
+          { type: "CREATE_PUREAI_EXT_CHECKOUT", plan, currency: cur, surface: "chatgpt_inline_upsell", fallbackUrl: link.href },
+          (resp) => {
+            const targetUrl = (resp && resp.url) ? resp.url : link.href;
+            window.open(targetUrl, "_blank", "noopener");
+          }
+        );
+      });
     });
     barEl.appendChild(box);
   }

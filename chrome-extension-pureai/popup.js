@@ -139,6 +139,47 @@ if (btnActivatePro) {
   });
 }
 
+(function wireExtensionStripeLinks() {
+  const links = document.querySelectorAll('a[href*="buy.stripe.com"]');
+  if (!links || !links.length) return;
+  let cur = "eur";
+  try {
+    const tz = (Intl.DateTimeFormat().resolvedOptions().timeZone || "").toLowerCase();
+    if (/america|us|canada|pacific|eastern|central|mountain/.test(tz)) cur = "usd";
+    else if (/london/.test(tz)) cur = "gbp";
+  } catch (_) {}
+  window.__pureaiExtCurrency = cur;
+  links.forEach((link) => {
+    const plan = link.id === "ext-link-yr" || link.href.includes("eVq00k7HIfTn1jabHs0000h")
+      ? "annual_unlimited"
+      : link.id === "ext-link-p50" || link.href.includes("3cIdRae66bD74vm6n80000g")
+        ? "pack_50"
+        : "pack_10";
+    if (cur === "usd") {
+      link.textContent = link.textContent.replace("2,99 €", "$3.39").replace("€2.99", "$3.39").replace("9,90 €", "$11.29").replace("€9.90", "$11.29").replace("39 €", "$44").replace("€39", "$44");
+    } else if (cur === "gbp") {
+      link.textContent = link.textContent.replace("2,99 €", "£2.59").replace("€2.99", "£2.59").replace("9,90 €", "£8.59").replace("€9.90", "£8.59").replace("39 €", "£34").replace("€39", "£34");
+    }
+    link.addEventListener("click", (e) => {
+      if (typeof chrome === "undefined" || !chrome.runtime || typeof chrome.runtime.sendMessage !== "function") return;
+      e.preventDefault();
+      imgStatus.textContent = "⏳ Creating multi-currency Stripe Checkout...";
+      imgStatus.style.color = "#93c5fd";
+      chrome.runtime.sendMessage(
+        { type: "CREATE_PUREAI_EXT_CHECKOUT", plan, currency: cur, fallbackUrl: link.href },
+        (resp) => {
+          const targetUrl = (resp && resp.ok && resp.url) ? resp.url : link.href;
+          if (chrome.tabs && typeof chrome.tabs.create === "function") {
+            chrome.tabs.create({ url: targetUrl });
+          } else {
+            window.open(targetUrl, "_blank", "noopener");
+          }
+        }
+      );
+    });
+  });
+})();
+
 txtInput.addEventListener("input", () => {
   const v = txtInput.value;
   const u = (v.match(/[\u200B-\u200D\uFEFF\u202F\u00A0\u2060\u180E]/g) || []).length;

@@ -5,14 +5,30 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="referrer" content="strict-origin-when-cross-origin" />
   <meta http-equiv="Content-Security-Policy" content="default-src 'self' https: data: blob:; script-src 'self' 'unsafe-inline' https://www.googletagmanager.com https://www.googleadservices.com https://googleads.g.doubleclick.net; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; media-src 'self' data: blob:; connect-src 'self' https:; object-src 'none'; base-uri 'self'; form-action 'self';" />
-  <!-- Google tag (gtag.js) -->
-  <script async src="https://www.googletagmanager.com/gtag/js?id=AW-18550704085"></script>
+  <!-- Google tag (gtag.js — strictly gated behind explicit GDPR opt-in) -->
   <script id="google-ads-gtag">
-    window.dataLayer = window.dataLayer || [];
-    function gtag(){dataLayer.push(arguments);}
-    gtag('js', new Date());
-
-    gtag('config', 'AW-18550704085');
+    (function () {
+      function initPureAiGtagIfConsented() {
+        try {
+          var consented = localStorage.getItem("pureai_telemetry_consent") === "granted" || localStorage.getItem("pureai_telemetry_optin") === "1";
+          if (!consented || window.__pureaiGtagLoaded) return false;
+          window.__pureaiGtagLoaded = true;
+          window.dataLayer = window.dataLayer || [];
+          window.gtag = window.gtag || function () { window.dataLayer.push(arguments); };
+          window.gtag("js", new Date());
+          window.gtag("config", "AW-18550704085");
+          var s = document.createElement("script");
+          s.async = true;
+          s.src = "https://www.googletagmanager.com/gtag/js?id=AW-18550704085";
+          (document.head || document.documentElement).appendChild(s);
+          return true;
+        } catch (_) {
+          return false;
+        }
+      }
+      window.initPureAiGtagIfConsented = initPureAiGtagIfConsented;
+      initPureAiGtagIfConsented();
+    })();
   </script>
   <title>PureAI Studio (2026) — Remove 'Made with AI' C2PA, Photoshop Generative Fill Lossless Fix &amp; iPhone 16 Pro EXIF + GPS Injector</title>
   <meta name="description" content="100% Client-Side C2PA/JUMBF Scrubber for AI Creator Agencies (Fanvue/Instagram/TikTok) &amp; Photographers: Strip Photoshop Generative Fill C2PA lossless, clean Sora/Kling .MP4 videos, batch-clean .ZIPs, and inject iPhone 16 Pro / Sony A7IV EXIF + GPS." />
@@ -315,6 +331,7 @@
   </header>
 
   <main class="container">
+    <div id="pa-checkout-success-banner" role="status" aria-live="polite" style="display:none;margin-bottom:16px;padding:14px 18px;border-radius:14px;background:rgba(16,185,129,0.14);border:1.5px solid #10b981;color:#ecfdf5;box-shadow:0 8px 24px rgba(0,229,163,0.16);"></div>
     <section class="pa-hero" style="padding:18px 22px;margin-bottom:18px;">
       <div style="max-width:740px;">
         <div style="font-size:0.75rem;font-weight:900;color:#6ee7b7;letter-spacing:0.04em;margin-bottom:4px;">📸 SUITE PARA CREADORES VISUALES · AGENCIAS IA (INSTAGRAM / TIKTOK / FANVUE) · FOTÓGRAFOS (PHOTOSHOP C2PA FIX)</div>
@@ -614,9 +631,9 @@
           </a>
         </div>
         <div id="pro-modal-trust-bar" style="font-size:0.7rem;color:#a7f3d0;background:rgba(15,23,42,0.75);border:1px solid rgba(255,255,255,0.09);border-radius:8px;padding:7px 10px;text-align:center;line-height:1.4;">
-          🔒 <strong>100% Automatic Unlock</strong> upon Stripe return (no signup/password) · VAT Included · Apple Pay / Google Pay / Link / Klarna
+          🔒 <strong>100% Automatic Unlock</strong> on Stripe return (no signup) · VAT Included · Card / Apple Pay / Google Pay / Link (Klarna &amp; Revolut Pay on packs)
         </div>
-        <details id="pro-modal-downsell" style="margin-top:9px;border-top:1px solid rgba(255,255,255,0.09);padding-top:7px;">
+        <details id="pro-modal-downsell" style="display:none;margin-top:9px;border-top:1px solid rgba(255,255,255,0.09);padding-top:7px;">
           <summary id="pro-modal-downsell-sum" style="cursor:pointer;font-size:0.72rem;color:#94a3b8;text-align:center;list-style:none;">Need just +1 single emergency clean? Share or enter email ▾</summary>
           <div style="margin-top:8px;">
             <button type="button" onclick="sharePureAiReferral('wa')" class="pa-btn pa-btn-purple" style="margin-top:0;padding:9px;font-size:0.78rem;">
@@ -1058,8 +1075,53 @@
           };
           saveSubscriptionRecord(srvRec);
           try {
+            var priorStoredRec = loadStoredSubscriptionRecord();
+            var stableActivatedAt = (priorStoredRec && Number(priorStoredRec.activatedAt)) || Number(srvRec.activatedAt) || Date.now();
+            srvRec.activatedAt = stableActivatedAt;
+            srvRec.checkoutGraceUntil = Math.max(
+              Number(srvRec.checkoutGraceUntil) || 0,
+              (priorStoredRec && Number(priorStoredRec.checkoutGraceUntil)) || 0,
+              stableActivatedAt + 90 * 1000
+            );
+            saveSubscriptionRecord(srvRec);
+            if (typeof BroadcastChannel === "function") {
+              var bc = new BroadcastChannel("pureai_license_sync");
+              bc.postMessage({ type: "LICENSE_VERIFIED", record: srvRec });
+              bc.close();
+            }
+          } catch (_) {}
+          try {
+            var actSentKey = "pureai_sub_act_" + (srvRec.stripeSessionId || srvRec.key);
+            if (!localStorage.getItem(actSentKey)) {
+              localStorage.setItem(actSentKey, "1");
+              var subActEvt = {
+                type: "subscription_activated",
+                event_name: "subscription_activated",
+                maskedProKey: typeof maskSensitiveTelemetryValue === "function" ? maskSensitiveTelemetryValue(srvRec.key) : undefined,
+                plan_selected: srvRec.planType || undefined,
+                trigger_tool: "stripe_return"
+              };
+              if (typeof emitOrQueuePureAiTelemetry === "function") {
+                emitOrQueuePureAiTelemetry(subActEvt);
+              } else if (typeof window !== "undefined") {
+                if (typeof window.sendPureAiAnalyticsEvent === "function") {
+                  window.sendPureAiAnalyticsEvent(subActEvt);
+                } else {
+                  window.__pureaiPendingTelemetryQueue = Array.isArray(window.__pureaiPendingTelemetryQueue) ? window.__pureaiPendingTelemetryQueue : [];
+                  window.__pureaiPendingTelemetryQueue.push(subActEvt);
+                }
+              }
+            }
+          } catch (_) {}
+          try {
+            if (typeof renderCheckoutSuccessBanner === "function" && typeof window !== "undefined" && window.location && window.location.search && window.location.search.indexOf("session_id=") !== -1) {
+              renderCheckoutSuccessBanner(srvRec);
+            }
+          } catch (_) {}
+          try {
+            var hasTelemetryConsentOptIn = (typeof window !== "undefined" && typeof window.hasPureAiTelemetryConsent === "function" && window.hasPureAiTelemetryConsent()) || localStorage.getItem("pureai_telemetry_consent") === "granted" || localStorage.getItem("pureai_telemetry_optin") === "1";
             var convKey = "pureai_ads_conv_" + (srvRec.stripeSessionId || srvRec.key);
-            if (!localStorage.getItem(convKey) && typeof window !== "undefined" && typeof window.gtag === "function") {
+            if (hasTelemetryConsentOptIn && !localStorage.getItem(convKey) && typeof window !== "undefined" && typeof window.gtag === "function") {
               localStorage.setItem(convKey, "1");
               window.gtag("event", "conversion", { send_to: "AW-18550704085", transaction_id: srvRec.stripeSessionId || srvRec.key });
             }
@@ -1068,14 +1130,21 @@
         }
         if (res.status === 404 || res.status === 403 || (data && data.valid === false)) {
           var existingRec = loadStoredSubscriptionRecord();
-          var isRecentCheckoutGrace =
+          var graceAnchorMs = existingRec
+            ? Math.max(Number(existingRec.checkoutGraceUntil) || 0, (Number(existingRec.activatedAt) || 0) + 90 * 1000)
+            : 0;
+          var matchesStoredCredential = Boolean(
+            existingRec &&
+            (existingRec.stripeSessionId === code ||
+             (existingRec.key && String(existingRec.key).toUpperCase() === String(code).toUpperCase()))
+          );
+          var isRecentCheckoutGrace = Boolean(
             res.status !== 403 &&
             !customEndpoint &&
-            code.indexOf("cs_") === 0 &&
-            existingRec &&
-            existingRec.stripeSessionId === code &&
-            existingRec.verifiedByServer === "CHECKOUT_GRACE" &&
-            Date.now() <= (Number(existingRec.checkoutGraceUntil) || 0);
+            matchesStoredCredential &&
+            (existingRec.verifiedByServer === "CHECKOUT_GRACE" || existingRec.verifiedByServer === true || existingRec.cacheMode === "SERVER_VERIFIED") &&
+            Date.now() <= graceAnchorMs
+          );
           if (isRecentCheckoutGrace) {
             return { checked: true, valid: true, pendingWebhookSync: true, record: existingRec };
           }
@@ -1103,6 +1172,18 @@
       const code = (document.getElementById("pa-pro-code").value || "").trim();
       if (isValidProLicenseCode(code)) {
         var now = typeof optionalNowMs === "number" ? optionalNowMs : Date.now();
+        var existingRec = loadStoredSubscriptionRecord();
+        if (
+          existingRec &&
+          existingRec.status === SUBSCRIPTION_STATES.ACTIVE &&
+          (existingRec.verifiedByServer === "SERVER_VERIFIED" || existingRec.verifiedByServer === true) &&
+          ((existingRec.key && existingRec.key.toUpperCase() === code.toUpperCase()) ||
+            existingRec.stripeSessionId === code)
+        ) {
+          if (typeof renderProStatusUi === "function") renderProStatusUi();
+          verifyLicenseWithServer(code).catch(function () {});
+          return;
+        }
         var rec = {
           key: code,
           status: SUBSCRIPTION_STATES.PENDING,
@@ -1116,9 +1197,6 @@
         saveSubscriptionRecord(rec);
         localStorage.setItem("pureai_pro_key", code);
         verifyLicenseWithServer(code).catch(function () {});
-        if (typeof window !== "undefined" && typeof window.sendPureAiAnalyticsEvent === "function") {
-          window.sendPureAiAnalyticsEvent({ type: "pro_license_activated_device", maskedKey: maskSensitiveTelemetryValue(code) });
-        }
         alert("🔑 Verificando licencia Pro con el servidor (/verify-license)... Si tu suscripción está activa en Stripe, las funciones Pro quedarán desbloqueadas automáticamente.");
         return true;
       } else {
@@ -2021,7 +2099,7 @@
     function claimFreeExtraUnlockByEmail() {
       var emEl = document.getElementById("modal-lead-email");
       var email = (emEl && emEl.value ? emEl.value.trim() : "");
-      if (!email || email.length > 160 || !/^[^\s@]+@[^\s@]+\.[a-zA-Z]{2,}$/.test(email)) {
+      if (!email || email.length > 160 || !/^[^\s@]{2,}@[^\s@]{2,}\.[a-zA-Z]{2,}$/.test(email)) {
         alert(currentUiLang === "es" ? "Introduce un email válido para desbloquear +1 uso puntual gratuito." : "Please enter a valid email address to unlock +1 one-time free export.");
         return false;
       }
@@ -2031,8 +2109,8 @@
         freeProCredits = Math.max(freeProCredits, 1);
         localStorage.setItem("pureai_free_pro_credits", String(freeProCredits));
       }
-      if (typeof window !== "undefined" && typeof window.sendPureAiAnalyticsEvent === "function") {
-        window.sendPureAiAnalyticsEvent({ type: "lead_email_captured", maskedEmail: maskSensitiveTelemetryValue(email) });
+      if (typeof emitOrQueuePureAiTelemetry === "function") {
+        emitOrQueuePureAiTelemetry({ type: "free_downsell_claimed", event_name: "free_downsell_claimed", maskedEmail: maskSensitiveTelemetryValue(email), trigger_tool: "pro_modal_downsell" });
       }
       closeProModal();
       return true;
@@ -2097,7 +2175,7 @@
     function updateFreeImgQuotaUi() {
       var badge = document.getElementById("free-img-quota-badge");
       if (!badge) return;
-      var isEn = currentUiLang === "en";
+      var isEn = currentUiLang !== "es";
       if (isPureAiPro) {
         var activeRec = loadStoredSubscriptionRecord();
         if (activeRec && activeRec.unlimited === false && typeof activeRec.creditsRemaining === "number") {
@@ -2164,7 +2242,7 @@
       }
       if (typeof document !== "undefined" && typeof document.getElementById === "function") {
         var titleEl = document.getElementById("pro-modal-title");
-        var isEnModal = currentUiLang === "en";
+        var isEnModal = currentUiLang !== "es";
         if (titleEl) {
           if (resolvedTrigger === "img_batch_zip") titleEl.textContent = isEnModal ? "📦 Unlock Mixed Batch .ZIP (Photos + .MP4)" : "📦 Desbloquea Lotes .ZIP Mixtos (Fotos + .MP4)";
           else if (resolvedTrigger === "video_c2pa_scrubber") titleEl.textContent = isEnModal ? "🎬 Unlock .MP4/.MOV Video Scrubber + Camera Header" : "🎬 Desbloquea Limpieza de Vídeos .MP4/.MOV + Firma Cámara";
@@ -2205,8 +2283,14 @@
           }
         }
         var downEl = document.getElementById("pro-modal-downsell");
-        if (downEl && downEl.open) {
-          downEl.open = false;
+        if (downEl) {
+          if (downEl.open) {
+            downEl.open = false;
+          }
+          var hasDismissedOnce =
+            (typeof window !== "undefined" && Number(window.__pureaiModalDismissCount) >= 1) ||
+            (typeof sessionStorage !== "undefined" && sessionStorage.getItem("pureai_modal_dismissed_once") === "1");
+          downEl.style.display = hasDismissedOnce ? "block" : "none";
         }
         var modal = document.getElementById("pro-modal-overlay");
         if (modal) {
@@ -2221,6 +2305,12 @@
     function closeProModal() {
       var modal = document.getElementById("pro-modal-overlay");
       if (modal) modal.style.display = "none";
+      if (typeof window !== "undefined") {
+        window.__pureaiModalDismissCount = (Number(window.__pureaiModalDismissCount) || 0) + 1;
+      }
+      try {
+        if (typeof sessionStorage !== "undefined") sessionStorage.setItem("pureai_modal_dismissed_once", "1");
+      } catch (_) {}
     }
     async function shareOrSaveCleanImage() {
       if (!lastCleanedBlob) return;
@@ -3171,15 +3261,20 @@
       if (myOwnRef && soldAff.toLowerCase() === myOwnRef.toLowerCase()) {
         soldAff = "self_referral_blocked";
       }
-      if (typeof window !== "undefined" && typeof window.sendPureAiAnalyticsEvent === "function") {
-        window.sendPureAiAnalyticsEvent({
+      if (typeof emitOrQueuePureAiTelemetry === "function") {
+        emitOrQueuePureAiTelemetry({
           type: "checkout_return_client",
+          event_name: "checkout_return_client",
           partner: soldAff,
           maskedSession: maskSensitiveTelemetryValue(sessionId),
           maskedProKey: maskSensitiveTelemetryValue(myProKey),
           commissionBasis: "net_after_vat_and_stripe_fees_30d_hold",
           commissionRate: soldAff === "self_referral_blocked" ? 0 : 0.40
         });
+      }
+      if (typeof renderCheckoutSuccessBanner === "function" && typeof loadStoredSubscriptionRecord === "function") {
+        var retRec = loadStoredSubscriptionRecord();
+        if (retRec) renderCheckoutSuccessBanner(retRec);
       }
       return { activated: !prevGraceAbused, duplicate: false, pendingServerVerification: prevGraceAbused, sessionId: sessionId, partner: soldAff };
     }
@@ -3448,6 +3543,133 @@
           : "📲 To install PureAI Studio as an App on your phone or PC:\n\n• On Android / Chrome / Edge: Click the install icon in the address bar or Menu (⋮) → 'Install app'.\n• On iPhone / iPad (Safari): Tap 'Share' (⬆️) → 'Add to Home Screen'."
       );
     }
+
+    function escapePureAiHtml(str) {
+      return String(str || "").replace(/[&<>"']/g, function (c) {
+        return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c] || c;
+      });
+    }
+
+    function emitOrQueuePureAiTelemetry(payload) {
+      if (!payload || typeof payload !== "object") return;
+      try {
+        if (typeof window !== "undefined") {
+          if (typeof window.sendPureAiAnalyticsEvent === "function") {
+            window.sendPureAiAnalyticsEvent(payload);
+          } else {
+            window.__pureaiPendingTelemetryQueue = Array.isArray(window.__pureaiPendingTelemetryQueue) ? window.__pureaiPendingTelemetryQueue : [];
+            window.__pureaiPendingTelemetryQueue.push(payload);
+          }
+        }
+      } catch (_) {}
+    }
+
+    function renderCheckoutSuccessBanner(rec) {
+      if (typeof document === "undefined" || !rec) return;
+      var banner = document.getElementById("pa-checkout-success-banner");
+      if (!banner) return;
+      var isEs = typeof currentUiLang !== "undefined" && currentUiLang === "es";
+      var keyText = String(rec.key || "");
+      var isPendingSync = rec.verifiedByServer === "CHECKOUT_GRACE";
+      var isAnnual = rec.unlimited !== false;
+      var planDesc = isPendingSync
+        ? (isEs ? "Sincronizando confirmación de pago con Stripe (1-3s)..." : "Confirming Stripe payment automatically (1-3s)...")
+        : (isAnnual
+          ? (isEs ? "Estudio Anual Ilimitado activo (4 dispositivos)" : "Annual Unlimited Studio Active (up to 4 devices)")
+          : (isEs
+            ? ("Pack activo: " + Number(rec.creditsRemaining || 0) + " créditos restantes")
+            : ("Pack Active: " + Number(rec.creditsRemaining || 0) + " clean credits remaining")));
+      var titleTxt = isPendingSync
+        ? (isEs ? "⏳ Procesando activación automática..." : "⏳ Finalizing Automatic Unlock...")
+        : (isEs ? "🎉 ¡Compra verificada y licencia activada automáticamente!" : "🎉 Purchase Verified & Unlocked Automatically!");
+      var copyLbl = isEs ? "📋 Copiar Clave" : "📋 Copy Key";
+      var noteTxt = isEs
+        ? "No necesitas cuenta ni contraseña. Guarda o copia esta clave para usarla también en tu ordenador, móvil o Extensión Chrome:"
+        : "No account or password needed. Copy this key to also unlock on your other browser tabs, mobile, or Chrome Extension:";
+      banner.style.background = "rgba(16,185,129,0.14)";
+      banner.style.borderColor = "#10b981";
+      banner.innerHTML =
+        "<div style=\"display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;\">" +
+          "<div style=\"flex:1;min-width:220px;\">" +
+            "<div style=\"font-weight:900;font-size:0.96rem;color:#6ee7b7;\">" + escapePureAiHtml(titleTxt) + "</div>" +
+            "<div style=\"font-size:0.82rem;color:#d1fae5;margin-top:3px;font-weight:700;\">" + escapePureAiHtml(planDesc) + "</div>" +
+            "<div style=\"font-size:0.74rem;color:#a7f3d0;margin-top:4px;\">" + escapePureAiHtml(noteTxt) + "</div>" +
+          "</div>" +
+          "<div style=\"display:flex;align-items:center;gap:8px;flex-wrap:wrap;\">" +
+            "<code id=\"pa-banner-key-code\" style=\"background:#042f1e;border:1px solid #10b981;color:#6ee7b7;padding:6px 10px;border-radius:8px;font-weight:900;font-size:0.84rem;\">" + escapePureAiHtml(keyText) + "</code>" +
+            "<button type=\"button\" id=\"pa-banner-copy-btn\" style=\"background:#10b981;color:#022c22;border:none;border-radius:8px;padding:7px 12px;font-weight:900;font-size:0.78rem;cursor:pointer;\">" + escapePureAiHtml(copyLbl) + "</button>" +
+            "<button type=\"button\" id=\"pa-banner-dismiss-btn\" style=\"background:transparent;color:#94a3b8;border:1px solid rgba(255,255,255,0.2);border-radius:8px;padding:6px 10px;font-size:0.76rem;cursor:pointer;\">✕</button>" +
+          "</div>" +
+        "</div>";
+      banner.style.display = "block";
+      var copyBtn = document.getElementById("pa-banner-copy-btn");
+      if (copyBtn) {
+        copyBtn.onclick = function () {
+          try { if (navigator.clipboard) navigator.clipboard.writeText(keyText); } catch (_) {}
+          copyBtn.textContent = isEs ? "✅ ¡Copiada!" : "✅ Copied!";
+        };
+      }
+      var dismissBtn = document.getElementById("pa-banner-dismiss-btn");
+      if (dismissBtn) {
+        dismissBtn.onclick = function () { banner.style.display = "none"; };
+      }
+    }
+
+    function renderCheckoutCanceledBanner(planKey) {
+      if (typeof document === "undefined") return;
+      var banner = document.getElementById("pa-checkout-success-banner");
+      if (!banner) return;
+      var isEs = typeof currentUiLang !== "undefined" && currentUiLang === "es";
+      banner.style.background = "rgba(56,189,248,0.12)";
+      banner.style.borderColor = "#38bdf8";
+      var msg = isEs
+        ? "Has vuelto de Stripe sin realizar ningún cargo. Tu archivo se procesa 100% gratis en local y puedes retomar tu Pack cuando quieras."
+        : "Returned from Stripe with zero charge. Your files stay 100% local in your browser—resume anytime whenever you're ready.";
+      banner.innerHTML =
+        "<div style=\"display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;\">" +
+          "<span style=\"font-size:0.82rem;color:#e0f2fe;font-weight:700;\">ℹ️ " + escapePureAiHtml(msg) + "</span>" +
+          "<div style=\"display:flex;gap:8px;align-items:center;\">" +
+            "<button type=\"button\" onclick=\"showProModal('checkout_retry')\" style=\"background:#38bdf8;color:#082f49;border:none;border-radius:8px;padding:6px 11px;font-size:0.76rem;font-weight:900;cursor:pointer;\">" + escapePureAiHtml(isEs ? "Ver Planes" : "Resume Plans") + "</button>" +
+            "<button type=\"button\" onclick=\"document.getElementById('pa-checkout-success-banner').style.display='none'\" style=\"background:transparent;color:#94a3b8;border:1px solid rgba(255,255,255,0.2);border-radius:8px;padding:5px 9px;font-size:0.75rem;cursor:pointer;\">✕</button>" +
+          "</div>" +
+        "</div>";
+      banner.style.display = "block";
+      emitOrQueuePureAiTelemetry({
+        type: "checkout_abandoned_back",
+        event_name: "checkout_abandoned_back",
+        plan_selected: planKey || undefined,
+        trigger_tool: "stripe_cancel_url"
+      });
+    }
+
+    (function initPureAiPostAuditHooks() {
+      try {
+        if (typeof BroadcastChannel === "function") {
+          var bc = new BroadcastChannel("pureai_license_sync");
+          bc.onmessage = function () {
+            if (typeof renderProStatusUi === "function") renderProStatusUi();
+          };
+        }
+      } catch (_) {}
+
+      try {
+        var syncDisplayCurFromDom = function () {
+          var pCard = document.getElementById("pro-card-pack10");
+          var txt = pCard ? String(pCard.textContent || "") : "";
+          var cur = txt.indexOf("$") !== -1 ? "usd" : (txt.indexOf("£") !== -1 ? "gbp" : "eur");
+          window.__pureaiDisplayCurrency = cur;
+        };
+        syncDisplayCurFromDom();
+        if (typeof window !== "undefined") window.syncPureAiDisplayCurrency = syncDisplayCurFromDom;
+      } catch (_) {}
+
+      try {
+        var qs = typeof window !== "undefined" && window.location && window.location.search ? new URLSearchParams(window.location.search) : null;
+        if (qs && qs.get("checkout_canceled") === "1") {
+          renderCheckoutCanceledBanner(qs.get("plan") || "");
+        }
+      } catch (_) {}
+    })();
   </script>
   <script src="telemetria-soporte.js"></script>
 </body>

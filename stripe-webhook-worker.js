@@ -186,6 +186,56 @@ const STRIPE_PAYMENT_LINK_PLANS = {
   plink_1UbbsDJGMJW2ESycZKktNrhu: { planType: "annual_unlimited", planInterval: "year", unlimited: true, creditsGranted: null }
 };
 
+const STRIPE_CHECKOUT_CATALOG = {
+  pack_10: {
+    key: "pack_10",
+    telemetryPlan: "PACK_10_299",
+    priceId: "price_1UbxSGJGMJW2ESycnHyuZnMe",
+    mode: "payment",
+    eurCents: 299,
+    currencies: { eur: 299, usd: 339, gbp: 259 },
+    fallbackUrl: "https://buy.stripe.com/9B6cN6e669uZ4vmeTE0000f",
+    submitMessage: "Instant unlock right after payment on PureAI Studio (zero signup). 100% browser processing."
+  },
+  pack_50: {
+    key: "pack_50",
+    telemetryPlan: "PACK_50_990",
+    priceId: "price_1UbxSHJGMJW2ESycO7f34U0v",
+    mode: "payment",
+    eurCents: 990,
+    currencies: { eur: 990, usd: 1129, gbp: 859 },
+    fallbackUrl: "https://buy.stripe.com/3cIdRae66bD74vm6n80000g",
+    submitMessage: "Instant 50-credit + Batch .ZIP unlock right after payment (zero account needed)."
+  },
+  annual_unlimited: {
+    key: "annual_unlimited",
+    telemetryPlan: "PRO_ANNUAL_3900",
+    priceId: "price_1UbxSHJGMJW2ESycYhqWgBNC",
+    mode: "subscription",
+    eurCents: 3900,
+    currencies: { eur: 3900, usd: 4400, gbp: 3400 },
+    fallbackUrl: "https://buy.stripe.com/eVq00k7HIfTn1jabHs0000h",
+    submitMessage: "Instant Unlimited Pro unlock (Web + Chrome Extension). Yearly plan; cancel in 1 click anytime."
+  }
+};
+
+function resolveCheckoutCatalogPlan(rawPlan) {
+  const k = String(rawPlan || "").trim().toLowerCase();
+  if (k === "pack_10" || k === "pack10" || k === "pack_10_299") return STRIPE_CHECKOUT_CATALOG.pack_10;
+  if (k === "pack_50" || k === "pack50" || k === "pack_50_990") return STRIPE_CHECKOUT_CATALOG.pack_50;
+  if (k === "annual_unlimited" || k === "annual" || k === "pro_annual_3900") return STRIPE_CHECKOUT_CATALOG.annual_unlimited;
+  return null;
+}
+
+function normalizeCheckoutAmountToEurCents(rawCents, currency) {
+  const n = Math.max(0, Number(rawCents) || 0);
+  const c = String(currency || "eur").toLowerCase();
+  if (c === "eur") return Math.round(n);
+  if (c === "usd") return Math.round(n * 0.882);
+  if (c === "gbp") return Math.round(n * 1.154);
+  return Math.round(n);
+}
+
 function resolveSubscriptionPeriod(obj, nowMs, previousPlanInterval) {
   const plinkId = String((obj && obj.payment_link) || "").trim();
   if (plinkId && STRIPE_PAYMENT_LINK_PLANS[plinkId]) {
@@ -248,7 +298,7 @@ function resolveSubscriptionPeriod(obj, nowMs, previousPlanInterval) {
     metaInterval === "year" ||
     (obj && obj.plan_interval === "year") ||
     lineInterval === "year" ||
-    (isMajorCurrency && amountCents >= 3500) ||
+    (isMajorCurrency && amountCents >= 3300) ||
     (!amountCents && previousPlanInterval === "year");
 
   const planInterval = isAnnual ? "year" : "month";
@@ -376,6 +426,12 @@ function processStripeWebhookEvent(store, event, nowMs, options) {
             ? Math.max(0, existing.creditsRemaining)
             : 0;
         const periodInfo = resolveSubscriptionPeriod(obj, now, existing.planInterval);
+        const piId = obj.payment_intent || null;
+        const invId = obj.invoice || null;
+        const samePaymentAlreadyGranted = Boolean(
+          existing.status === SUBSCRIPTION_STATES.ACTIVE &&
+          ((piId && existing.lastPaymentIntentId === piId) || (invId && existing.lastInvoiceId === invId))
+        );
         existing.status = SUBSCRIPTION_STATES.ACTIVE;
         existing.planInterval = periodInfo.planInterval;
         existing.planType = periodInfo.planType || (periodInfo.planInterval === "year" ? "annual_unlimited" : "monthly_unlimited");
@@ -384,8 +440,12 @@ function processStripeWebhookEvent(store, event, nowMs, options) {
           existing.creditsRemaining = null;
         } else {
           existing.unlimited = false;
-          existing.creditsRemaining = prevCredits + (Number(periodInfo.creditsGranted) || 10);
+          existing.creditsRemaining = samePaymentAlreadyGranted
+            ? (prevCredits > 0 ? prevCredits : (Number(periodInfo.creditsGranted) || 10))
+            : (prevCredits + (Number(periodInfo.creditsGranted) || 10));
         }
+        if (piId) existing.lastPaymentIntentId = piId;
+        if (invId) existing.lastInvoiceId = invId;
         existing.expiresAt = periodInfo.expiresAt;
         existing.graceEndsAt = existing.expiresAt + 72 * 3600 * 1000;
         if (obj.id && String(obj.id).startsWith("cs_")) {
@@ -430,9 +490,42 @@ function processStripeWebhookEvent(store, event, nowMs, options) {
       break;
     }
     case "invoice.paid": {
-      const periodInfo = resolveSubscriptionPeriod(obj, now, existing.planInterval);
+      const hadActiveUnlimited = Boolean(
+        existing.unlimited &&
+        existing.status === SUBSCRIPTION_STATES.ACTIVE &&
+        existing.expiresAt &&
+        existing.expiresAt > now
+      );
+      const prevCredits =
+        typeof existing.creditsRemaining === "number" && existing.creditsRemaining > 0
+          ? existing.creditsRemaining
+          : 0;
+      const invNormalized = {
+        ...obj,
+        amount_total: obj.amount_total !== undefined && obj.amount_total !== null ? obj.amount_total : (obj.amount_paid !== undefined && obj.amount_paid !== null ? obj.amount_paid : obj.total),
+        mode: obj.mode || (obj.subscription ? "subscription" : "payment")
+      };
+      const periodInfo = resolveSubscriptionPeriod(invNormalized, now, existing.planInterval);
+      const piId = obj.payment_intent || null;
+      const invId = obj.id || null;
+      const samePaymentAlreadyGranted = Boolean(
+        existing.status === SUBSCRIPTION_STATES.ACTIVE &&
+        ((piId && existing.lastPaymentIntentId === piId) || (invId && existing.lastInvoiceId === invId))
+      );
       existing.status = SUBSCRIPTION_STATES.ACTIVE;
       existing.planInterval = periodInfo.planInterval;
+      existing.planType = periodInfo.planType || (periodInfo.planInterval === "year" ? "annual_unlimited" : "monthly_unlimited");
+      if (periodInfo.unlimited || hadActiveUnlimited) {
+        existing.unlimited = true;
+        existing.creditsRemaining = null;
+      } else {
+        existing.unlimited = false;
+        existing.creditsRemaining = samePaymentAlreadyGranted
+          ? (prevCredits > 0 ? prevCredits : (Number(periodInfo.creditsGranted) || 10))
+          : (prevCredits + (Number(periodInfo.creditsGranted) || 10));
+      }
+      if (piId) existing.lastPaymentIntentId = piId;
+      if (invId) existing.lastInvoiceId = invId;
       existing.expiresAt = periodInfo.expiresAt;
       existing.graceEndsAt = existing.expiresAt + 72 * 3600 * 1000;
       break;
@@ -539,6 +632,7 @@ const ALLOWED_ORIGINS = new Set([
 
 const VERIFY_LICENSE_EXTRA_ORIGINS = new Set([
   "https://chatgpt.com",
+  "https://chat.openai.com",
   "https://claude.ai"
 ]);
 
@@ -550,7 +644,12 @@ function isAllowedExtensionOrigin(origin) {
 }
 
 function buildCorsHeaders(origin, pathname) {
-  const isVerifyPath = pathname === "/verify-license" || pathname === "/consume-credit";
+  const isVerifyPath =
+    pathname === "/verify-license" ||
+    pathname === "/consume-credit" ||
+    pathname === "/create-checkout-session" ||
+    pathname === "/claim-extension-license" ||
+    pathname === "/telemetry";
   const allowed =
     ALLOWED_ORIGINS.has(origin) ||
     isAllowedExtensionOrigin(origin) ||
@@ -610,7 +709,8 @@ function verifyAdminBearerAuth(req, env) {
 const ALLOWED_TELEMETRY_STR_FIELDS = [
   "type", "event_name", "target", "tool_id", "trigger_tool", "plan_selected",
   "channel", "lang", "cohortWeek", "retentionBucket", "userTier", "page",
-  "aff", "partner", "maskedSession", "maskedProKey", "commissionBasis"
+  "aff", "partner", "maskedSession", "maskedProKey", "maskedKey",
+  "commissionBasis", "displayCurrency", "surface", "attemptId", "declineCode", "source"
 ];
 const ALLOWED_TELEMETRY_BOOL_FIELDS = ["isReturning", "genuineReturn", "isDemo"];
 const ALLOWED_TELEMETRY_NUM_FIELDS = ["daysSinceFirstVisit", "usedCredits", "line"];
@@ -698,10 +798,16 @@ async function persistWebhookResultToKv(env, eventObj, result) {
     const serializedSub = JSON.stringify(result.subscription);
     const proKey = result.subscription.proKey;
     const piId = result.subscription.lastPaymentIntentId || obj.payment_intent;
+    const extClaimToken = obj && obj.metadata && typeof obj.metadata.ext_claim_token === "string"
+      ? obj.metadata.ext_claim_token.trim()
+      : "";
     if (effectiveCustId) await kv.put(`sub:${effectiveCustId}`, serializedSub);
     if (sessId) await kv.put(`sess:${sessId}`, serializedSub);
     if (proKey) await kv.put(`key:${proKey.toUpperCase()}`, serializedSub);
     if (piId) await kv.put(`pi:${piId}`, serializedSub);
+    if (extClaimToken && /^[a-zA-Z0-9_-]{16,64}$/.test(extClaimToken)) {
+      await kv.put(`extclaim:${extClaimToken}`, serializedSub, { expirationTtl: 86400 });
+    }
   }
   if (result.pendingAffiliateKey && result.pendingAffiliateEntry) {
     await kv.put(
@@ -834,10 +940,15 @@ async function handleWorkerHttpRequest(req, env, sharedStore) {
       if (typeof result.commitInMemory === "function") {
         result.commitInMemory();
       }
+      await recordStripeFunnelWebhookTelemetry(eventObj, env);
+
       if (eventObj.type === "checkout.session.completed" && result.state === SUBSCRIPTION_STATES.ACTIVE) {
         const objPaid = (eventObj.data && eventObj.data.object) || {};
-        const amountCents = Number(objPaid.amount_total) || 0;
-        const taxCents = (objPaid.total_details && Number(objPaid.total_details.amount_tax)) || 0;
+        const paidCurrency = String(objPaid.currency || "eur").toLowerCase();
+        const rawAmountCents = Number(objPaid.amount_total) || 0;
+        const rawTaxCents = (objPaid.total_details && Number(objPaid.total_details.amount_tax)) || 0;
+        const amountCents = normalizeCheckoutAmountToEurCents(rawAmountCents, paidCurrency);
+        const taxCents = normalizeCheckoutAmountToEurCents(rawTaxCents, paidCurrency);
         const amountEur = (amountCents / 100).toFixed(2);
         const rawRef = String(objPaid.client_reference_id || "");
         const affPartner = rawRef.startsWith("aff_") ? rawRef.slice(4) : "organic";
@@ -1391,7 +1502,17 @@ async function handleWorkerHttpRequest(req, env, sharedStore) {
     if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
       return { status: 400, headers, body: JSON.stringify({ ok: false, error: "invalid_payload_object" }) };
     }
-    if (parsed.event_name === "purchase_verified" || parsed.type === "sale_verified_session") {
+    const SERVER_ONLY_FUNNEL_EVENTS = new Set([
+      "purchase_verified",
+      "sale_verified_session",
+      "checkout_session_created",
+      "payment_submitted",
+      "payment_failed",
+      "checkout_expired"
+    ]);
+    const normEvName = typeof parsed.event_name === "string" ? parsed.event_name.trim().toLowerCase() : "";
+    const normEvType = typeof parsed.type === "string" ? parsed.type.trim().toLowerCase() : "";
+    if (SERVER_ONLY_FUNNEL_EVENTS.has(normEvName) || SERVER_ONLY_FUNNEL_EVENTS.has(normEvType)) {
       return { status: 403, headers, body: JSON.stringify({ ok: false, error: "forbidden_server_only_event" }) };
     }
     const sanitized = sanitizeClientTelemetryPayload(parsed);
@@ -1509,7 +1630,319 @@ async function handleWorkerHttpRequest(req, env, sharedStore) {
     return { status: 200, headers, body: JSON.stringify({ ok: Boolean(tgRes && tgRes.ok), webhookUrl }) };
   }
 
+  if (req.method === "POST" && url.pathname === "/create-checkout-session") {
+    if (clientIp) {
+      const rl = checkWorkerRateLimit(rateMap, `chkout:${clientIp}`, 25, Date.now());
+      if (!rl.allowed) {
+        return {
+          status: 429,
+          headers: { ...headers, "Retry-After": String(rl.retryAfterSec) },
+          body: JSON.stringify({ ok: false, error: "rate_limited" })
+        };
+      }
+    }
+    if (
+      rawOrigin &&
+      !ALLOWED_ORIGINS.has(rawOrigin) &&
+      !isAllowedExtensionOrigin(rawOrigin) &&
+      !VERIFY_LICENSE_EXTRA_ORIGINS.has(rawOrigin)
+    ) {
+      return { status: 403, headers, body: JSON.stringify({ ok: false, error: "origin_not_allowed" }) };
+    }
+    let body = {};
+    try {
+      const rawBody = typeof req.text === "function" ? await req.text() : String(req.body || "{}");
+      if (rawBody.length > 4096) {
+        return { status: 413, headers, body: JSON.stringify({ ok: false, error: "payload_too_large" }) };
+      }
+      body = JSON.parse(rawBody || "{}");
+    } catch (_) {
+      return { status: 400, headers, body: JSON.stringify({ ok: false, error: "invalid_json" }) };
+    }
+
+    const plan = resolveCheckoutCatalogPlan(body && body.plan);
+    if (!plan) {
+      return { status: 400, headers, body: JSON.stringify({ ok: false, error: "invalid_plan" }) };
+    }
+    const rawCurrency = String((body && body.currency) || "eur").trim().toLowerCase();
+    const currency = rawCurrency === "usd" || rawCurrency === "gbp" ? rawCurrency : "eur";
+    const supportedLangs = new Set(["en", "es", "de", "fr", "pt", "it", "ja", "ko", "tr", "pl"]);
+    const rawLang = String((body && body.lang) || "").trim().toLowerCase().slice(0, 5);
+    const stripeLocale = supportedLangs.has(rawLang) ? rawLang : "auto";
+    const safeReturnPath = sanitizeCheckoutReturnPath(body && body.returnPath);
+    const surface = String((body && body.surface) || "pricing_box").replace(/[^a-zA-Z0-9_-]/g, "_").slice(0, 48) || "pricing_box";
+    const triggerTool = String((body && body.triggerTool) || "direct_pricing_box").replace(/[^a-zA-Z0-9_-]/g, "_").slice(0, 48) || "direct_pricing_box";
+    const affRaw = String((body && body.aff) || "").trim();
+    const aff = /^[a-zA-Z0-9_-]{2,40}$/.test(affRaw) ? affRaw : "";
+    const extTokenRaw = String((body && body.extClaimToken) || "").trim();
+    const extClaimToken = /^[a-zA-Z0-9_-]{16,64}$/.test(extTokenRaw) ? extTokenRaw : "";
+    const attemptId = "att_" + Date.now().toString(36) + "_" + Math.random().toString(36).slice(2, 8);
+
+    const qLang = supportedLangs.has(rawLang) ? `&lang=${rawLang}` : "";
+    const qExt = extClaimToken ? "&ext_claim=1" : "";
+    const successUrl = `https://pureaistudios.com${safeReturnPath}?session_id={CHECKOUT_SESSION_ID}${qLang}${qExt}`;
+    const cancelUrl = `https://pureaistudios.com${safeReturnPath}?checkout_canceled=1&plan=${encodeURIComponent(plan.key)}${qLang}`;
+
+    const stripeSk = String((env && env.STRIPE_SECRET_KEY) || "").trim();
+    if (!stripeSk || typeof fetch !== "function") {
+      return {
+        status: 503,
+        headers,
+        body: JSON.stringify({
+          ok: false,
+          error: "stripe_checkout_api_unavailable",
+          fallbackUrl: plan.fallbackUrl,
+          attemptId
+        })
+      };
+    }
+
+    const formFields = {
+      mode: plan.mode,
+      "line_items[0][price]": plan.priceId,
+      "line_items[0][quantity]": "1",
+      currency,
+      locale: stripeLocale,
+      success_url: successUrl,
+      cancel_url: cancelUrl,
+      client_reference_id: aff || attemptId,
+      "custom_text[submit][message]": plan.submitMessage,
+      "metadata[plan_type]": plan.key,
+      "metadata[attempt_id]": attemptId,
+      "metadata[display_currency]": currency,
+      "metadata[surface]": surface,
+      "metadata[trigger_tool]": triggerTool,
+      "metadata[lang]": rawLang || "en"
+    };
+    if (aff) formFields["metadata[aff]"] = aff;
+    if (extClaimToken) formFields["metadata[ext_claim_token]"] = extClaimToken;
+    if (plan.mode === "subscription") {
+      formFields["subscription_data[metadata][plan_type]"] = plan.key;
+      formFields["subscription_data[metadata][attempt_id]"] = attemptId;
+      formFields["subscription_data[metadata][display_currency]"] = currency;
+      if (aff) formFields["subscription_data[metadata][aff]"] = aff;
+      if (extClaimToken) formFields["subscription_data[metadata][ext_claim_token]"] = extClaimToken;
+    }
+
+    const callStripeCreateSession = async (fields) => {
+      const stripeRes = await fetch("https://api.stripe.com/v1/checkout/sessions", {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${stripeSk}`,
+          "Content-Type": "application/x-www-form-urlencoded"
+        },
+        body: encodeStripeFormBody(fields)
+      });
+      const text = await stripeRes.text();
+      let data = {};
+      try { data = JSON.parse(text || "{}"); } catch (_) {}
+      return { ok: stripeRes.ok, status: stripeRes.status, data };
+    };
+
+    try {
+      let stripeCall = await callStripeCreateSession(formFields);
+      const errMsg = String((stripeCall.data && stripeCall.data.error && stripeCall.data.error.message) || "");
+      if (!stripeCall.ok && stripeCall.status === 400 && /custom_text|Managed Payments/i.test(errMsg)) {
+        const retryFields = { ...formFields };
+        delete retryFields["custom_text[submit][message]"];
+        stripeCall = await callStripeCreateSession(retryFields);
+      }
+
+      if (!stripeCall.ok || !stripeCall.data || !stripeCall.data.url || !stripeCall.data.id) {
+        return {
+          status: 502,
+          headers,
+          body: JSON.stringify({
+            ok: false,
+            error: "stripe_session_creation_failed",
+            fallbackUrl: plan.fallbackUrl,
+            attemptId
+          })
+        };
+      }
+
+      await recordWorkerTelemetryEvent(env, {
+        type: "checkout_session_created",
+        event_name: "checkout_session_created",
+        plan_selected: plan.telemetryPlan,
+        displayCurrency: currency,
+        surface,
+        lang: rawLang || "en",
+        trigger_tool: triggerTool,
+        attemptId,
+        maskedSession: `***${String(stripeCall.data.id).slice(-8)}`,
+        channel: "worker_checkout_api"
+      });
+
+      return {
+        status: 200,
+        headers,
+        body: JSON.stringify({
+          ok: true,
+          sessionId: stripeCall.data.id,
+          url: stripeCall.data.url,
+          fallbackUrl: plan.fallbackUrl,
+          attemptId,
+          currency,
+          plan: plan.key
+        })
+      };
+    } catch (_) {
+      return {
+        status: 502,
+        headers,
+        body: JSON.stringify({
+          ok: false,
+          error: "stripe_network_error",
+          fallbackUrl: plan.fallbackUrl,
+          attemptId
+        })
+      };
+    }
+  }
+
+  if (req.method === "GET" && url.pathname === "/claim-extension-license") {
+    if (clientIp) {
+      const rl = checkWorkerRateLimit(rateMap, `extclaim:${clientIp}`, 40, Date.now());
+      if (!rl.allowed) {
+        return { status: 429, headers, body: JSON.stringify({ ok: false, error: "rate_limited" }) };
+      }
+    }
+    if (rawOrigin && !ALLOWED_ORIGINS.has(rawOrigin) && !isAllowedExtensionOrigin(rawOrigin)) {
+      return { status: 403, headers, body: JSON.stringify({ ok: false, error: "origin_not_allowed" }) };
+    }
+    const token = String(url.searchParams.get("token") || "").trim();
+    if (!/^[a-zA-Z0-9_-]{16,64}$/.test(token)) {
+      return { status: 400, headers, body: JSON.stringify({ ok: false, error: "invalid_token" }) };
+    }
+    if (env && env.PUREAI_LICENSES_KV && typeof env.PUREAI_LICENSES_KV.get === "function") {
+      try {
+        const rawSub = await env.PUREAI_LICENSES_KV.get(`extclaim:${token}`);
+        if (rawSub) {
+          const parsedSub = JSON.parse(rawSub);
+          if (parsedSub && parsedSub.proKey && parsedSub.status === SUBSCRIPTION_STATES.ACTIVE) {
+            return {
+              status: 200,
+              headers,
+              body: JSON.stringify({
+                ok: true,
+                claimed: true,
+                proKey: parsedSub.proKey,
+                status: parsedSub.status,
+                planType: parsedSub.planType || null,
+                unlimited: parsedSub.unlimited !== false,
+                creditsRemaining: typeof parsedSub.creditsRemaining === "number" ? parsedSub.creditsRemaining : null,
+                expiresAt: parsedSub.expiresAt || null
+              })
+            };
+          }
+        }
+      } catch (_) {}
+    }
+    return { status: 200, headers, body: JSON.stringify({ ok: true, claimed: false }) };
+  }
+
   return { status: 404, headers, body: JSON.stringify({ ok: false, error: "not_found" }) };
+}
+
+function sanitizeCheckoutReturnPath(rawPath) {
+  const raw = String(rawPath || "").trim();
+  if (!raw || raw.length > 200) return "/clean-ai-studio.html";
+  if (!raw.startsWith("/") || raw.startsWith("//") || raw.includes("://") || /[\\\s@\r\n]/.test(raw)) {
+    return "/clean-ai-studio.html";
+  }
+  try {
+    const parsed = new URL(raw, "https://pureaistudios.com");
+    if (parsed.origin !== "https://pureaistudios.com" || !parsed.pathname.startsWith("/")) {
+      return "/clean-ai-studio.html";
+    }
+    if (/^[a-zA-Z0-9_./-]+$/.test(parsed.pathname)) {
+      return parsed.pathname;
+    }
+  } catch (_) {}
+  return "/clean-ai-studio.html";
+}
+
+function encodeStripeFormBody(fields) {
+  return Object.entries(fields || {})
+    .filter(([, v]) => v !== undefined && v !== null)
+    .map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(String(v))}`)
+    .join("&");
+}
+
+async function recordWorkerTelemetryEvent(env, ev) {
+  if (!ev || !env || !env.PUREAI_LICENSES_KV || typeof env.PUREAI_LICENSES_KV.get !== "function" || typeof env.PUREAI_LICENSES_KV.put !== "function") {
+    return;
+  }
+  const eventRecord = { ts: new Date().toISOString(), ...ev };
+  try {
+    let list = [];
+    const raw = await env.PUREAI_LICENSES_KV.get("telemetry:recent_events");
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed)) list = parsed;
+    }
+    const existingPre = list.slice();
+    list.push(eventRecord);
+    if (list.length > 500) list = list.slice(-500);
+    await env.PUREAI_LICENSES_KV.put("telemetry:recent_events", JSON.stringify(list));
+    await incrementLifetimeTelemetryCounter(env, eventRecord, existingPre);
+  } catch (_) {}
+}
+
+async function recordStripeFunnelWebhookTelemetry(eventObj, env) {
+  if (!eventObj || !eventObj.type) return;
+  const obj = (eventObj.data && eventObj.data.object) || {};
+  const meta = (obj && obj.metadata) || {};
+  const planKey = String(meta.plan_type || "").trim();
+  const attemptId = typeof meta.attempt_id === "string" ? meta.attempt_id.slice(0, 48) : undefined;
+  const displayCurrency = typeof meta.display_currency === "string"
+    ? meta.display_currency.slice(0, 8)
+    : (typeof obj.currency === "string" ? obj.currency.toLowerCase().slice(0, 8) : undefined);
+  const surface = typeof meta.surface === "string" ? meta.surface.slice(0, 48) : undefined;
+  const lang = typeof meta.lang === "string" ? meta.lang.slice(0, 10) : undefined;
+  const maskedSession = obj.id ? `***${String(obj.id).slice(-8)}` : undefined;
+
+  if (eventObj.type === "payment_intent.created") {
+    await recordWorkerTelemetryEvent(env, {
+      type: "payment_submitted",
+      event_name: "payment_submitted",
+      plan_selected: planKey || undefined,
+      displayCurrency,
+      surface,
+      lang,
+      attemptId,
+      maskedSession,
+      channel: "stripe_webhook"
+    });
+  } else if (eventObj.type === "payment_intent.payment_failed") {
+    const errObj = obj.last_payment_error || {};
+    const declineCode = String(errObj.decline_code || errObj.code || "payment_failed").slice(0, 48);
+    await recordWorkerTelemetryEvent(env, {
+      type: "payment_failed",
+      event_name: "payment_failed",
+      plan_selected: planKey || undefined,
+      displayCurrency,
+      surface,
+      lang,
+      attemptId,
+      declineCode,
+      maskedSession,
+      channel: "stripe_webhook"
+    });
+  } else if (eventObj.type === "checkout.session.expired") {
+    await recordWorkerTelemetryEvent(env, {
+      type: "checkout_expired",
+      event_name: "checkout_expired",
+      plan_selected: planKey || undefined,
+      displayCurrency,
+      surface,
+      lang,
+      attemptId,
+      maskedSession,
+      channel: "stripe_webhook"
+    });
+  }
 }
 
 function inspectBinaryHeaderForTelegram(bytes) {
@@ -1668,7 +2101,23 @@ async function handlePublicTelegramBotMessage(botToken, chatId, msg, isEs) {
 
 
 function createTelemetryBucket() {
-  return { visits: 0, engaged15s: 0, photos: 0, texts: 0, demos: 0, paywalls: 0, checkouts: 0, paidSales: 0 };
+  return {
+    visits: 0,
+    engaged15s: 0,
+    photos: 0,
+    texts: 0,
+    demos: 0,
+    paywalls: 0,
+    checkouts: 0,
+    paidSales: 0,
+    pricingViews: 0,
+    sessionsCreated: 0,
+    checkoutCanceled: 0,
+    checkoutExpired: 0,
+    paymentSubmitted: 0,
+    paymentFailed: 0,
+    activations: 0
+  };
 }
 
 function applyEventToTelemetryBucket(b, e) {
@@ -1681,6 +2130,13 @@ function applyEventToTelemetryBucket(b, e) {
   if (e.event_name === "paywall_viewed") b.paywalls++;
   if (e.type === "click_checkout" || e.event_name === "checkout_clicked") b.checkouts++;
   if (e.event_name === "purchase_verified") b.paidSales++;
+  if (e.event_name === "pricing_view" || e.type === "pricing_view") b.pricingViews = (b.pricingViews || 0) + 1;
+  if (e.event_name === "checkout_session_created" || e.type === "checkout_session_created") b.sessionsCreated = (b.sessionsCreated || 0) + 1;
+  if (e.event_name === "checkout_abandoned_back" || e.type === "checkout_abandoned_back") b.checkoutCanceled = (b.checkoutCanceled || 0) + 1;
+  if (e.event_name === "checkout_expired" || e.type === "checkout_expired") b.checkoutExpired = (b.checkoutExpired || 0) + 1;
+  if (e.event_name === "payment_submitted" || e.type === "payment_submitted") b.paymentSubmitted = (b.paymentSubmitted || 0) + 1;
+  if (e.event_name === "payment_failed" || e.type === "payment_failed") b.paymentFailed = (b.paymentFailed || 0) + 1;
+  if (e.event_name === "subscription_activated" || e.type === "subscription_activated") b.activations = (b.activations || 0) + 1;
 }
 
 async function incrementLifetimeTelemetryCounter(env, newEv, existingRecentList) {

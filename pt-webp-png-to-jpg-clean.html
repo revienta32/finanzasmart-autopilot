@@ -127,8 +127,9 @@
           box.style.display = "block";
           box.innerHTML = "<div style='color:#fcd34d;font-weight:800;'>🔒 " + esc(reasonMsg || "1/1 free file used.") + "</div>" +
             "<div style='margin-top:8px;display:flex;flex-wrap:wrap;gap:8px;'>" +
-            "<a href='https://buy.stripe.com/9B6cN6e669uZ4vmeTE0000f' target='_blank' rel='noopener noreferrer' style='background:#00e5a3;color:#042f1e;padding:6px 12px;border-radius:8px;font-weight:900;text-decoration:none;'>10 Files · €2.99</a>" +
-            "<a href='https://buy.stripe.com/3cIdRae66bD74vm6n80000g' target='_blank' rel='noopener noreferrer' style='background:#a855f7;color:#fff;padding:6px 12px;border-radius:8px;font-weight:900;text-decoration:none;'>50 + .ZIP · €9.90</a>" +
+            "<a href='https://buy.stripe.com/9B6cN6e669uZ4vmeTE0000f' target='_blank' rel='noopener noreferrer' data-plan='pack_10' data-surface='matrix_paywall' style='background:#00e5a3;color:#042f1e;padding:6px 12px;border-radius:8px;font-weight:900;text-decoration:none;'>10 Files · €2.99</a>" +
+            "<a href='https://buy.stripe.com/3cIdRae66bD74vm6n80000g' target='_blank' rel='noopener noreferrer' data-plan='pack_50' data-surface='matrix_paywall' style='background:#a855f7;color:#fff;padding:6px 12px;border-radius:8px;font-weight:900;text-decoration:none;'>50 + .ZIP · €9.90</a>" +
+            "<a href='https://buy.stripe.com/eVq00k7HIfTn1jabHs0000h' target='_blank' rel='noopener noreferrer' data-plan='annual_unlimited' data-surface='matrix_paywall' style='background:#38bdf8;color:#082f49;padding:6px 12px;border-radius:8px;font-weight:900;text-decoration:none;'>Annual · €39/yr</a>" +
             "<a href='" + esc(STUDIO_URL) + "' style='color:#93c5fd;padding:6px 4px;font-weight:700;text-decoration:underline;'>Activate Pro Key →</a></div>";
         }
       }
@@ -408,9 +409,10 @@
         <h2>Precisa de Lote .ZIP, Vídeo MP4 ou EXIF iPhone 16 Pro?</h2>
         <p>Desbloqueie 10 arquivos (€2,99 pagamento único), 50 arquivos + .ZIP (€9,90) ou Anual Ilimitado (€39/ano). Créditos nunca expiram.</p>
         <a href="clean-ai-studio.html" class="cta-button">Abrir PureAI Studio →</a>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:8px;">
-          <a href="https://buy.stripe.com/9B6cN6e669uZ4vmeTE0000f" target="_blank" rel="noopener" style="text-align:center;padding:0.5rem;border-radius:8px;background:rgba(15,23,42,0.85);border:1px solid rgba(255,255,255,0.2);color:#e2e8f0;font-size:0.78rem;font-weight:700;text-decoration:none;">10 Files · €2.99</a>
-          <a href="https://buy.stripe.com/3cIdRae66bD74vm6n80000g" target="_blank" rel="noopener" style="text-align:center;padding:0.5rem;border-radius:8px;background:rgba(168,85,247,0.25);border:1px solid #a855f7;color:#fff;font-size:0.78rem;font-weight:700;text-decoration:none;">50 + .ZIP · €9.90</a>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(88px,1fr));gap:6px;margin-top:8px;">
+          <a href="https://buy.stripe.com/9B6cN6e669uZ4vmeTE0000f" target="_blank" rel="noopener" data-plan="pack_10" data-surface="matrix_sidebar" style="text-align:center;padding:0.5rem;border-radius:8px;background:rgba(15,23,42,0.85);border:1px solid rgba(255,255,255,0.2);color:#e2e8f0;font-size:0.78rem;font-weight:700;text-decoration:none;">10 Files · €2.99</a>
+          <a href="https://buy.stripe.com/3cIdRae66bD74vm6n80000g" target="_blank" rel="noopener" data-plan="pack_50" data-surface="matrix_sidebar" style="text-align:center;padding:0.5rem;border-radius:8px;background:rgba(168,85,247,0.25);border:1px solid #a855f7;color:#fff;font-size:0.78rem;font-weight:700;text-decoration:none;">50 + .ZIP · €9.90</a>
+          <a href="https://buy.stripe.com/eVq00k7HIfTn1jabHs0000h" target="_blank" rel="noopener" data-plan="annual_unlimited" data-surface="matrix_sidebar" style="text-align:center;padding:0.5rem;border-radius:8px;background:rgba(56,189,248,0.2);border:1px solid #38bdf8;color:#e0f2fe;font-size:0.78rem;font-weight:700;text-decoration:none;">Annual · €39/yr</a>
         </div>
       </div>
     </aside>

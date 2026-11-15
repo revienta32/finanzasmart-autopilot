@@ -28,6 +28,13 @@
     if (q.includes("utm_source=tiktok") || ref.includes("tiktok.com")) return "social_tiktok";
     if (/utm_source=(discord|telegram|twitter|x|instagram)/.test(q) || /discord\.com|t\.co|x\.com|instagram\.com/.test(ref)) return "community_social";
     if (/google\.|bing\.com|duckduckgo\.com|yahoo\.com|ecosia\.org|yandex\.|baidu\.com/.test(ref)) return "organic_search";
+    if (/checkout\.stripe\.com|billing\.stripe\.com|buy\.stripe\.com/.test(ref)) {
+      try {
+        const savedCh = localStorage.getItem("pureai_session_channel") || sessionStorage.getItem("pureai_session_channel");
+        if (savedCh && savedCh !== "referral_other") return savedCh;
+      } catch (_) {}
+      return "direct";
+    }
     if (ref && !ref.includes("pureaistudios.com") && !ref.includes("localhost")) return "referral_other";
     return "direct";
   }
@@ -59,7 +66,7 @@
 
   function hasTelemetryConsent() {
     try {
-      return localStorage.getItem("pureai_telemetry_consent") === "granted";
+      return localStorage.getItem("pureai_telemetry_consent") === "granted" || localStorage.getItem("pureai_telemetry_optin") === "1";
     } catch (_) {
       return false;
     }
@@ -68,6 +75,11 @@
   function setTelemetryConsent(granted) {
     try {
       localStorage.setItem("pureai_telemetry_consent", granted ? "granted" : "denied");
+      if (granted) localStorage.setItem("pureai_telemetry_optin", "1");
+      else localStorage.removeItem("pureai_telemetry_optin");
+      if (granted && typeof window !== "undefined" && typeof window.initPureAiGtagIfConsented === "function") {
+        window.initPureAiGtagIfConsented();
+      }
     } catch (_) {}
   }
 
@@ -167,7 +179,18 @@
 
       const isExplicitUserSupportAction = Boolean(options && options.explicitUserConsent === true);
       const isAnonCounter = !minimized.msg && !minimized.email;
-      if (typeof window !== "undefined" && typeof window.gtag === "function" && (minimized.event_name || minimized.target)) { try { window.gtag("event", minimized.event_name || minimized.target, { event_category: minimized.type || "app_action", event_label: minimized.tool_id || minimized.target || pageName, channel: minimized.channel }); } catch (_) {} }
+      try {
+        if (
+          typeof document !== "undefined" &&
+          minimized.channel &&
+          !/checkout\.stripe\.com|billing\.stripe\.com|buy\.stripe\.com/i.test(document.referrer || "") &&
+          typeof localStorage !== "undefined" &&
+          !localStorage.getItem("pureai_session_channel")
+        ) {
+          localStorage.setItem("pureai_session_channel", minimized.channel);
+        }
+      } catch (_) {}
+      if (hasTelemetryConsent() && typeof window !== "undefined" && typeof window.gtag === "function" && (minimized.event_name || minimized.target)) { try { window.gtag("event", minimized.event_name || minimized.target, { event_category: minimized.type || "app_action", event_label: minimized.tool_id || minimized.target || pageName, channel: minimized.channel }); } catch (_) {} }
       if (!isExplicitUserSupportAction && !isAnonCounter && !hasTelemetryConsent()) {
         return false;
       }
@@ -230,7 +253,7 @@
     if (btn) {
       const oc = btn.getAttribute("onclick") || "";
       if (btn.id === "btn-pwa-install") sendTelemetry({ type: "app_action", event_name: "lead_captured", target: "pwa_install_click" });
-      else if (btn.id === "btn-inline-scrub") sendTelemetry({ type: "app_action", event_name: "tool_completed", tool_id: "img_c2pa_scrubber", isDemo: false, target: "image_scrub_download" });
+      else if (btn.id === "btn-scrub-img" || btn.id === "btn-inline-scrub") sendTelemetry({ type: "app_action", event_name: "tool_completed", tool_id: "img_c2pa_scrubber", isDemo: false, target: "image_scrub_download" });
       else if (btn.id === "btn-verify-clean") sendTelemetry({ type: "app_action", target: "forensic_verify_click" });
       else if (btn.id === "ui-btn-sample-img") sendTelemetry({ type: "app_action", event_name: "tool_completed", tool_id: "img_c2pa_scrubber", target: "demo_photo_tested", isDemo: true });
       else if (btn.id === "ui-btn-sample-top" || btn.id === "ui-btn-sample") sendTelemetry({ type: "app_action", event_name: "tool_completed", tool_id: "txt_invisible_cleaner", target: "demo_text_tested", isDemo: true });
@@ -243,20 +266,86 @@
     const link = e.target.closest("a");
     if (!link || !link.href) return;
     if (link.href.includes("buy.stripe.com")) {
-      const planSelected = link.href.includes("eVq00k7HIfTn1jabHs0000h")
-        ? "PRO_ANNUAL_3900"
+      const planKey = link.href.includes("eVq00k7HIfTn1jabHs0000h")
+        ? "annual_unlimited"
         : link.href.includes("3cIdRae66bD74vm6n80000g")
+          ? "pack_50"
+          : "pack_10";
+      const planSelected = planKey === "annual_unlimited"
+        ? "PRO_ANNUAL_3900"
+        : planKey === "pack_50"
           ? "PACK_50_990"
-          : link.href.includes("9B6cN6e669uZ4vmeTE0000f")
-            ? "PACK_10_299"
-            : "STRIPE_DIRECT";
+          : "PACK_10_299";
+      const displayCurrency = (typeof window !== "undefined" && window.__pureaiDisplayCurrency)
+        ? String(window.__pureaiDisplayCurrency).toLowerCase()
+        : (link.textContent && link.textContent.includes("$") ? "usd" : (link.textContent && link.textContent.includes("£") ? "gbp" : "eur"));
+      const surface = (link.dataset && link.dataset.surface)
+        ? link.dataset.surface
+        : (link.closest && link.closest("#pro-modal-box"))
+          ? "pro_modal"
+          : (link.closest && link.closest("#pa-pro-box"))
+            ? "pricing_box"
+            : (link.closest && link.closest("#pa-sticky-seo-bar"))
+              ? "sticky_bar"
+              : (link.id || "stripe_link");
+      const pageLang = (typeof window !== "undefined" && window.currentUiLang)
+        ? String(window.currentUiLang).toLowerCase()
+        : (typeof document !== "undefined" && document.documentElement && document.documentElement.lang ? String(document.documentElement.lang).toLowerCase() : "en");
+      const triggerTool = (typeof window !== "undefined" && window.lastPaywallTriggerTool) || "direct_pricing_box";
+
       sendTelemetry({
         type: "click_checkout",
         event_name: "checkout_clicked",
         target: "stripe_checkout",
         plan_selected: planSelected,
-        trigger_tool: (typeof window !== "undefined" && window.lastPaywallTriggerTool) || "direct_pricing_box"
+        displayCurrency,
+        surface,
+        trigger_tool: triggerTool
       });
+
+      const isPrimaryClick = !e.defaultPrevented && !e.metaKey && !e.ctrlKey && !e.shiftKey && !e.altKey && (typeof e.button !== "number" || e.button === 0);
+      if (isPrimaryClick && link.dataset && link.dataset.directStripe !== "1" && typeof fetch === "function") {
+        e.preventDefault();
+        if (link.dataset.paCheckoutBusy === "1") return;
+        link.dataset.paCheckoutBusy = "1";
+        const origOpacity = link.style.opacity;
+        link.style.opacity = "0.75";
+        try {
+          localStorage.setItem("pureai_pending_checkout", JSON.stringify({ plan: planKey, ts: Date.now(), page: window.location.pathname }));
+        } catch (_) {}
+
+        let savedAff = "";
+        try { savedAff = localStorage.getItem("pureai_aff_partner") || localStorage.getItem("pureai_ref_aff") || ""; } catch (_) {}
+        const apiBase = (typeof window !== "undefined" && window.PUREAI_WORKER_URL) || "https://pureai-stripe-webhook.pureaistudio-app.workers.dev";
+        const sessionReq = fetch(apiBase + "/create-checkout-session", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            plan: planKey,
+            currency: displayCurrency,
+            lang: pageLang,
+            surface,
+            triggerTool,
+            returnPath: (typeof window !== "undefined" && window.location && window.location.pathname) || "/clean-ai-studio.html",
+            aff: savedAff
+          })
+        }).then((r) => r.json()).catch(() => null);
+
+        const timeoutPromise = new Promise((resolve) => setTimeout(() => resolve(null), 2800));
+        Promise.race([sessionReq, timeoutPromise]).then((resp) => {
+          link.dataset.paCheckoutBusy = "";
+          link.style.opacity = origOpacity || "";
+          if (resp && resp.ok === true && resp.url && String(resp.url).indexOf("https://checkout.stripe.com/") === 0) {
+            window.location.assign(resp.url);
+          } else {
+            window.location.assign((resp && resp.fallbackUrl) || link.href);
+          }
+        }).catch(() => {
+          link.dataset.paCheckoutBusy = "";
+          link.style.opacity = origOpacity || "";
+          window.location.assign(link.href);
+        });
+      }
     } else if (link.href.includes("chromewebstore.google.com") || link.href.includes("chrome-extension-pureai.zip")) {
       sendTelemetry({ type: "app_action", event_name: "lead_captured", tool_id: "chrome_ext_bridge", target: "chrome_extension_download" });
     }
@@ -271,11 +360,11 @@
 
   // 3. Widget flotante de soporte con casilla de consentimiento explícito e información de privacidad
   const widgetHtml = `
-    <div id="fs-bug-widget" style="position:fixed;bottom:16px;right:16px;z-index:9999;font-family:system-ui,sans-serif;">
+    <div id="fs-bug-widget" style="position:fixed;bottom:74px;right:16px;z-index:9999;font-family:system-ui,sans-serif;">
       <button type="button" id="fs-bug-toggle" style="background:#1e293b;color:#f8fafc;border:1px solid #10b981;padding:0.55rem 0.9rem;border-radius:99px;font-size:0.8rem;font-weight:700;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,0.4);">
         🛠️ ¿Algún fallo o sugerencia?
       </button>
-      <div id="fs-bug-modal" hidden style="position:absolute;bottom:46px;right:0;width:310px;background:#1e293b;border:1px solid #334155;border-radius:0.75rem;padding:1rem;box-shadow:0 10px 25px rgba(0,0,0,0.6);color:#f8fafc;">
+      <div id="fs-bug-modal" hidden style="position:absolute;bottom:46px;right:0;width:310px;max-width:calc(100vw - 32px);box-sizing:border-box;background:#1e293b;border:1px solid #334155;border-radius:0.75rem;padding:1rem;box-shadow:0 10px 25px rgba(0,0,0,0.6);color:#f8fafc;">
         <strong style="display:block;font-size:0.88rem;margin-bottom:0.35rem;">🛠️ Reportar fallo o pedir mejora</strong>
         <p style="font-size:0.74rem;color:#94a3b8;margin-bottom:0.5rem;">No incluyas datos sensibles; los emails y claves se enmascaran automáticamente antes del envío:</p>
         <textarea id="fs-bug-text" rows="3" placeholder="Ej: Duda sobre formato MP4 o sugerencia de mejora..." style="width:100%;background:#0f172a;color:#f8fafc;border:1px solid #334155;border-radius:0.4rem;padding:0.5rem;font-size:0.8rem;margin-bottom:0.45rem;resize:vertical;"></textarea>
@@ -301,6 +390,46 @@
   container.innerHTML = widgetHtml;
   if (document.body) {
     document.body.appendChild(container);
+    if (document.getElementById("pa-sticky-seo-bar")) {
+      document.body.style.paddingBottom = "72px";
+    }
+    try {
+      const queued = Array.isArray(window.__pureaiPendingTelemetryQueue)
+        ? window.__pureaiPendingTelemetryQueue.splice(0)
+        : [];
+      for (let i = 0; i < queued.length; i++) {
+        sendTelemetry(queued[i]);
+      }
+    } catch (_) {}
+    try {
+      const proBox = document.getElementById("pa-pro-box");
+      if (
+        proBox &&
+        typeof IntersectionObserver === "function" &&
+        (!window.sessionStorage || !sessionStorage.getItem("pureai_pricing_viewed"))
+      ) {
+        const io = new IntersectionObserver((entries) => {
+          for (let i = 0; i < entries.length; i++) {
+            if (entries[i].isIntersecting) {
+              try {
+                if (window.sessionStorage) sessionStorage.setItem("pureai_pricing_viewed", "1");
+              } catch (_) {}
+              sendTelemetry({
+                type: "pricing_view",
+                event_name: "pricing_view",
+                target: "pa_pro_box",
+                trigger_tool: "pricing_box",
+                surface: "pricing_box",
+                displayCurrency: (typeof window !== "undefined" && window.__pureaiDisplayCurrency) || "eur"
+              });
+              io.disconnect();
+              break;
+            }
+          }
+        }, { threshold: 0.35 });
+        io.observe(proBox);
+      }
+    } catch (_) {}
   }
 
   const toggleBtn = document.getElementById("fs-bug-toggle");
