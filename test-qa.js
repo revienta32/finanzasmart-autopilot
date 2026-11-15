@@ -2322,7 +2322,7 @@ assert(cleanAiHtml.includes("terms.html") && cleanAiHtml.includes("Art. 103.m TR
   const extManifest = JSON.parse(fs.readFileSync(path.join(__dirname, "chrome-extension-pureai", "manifest.json"), "utf8"));
   const extBgCode = fs.readFileSync(path.join(__dirname, "chrome-extension-pureai", "background.js"), "utf8");
   const extPopupCode = fs.readFileSync(path.join(__dirname, "chrome-extension-pureai", "popup.js"), "utf8");
-  assert.strictEqual(extManifest.version, "1.2.5", "EXT-V125: manifest.json debe reflejar la versión endurecida 1.2.5");
+  assert.strictEqual(extManifest.version, "1.2.6", "EXT-V126: manifest.json debe reflejar la versión endurecida 1.2.6");
   assert(
     extBgCode.includes("CONSUME_PUREAI_CREDIT") &&
     extBgCode.includes("CHECK_PUREAI_FREE_QUOTA") &&
