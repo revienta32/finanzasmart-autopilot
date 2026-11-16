@@ -131,12 +131,22 @@
     <priority>0.9</priority>
   </url>
   <url>
+    <loc>https://pureaistudios.com/fr-mp4-frame-extractor.html</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
     <loc>https://pureaistudios.com/fr-photo-gps-remover.html</loc>
     <changefreq>daily</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
     <loc>https://pureaistudios.com/fr-png-prompt-inspector.html</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://pureaistudios.com/fr-webp-png-to-jpg-clean.html</loc>
     <changefreq>daily</changefreq>
     <priority>0.9</priority>
   </url>
@@ -172,6 +182,36 @@
   </url>
   <url>
     <loc>https://pureaistudios.com/humanize-ai-text-bypass-turnitin-gptzero-free.html</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://pureaistudios.com/it-ai-photo-detector.html</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://pureaistudios.com/it-mp4-frame-extractor.html</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://pureaistudios.com/it-photo-gps-remover.html</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://pureaistudios.com/it-png-prompt-inspector.html</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://pureaistudios.com/it-webp-png-to-jpg-clean.html</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://pureaistudios.com/ja-ai-photo-detector.html</loc>
     <changefreq>daily</changefreq>
     <priority>0.9</priority>
   </url>
