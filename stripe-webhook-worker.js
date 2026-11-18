@@ -785,6 +785,96 @@ function sanitizeClientTelemetryPayload(parsed) {
   return clean;
 }
 
+const BOT_TELEMETRY_UA_REGEX = /(googlebot|adsbot|mediapartners-google|apis-google|google-inspectiontool|googleother|storebot-google|google-read-aloud|bingbot|bingpreview|adidxbot|msnbot|slurp|duckduckbot|baiduspider|yandexbot|yandeximages|yandexrenderresourcesbot|facebookexternalhit|meta-externalagent|applebot|semrushbot|ahrefsbot|mj12bot|dotbot|screaming\s*frog|petalbot|bytespider|gptbot|oai-searchbot|chatgpt-user|claudebot|anthropic-ai|perplexitybot|amazonbot|ccbot|headlesschrome|phantomjs|puppeteer|playwright|selenium|webdriver|cypress|lighthouse|chrome-lighthouse|pagespeed|gtmetrix|pingdom|uptimerobot|statuscake|datadog|curl\/|wget|python-requests|python-urllib|aiohttp|httpx|go-http-client|okhttp|axios\/|node-fetch|undici|scrapy|prerender|telegrambot|twitterbot|discordbot|linkedinbot|slackbot|(?:^|[\s(;/_+-])(?!cubot\b)[a-z0-9_-]*(?:bot|crawler|spider)(?:[\s);/_+.-]|$))/i;
+
+function classifyTelemetryBotRequest(req, sanitizedPayload, clientIp, rateMap, nowMs) {
+  const hdrGet = req && req.headers && typeof req.headers.get === "function"
+    ? (h) => req.headers.get(h)
+    : () => "";
+  const ua = String(hdrGet("user-agent") || hdrGet("User-Agent") || "").trim();
+  if (ua && BOT_TELEMETRY_UA_REGEX.test(ua)) {
+    return { isBot: true, reason: "bot_user_agent" };
+  }
+  const purpose = String(
+    hdrGet("sec-purpose") || hdrGet("Sec-Purpose") ||
+    hdrGet("purpose") || hdrGet("Purpose") ||
+    hdrGet("x-moz") || hdrGet("X-Moz") || ""
+  ).toLowerCase();
+  if (purpose.includes("prefetch") || purpose.includes("prerender") || purpose.includes("preview")) {
+    return { isBot: true, reason: "prefetch_prerender" };
+  }
+  if (req && req.cf && (req.cf.verifiedBotCategory || (req.cf.botManagement && req.cf.botManagement.verifiedBot === true))) {
+    return { isBot: true, reason: "cf_verified_bot" };
+  }
+  if (clientIp && sanitizedPayload && (sanitizedPayload.event_name === "session_start" || sanitizedPayload.type === "pageview")) {
+    const map = rateMap || GLOBAL_RATE_LIMITS;
+    const now = typeof nowMs === "number" ? nowMs : Date.now();
+    const burstKey = `botburst:${clientIp}`;
+    const prev = Array.isArray(map.get(burstKey)) ? map.get(burstKey) : [];
+    const entries = prev.filter((item) => item && now - item.ts < 300000);
+    entries.push({ ts: now, page: String(sanitizedPayload.page || "index.html") });
+    if (map.size > 5000 && !map.has(burstKey)) {
+      const oldestKey = map.keys().next().value;
+      if (oldestKey) map.delete(oldestKey);
+    }
+    map.set(burstKey, entries);
+    const uniquePages = new Set(entries.map((item) => item.page));
+    if (entries.length >= 4 && uniquePages.size >= 3) {
+      return { isBot: true, reason: "stateless_crawler_burst" };
+    }
+  }
+  return { isBot: false, reason: null };
+}
+
+function filterBotTelemetryEvents(events) {
+  if (!Array.isArray(events) || events.length === 0) return [];
+  const sessList = [];
+  for (let i = 0; i < events.length; i++) {
+    const e = events[i];
+    if (e && (e.type === "pageview" || e.event_name === "session_start") && !e.isReturning && e.ts) {
+      const ms = Date.parse(e.ts);
+      if (ms > 0) sessList.push({ i, e, ms });
+    }
+  }
+  const botIndices = new Set();
+  const markCluster = (cluster) => {
+    if (!cluster || cluster.length < 4) return;
+    const pages = new Set(cluster.map((x) => x.e.page || ""));
+    if (pages.size < 3) return;
+    const startMs = cluster[0].ms;
+    const endMs = cluster[cluster.length - 1].ms;
+    for (const x of cluster) botIndices.add(x.i);
+    for (let idx = 0; idx < events.length; idx++) {
+      const ev = events[idx];
+      if (ev && ev.target === "engaged_15s" && ev.ts) {
+        const ems = Date.parse(ev.ts);
+        if (ems >= startMs && ems <= endMs + 20000 && pages.has(ev.page || "")) {
+          botIndices.add(idx);
+        }
+      }
+    }
+  };
+  if (sessList.length > 0) {
+    let run = [sessList[0]];
+    for (let k = 1; k < sessList.length; k++) {
+      const prev = run[run.length - 1];
+      const cur = sessList[k];
+      if (
+        cur.ms - prev.ms <= 65000 &&
+        (cur.e.channel || "") === (prev.e.channel || "") &&
+        (cur.e.lang || "") === (prev.e.lang || "")
+      ) {
+        run.push(cur);
+      } else {
+        markCluster(run);
+        run = [cur];
+      }
+    }
+    markCluster(run);
+  }
+  return events.filter((e, idx) => e && !e.isBot && !botIndices.has(idx));
+}
+
 async function hydrateStoreFromKv(env, store, eventObj) {
   if (!env || !env.PUREAI_LICENSES_KV || !eventObj) return { alreadyProcessedInKv: false };
   const kv = env.PUREAI_LICENSES_KV;
@@ -1517,7 +1607,18 @@ async function handleWorkerHttpRequest(req, env, sharedStore) {
         if (rawLedger) financialLedger = JSON.parse(rawLedger);
       } catch (_) {}
     }
-    return { status: 200, headers, body: JSON.stringify({ ok: true, events: list, financialLedger }) };
+    const cleanList = filterBotTelemetryEvents(list);
+    return {
+      status: 200,
+      headers,
+      body: JSON.stringify({
+        ok: true,
+        events: cleanList,
+        rawEventsCount: list.length,
+        filteredBotsCount: Math.max(0, list.length - cleanList.length),
+        financialLedger
+      })
+    };
   }
 
   if (req.method === "GET" && url.pathname === "/ops-state") {
@@ -1608,6 +1709,12 @@ async function handleWorkerHttpRequest(req, env, sharedStore) {
     if (supportMsg && !sanitized.msg) sanitized.msg = supportMsg;
     const isSupportTicket = url.pathname === "/support" || sanitized.type === "user_bug_report" || sanitized.type === "support_inquiry";
     if (isSupportTicket && !sanitized.type) sanitized.type = "user_bug_report";
+    if (!isSupportTicket) {
+      const botCheck = classifyTelemetryBotRequest(req, sanitized, clientIp, rateMap, Date.now());
+      if (botCheck.isBot) {
+        return { status: 200, headers, body: JSON.stringify({ ok: true, relayed: false, filtered: botCheck.reason }) };
+      }
+    }
     const triage = isSupportTicket ? classifyWorkerSupportMessage(supportMsg || "") : null;
     const evWithId = {
       ...sanitized,
@@ -2251,16 +2358,19 @@ function applyEventToTelemetryBucket(b, e) {
 
 async function incrementLifetimeTelemetryCounter(env, newEv, existingRecentList) {
   if (!env || !env.PUREAI_LICENSES_KV || typeof env.PUREAI_LICENSES_KV.get !== "function" || typeof env.PUREAI_LICENSES_KV.put !== "function") return;
-  if (!newEv || newEv.channel === "test_verificacion_telegram") return;
+  if (!newEv || newEv.channel === "test_verificacion_telegram" || newEv.isBot === true) return;
   try {
     let lifetime = null;
     const rawLt = await env.PUREAI_LICENSES_KV.get("telemetry:lifetime_totals");
     if (rawLt) {
-      lifetime = Object.assign(createTelemetryBucket(), JSON.parse(rawLt));
+      const parsedLt = JSON.parse(rawLt);
+      lifetime = Object.assign(createTelemetryBucket(), parsedLt);
+      if (parsedLt && parsedLt.botFilterV1) lifetime.botFilterV1 = parsedLt.botFilterV1;
     } else {
       lifetime = createTelemetryBucket();
-      const seedList = Array.isArray(existingRecentList) ? existingRecentList : [];
+      const seedList = filterBotTelemetryEvents(Array.isArray(existingRecentList) ? existingRecentList : []);
       for (const item of seedList) applyEventToTelemetryBucket(lifetime, item);
+      lifetime.botFilterV1 = 1;
     }
     applyEventToTelemetryBucket(lifetime, newEv);
     await env.PUREAI_LICENSES_KV.put("telemetry:lifetime_totals", JSON.stringify(lifetime));
@@ -2365,34 +2475,51 @@ async function buildAndSendDailyTelegramDigest(env, options = {}) {
     } catch (_) {}
   }
 
+  const rawWindowTotal = createTelemetryBucket();
   const last24h = createTelemetryBucket();
   const windowTotal = createTelemetryBucket();
   let pendingSupportApprovals = 0;
 
   for (const e of list) {
+    if (!e || e.channel === "test_verificacion_telegram") continue;
+    applyEventToTelemetryBucket(rawWindowTotal, e);
+    if ((e.type === "user_bug_report" || e.type === "support_inquiry") && e.triage && e.triage.requiresHumanApproval) {
+      pendingSupportApprovals++;
+    }
+  }
+
+  const cleanList = filterBotTelemetryEvents(list);
+  for (const e of cleanList) {
     if (e.channel === "test_verificacion_telegram") continue;
     const evMs = e.ts ? Date.parse(e.ts) : 0;
     const is24h = evMs > 0 && (nowMs - evMs) <= 24 * 3600 * 1000;
     applyEventToTelemetryBucket(windowTotal, e);
     if (is24h) applyEventToTelemetryBucket(last24h, e);
-    if ((e.type === "user_bug_report" || e.type === "support_inquiry") && e.triage && e.triage.requiresHumanApproval) {
-      pendingSupportApprovals++;
-    }
   }
 
   const total = createTelemetryBucket();
   for (const k of Object.keys(total)) {
     total[k] = Math.max(windowTotal[k] || 0, (storedLifetime && Number(storedLifetime[k])) || 0);
   }
+  let shouldPersistLifetime = false;
+  if (storedLifetime && storedLifetime.botFilterV1) {
+    total.botFilterV1 = storedLifetime.botFilterV1;
+  } else {
+    const botVisitsDelta = Math.max(0, (rawWindowTotal.visits || 0) - (windowTotal.visits || 0));
+    const botEngagedDelta = Math.max(0, (rawWindowTotal.engaged15s || 0) - (windowTotal.engaged15s || 0));
+    if (storedLifetime && (botVisitsDelta > 0 || botEngagedDelta > 0)) {
+      total.visits = Math.max(windowTotal.visits || 0, Math.max(0, Number(storedLifetime.visits || 0) - botVisitsDelta));
+      total.engaged15s = Math.max(windowTotal.engaged15s || 0, Math.max(0, Number(storedLifetime.engaged15s || 0) - botEngagedDelta));
+    }
+    total.botFilterV1 = 1;
+    shouldPersistLifetime = true;
+  }
   if (storedLifetime && windowTotal.qaSales > 0 && storedLifetime.qaSales === undefined) {
     total.paidSales = Math.max(windowTotal.paidSales || 0, Math.max(0, Number(storedLifetime.paidSales || 0) - windowTotal.qaSales));
     total.qaSales = windowTotal.qaSales;
-    if (env && env.PUREAI_LICENSES_KV && typeof env.PUREAI_LICENSES_KV.put === "function") {
-      try {
-        await env.PUREAI_LICENSES_KV.put("telemetry:lifetime_totals", JSON.stringify(total));
-      } catch (_) {}
-    }
-  } else if (!storedLifetime && env && env.PUREAI_LICENSES_KV && typeof env.PUREAI_LICENSES_KV.put === "function") {
+    shouldPersistLifetime = true;
+  }
+  if (shouldPersistLifetime && env && env.PUREAI_LICENSES_KV && typeof env.PUREAI_LICENSES_KV.put === "function") {
     try {
       await env.PUREAI_LICENSES_KV.put("telemetry:lifetime_totals", JSON.stringify(total));
     } catch (_) {}
@@ -2545,6 +2672,8 @@ module.exports = {
   createWebhookProcessorStore,
   processStripeWebhookEvent,
   classifyWorkerSupportMessage,
+  classifyTelemetryBotRequest,
+  filterBotTelemetryEvents,
   appendFinancialLedgerEvent,
   isOwnerQaSaleRecord,
   buildAndSendDailyTelegramDigest,

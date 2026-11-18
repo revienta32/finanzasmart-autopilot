@@ -3088,7 +3088,177 @@ assert(cleanAiHtml.includes("terms.html") && cleanAiHtml.includes("Art. 103.m TR
     "STRAT-PLAN-01f: content-chatgpt.js debe descontar créditos reales de servidor para pases pack_10/pack_50"
   );
 
-  console.log("✅ QA TEST SUITE PASSED (24 SECCIONES / 375+ ASERCIONES): 100% E2E VM + Embudo Checkout & Multi-divisa Stripe + BUG-01/02/03/06 + GDPR gtag Gate + Seguridad Open-Redirect + Aislamiento Estricto por Plan.");
+  // 25. FILTRADO ANTI-BOTS EN TELEMETRÍA Y PARTE DIARIO (BOT-FILTER-01a..f)
+  const botKvMap = new Map();
+  const botStore = webhookEngine.createWebhookProcessorStore();
+  const botEnv = {
+    ADMIN_DIGEST_TOKEN: secEnv.ADMIN_DIGEST_TOKEN,
+    PUREAI_LICENSES_KV: {
+      get: async (k) => (botKvMap.has(k) ? botKvMap.get(k) : null),
+      put: async (k, v) => { botKvMap.set(k, String(v)); }
+    }
+  };
+  const makeTelReq = (pathname, hdrs, bodyObj, cfObj) => ({
+    method: "POST",
+    url: "https://api.pureaistudios.com" + pathname,
+    headers: {
+      get: (h) => {
+        const key = String(h || "").toLowerCase();
+        for (const [k, v] of Object.entries(hdrs || {})) {
+          if (k.toLowerCase() === key) return v;
+        }
+        return "";
+      }
+    },
+    ...(cfObj ? { cf: cfObj } : {}),
+    text: async () => JSON.stringify(bodyObj || {})
+  });
+
+  // 25a. Googlebot & GPTBot en POST /telemetry -> 200 relayed:false sin ensuciar KV
+  for (const botUa of [
+    "Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)",
+    "GPTBot/1.0"
+  ]) {
+    const botRes = await webhookEngine.handleWorkerHttpRequest(
+      makeTelReq("/telemetry", { origin: "https://pureaistudios.com", "user-agent": botUa }, { type: "pageview", event_name: "session_start", page: "index.html" }),
+      botEnv,
+      botStore
+    );
+    assert.strictEqual(botRes.status, 200, `BOT-FILTER-01a: ${botUa} debe responder HTTP 200`);
+    const botResBody = JSON.parse(botRes.body);
+    assert.strictEqual(botResBody.relayed, false, `BOT-FILTER-01a: ${botUa} no debe retransmitirse a KV`);
+    assert.strictEqual(botResBody.filtered, "bot_user_agent", `BOT-FILTER-01a: ${botUa} debe marcar filtered=bot_user_agent`);
+  }
+  assert.strictEqual(botKvMap.has("telemetry:recent_events"), false, "BOT-FILTER-01a: Ningún bot por UA debe crear telemetry:recent_events");
+  assert.strictEqual(botKvMap.has("telemetry:lifetime_totals"), false, "BOT-FILTER-01a: Ningún bot por UA debe crear telemetry:lifetime_totals");
+
+  // 25b. Sec-Purpose prefetch filtrado vs Chrome humano real aceptado
+  const prefetchRes = await webhookEngine.handleWorkerHttpRequest(
+    makeTelReq("/telemetry", { origin: "https://pureaistudios.com", "sec-purpose": "prefetch;prerender", "user-agent": "Mozilla/5.0 Chrome/131.0.0.0 Safari/537.36" }, { type: "pageview", event_name: "session_start", page: "ai-photo-detector.html" }),
+    botEnv,
+    botStore
+  );
+  assert.strictEqual(JSON.parse(prefetchRes.body).relayed, false, "BOT-FILTER-01b: Sec-Purpose prefetch/prerender debe descartarse");
+
+  const humanRes = await webhookEngine.handleWorkerHttpRequest(
+    makeTelReq("/telemetry", {
+      origin: "https://pureaistudios.com",
+      "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/131.0.0.0 Safari/537.36"
+    }, { type: "pageview", event_name: "session_start", page: "index.html", channel: "organic_search", lang: "en" }),
+    botEnv,
+    botStore
+  );
+  assert.strictEqual(humanRes.status, 200, "BOT-FILTER-01b: Navegador humano real debe responder HTTP 200");
+  assert.strictEqual(JSON.parse(humanRes.body).relayed, true, "BOT-FILTER-01b: Navegador humano real SÍ debe guardarse");
+
+  // 25c. POST /support o user_bug_report nunca debe bloquearse aunque lleve UA atípico
+  const supportOddUaRes = await webhookEngine.handleWorkerHttpRequest(
+    makeTelReq("/support", { origin: "https://pureaistudios.com", "user-agent": "curl/8.4.0" }, { type: "user_bug_report", msg: "Cannot verify key after payment", page: "clean-ai-studio.html" }),
+    botEnv,
+    botStore
+  );
+  assert.strictEqual(JSON.parse(supportOddUaRes.body).relayed, true, "BOT-FILTER-01c: /support jamás debe filtrarse por User-Agent");
+
+  // 25d. Ráfaga de crawler sin sessionStorage desde una misma cf-connecting-ip en 4 páginas distintas
+  const burstIp = "203.0.113.77";
+  const burstPages = ["index.html", "ai-photo-detector.html", "png-prompt-inspector.html", "photo-gps-remover.html"];
+  let fourthBurstBody = null;
+  for (let bi = 0; bi < burstPages.length; bi++) {
+    const rBurst = await webhookEngine.handleWorkerHttpRequest(
+      makeTelReq("/telemetry", {
+        origin: "https://pureaistudios.com",
+        "cf-connecting-ip": burstIp,
+        "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/131.0.0.0 Safari/537.36"
+      }, { type: "pageview", event_name: "session_start", page: burstPages[bi], channel: "organic_search", lang: "en" }),
+      botEnv,
+      botStore
+    );
+    if (bi === 3) fourthBurstBody = JSON.parse(rBurst.body);
+  }
+  assert.strictEqual(fourthBurstBody.relayed, false, "BOT-FILTER-01d: El 4º session_start desde misma IP en >=3 páginas en <5m debe filtrarse");
+  assert.strictEqual(fourthBurstBody.filtered, "stateless_crawler_burst", "BOT-FILTER-01d: Debe reportar filtered=stateless_crawler_burst");
+
+  // 25e. Limpieza retroactiva de ráfaga histórica en filterBotTelemetryEvents y /daily-digest (botFilterV1 === 1)
+  const histBaseMs = Date.now() - 180000;
+  const histEvents = [
+    { type: "pageview", event_name: "session_start", channel: "organic_search", lang: "en", isReturning: false, page: "index.html", ts: new Date(histBaseMs - 3600000).toISOString() },
+    { type: "pageview", event_name: "session_start", channel: "organic_search", lang: "en", isReturning: false, page: "p1.html", ts: new Date(histBaseMs).toISOString() },
+    { type: "pageview", event_name: "session_start", channel: "organic_search", lang: "en", isReturning: false, page: "p2.html", ts: new Date(histBaseMs + 12000).toISOString() },
+    { type: "pageview", event_name: "session_start", channel: "organic_search", lang: "en", isReturning: false, page: "p3.html", ts: new Date(histBaseMs + 25000).toISOString() },
+    { type: "pageview", event_name: "session_start", channel: "organic_search", lang: "en", isReturning: false, page: "p4.html", ts: new Date(histBaseMs + 38000).toISOString() },
+    { type: "pageview", event_name: "session_start", channel: "organic_search", lang: "en", isReturning: false, page: "p2.html", ts: new Date(histBaseMs + 50000).toISOString() },
+    { type: "app_action", event_name: "engaged_15s", target: "engaged_15s", page: "p2.html", ts: new Date(histBaseMs + 58000).toISOString() },
+    { type: "pageview", event_name: "session_start", channel: "direct", lang: "es", isReturning: true, page: "clean-ai-studio.html", ts: new Date(histBaseMs + 900000).toISOString() }
+  ];
+  assert.strictEqual(webhookEngine.filterBotTelemetryEvents(histEvents).length, 2, "BOT-FILTER-01e: filterBotTelemetryEvents debe preservar las 2 visitas humanas reales y quitar la ráfaga de 5+1");
+  const histKvMap = new Map();
+  histKvMap.set("telemetry:recent_events", JSON.stringify(histEvents));
+  histKvMap.set("telemetry:lifetime_totals", JSON.stringify({ visits: 10, engaged15s: 3, photos: 1, texts: 0, demos: 0, paywalls: 0, checkouts: 0, paidSales: 0 }));
+  const histEnv = {
+    ADMIN_DIGEST_TOKEN: secEnv.ADMIN_DIGEST_TOKEN,
+    PUREAI_LICENSES_KV: {
+      get: async (k) => (histKvMap.has(k) ? histKvMap.get(k) : null),
+      put: async (k, v) => { histKvMap.set(k, String(v)); }
+    }
+  };
+  const histDigestRes = await webhookEngine.handleWorkerHttpRequest(
+    {
+      method: "POST",
+      url: "https://api.pureaistudios.com/daily-digest",
+      headers: { get: (h) => (String(h).toLowerCase() === "authorization" ? "Bearer " + secEnv.ADMIN_DIGEST_TOKEN : "") },
+      text: async () => JSON.stringify({ force: true, skipRadar: true })
+    },
+    histEnv
+  );
+  const histDigestBody = JSON.parse(histDigestRes.body);
+  assert.strictEqual(histDigestBody.last24h.visits, 2, "BOT-FILTER-01e: last24h.visits debe contar solo 2 visitas humanas reales");
+  assert.strictEqual(histDigestBody.total.visits, 5, "BOT-FILTER-01e: total.visits debe descontar exactamente las 5 visitas bot históricas (10 -> 5)");
+  assert.strictEqual(histDigestBody.total.engaged15s, 2, "BOT-FILTER-01e: total.engaged15s debe descontar el engaged_15s del bot (3 -> 2)");
+  assert.strictEqual(histDigestBody.total.botFilterV1, 1, "BOT-FILTER-01e: total debe marcar botFilterV1 === 1");
+  const histDigestAgain = JSON.parse((await webhookEngine.handleWorkerHttpRequest(
+    {
+      method: "POST",
+      url: "https://api.pureaistudios.com/daily-digest",
+      headers: { get: (h) => (String(h).toLowerCase() === "authorization" ? "Bearer " + secEnv.ADMIN_DIGEST_TOKEN : "") },
+      text: async () => JSON.stringify({ force: true, skipRadar: true })
+    },
+    histEnv
+  )).body);
+  assert.strictEqual(histDigestAgain.total.visits, 5, "BOT-FILTER-01e: Segunda ejecución NO debe descontar dos veces (idempotente por botFilterV1)");
+
+  // 25f. Cliente webdriver=true bloquea telemetría automática en VM pero permite soporte explícito
+  const botVmFetches = [];
+  const botVmStore = {};
+  const botVmSandbox = {
+    console, Math, Date, JSON, Array, Object, String, Boolean, Number, Promise, URL, encodeURIComponent,
+    setTimeout, clearTimeout,
+    localStorage: { getItem: (k) => botVmStore[k] ?? null, setItem: (k, v) => { botVmStore[k] = String(v); }, removeItem: (k) => { delete botVmStore[k]; } },
+    sessionStorage: { _m: {}, getItem(k) { return this._m[k] ?? null; }, setItem(k, v) { this._m[k] = String(v); } },
+    navigator: { language: "en-US", webdriver: true },
+    location: { href: "https://pureaistudios.com/index.html", pathname: "/index.html", search: "", hostname: "pureaistudios.com" },
+    document: {
+      referrer: "",
+      documentElement: { lang: "en", getAttribute: () => null },
+      body: { style: {}, appendChild() {} },
+      createElement: () => telElStub(),
+      getElementById: () => telElStub(),
+      addEventListener() {}
+    },
+    fetch: async (_u, opts) => {
+      if (opts && opts.body) botVmFetches.push(JSON.parse(opts.body));
+      return { ok: true, json: async () => ({ ok: true }) };
+    }
+  };
+  botVmSandbox.window = botVmSandbox;
+  vm.createContext(botVmSandbox);
+  vm.runInContext(telemetriaCode, botVmSandbox);
+  assert.strictEqual(botVmFetches.length, 0, "BOT-FILTER-01f: webdriver=true NO debe disparar fetch en session_start");
+  const botSupportSent = botVmSandbox.sendPureAiAnalyticsEvent({ type: "user_bug_report", msg: "Help needed" }, { explicitUserConsent: true });
+  assert.strictEqual(botSupportSent, true, "BOT-FILTER-01f: Envío explícito de soporte debe seguir permitido");
+  assert.strictEqual(botVmFetches.length, 1, "BOT-FILTER-01f: Solo el envío explícito de soporte debe llamar a fetch");
+  assert(!telemetriaCode.includes("navigator.userAgent"), "BOT-FILTER-01f: telemetria-soporte.js debe seguir sin contener navigator.userAgent");
+
+  console.log("✅ QA TEST SUITE PASSED (25 SECCIONES / 390+ ASERCIONES): 100% E2E VM + Embudo Checkout & Multi-divisa Stripe + BUG-01/02/03/06 + GDPR gtag Gate + Seguridad Open-Redirect + Aislamiento por Plan + Anti-Bots.");
 })();
 
 

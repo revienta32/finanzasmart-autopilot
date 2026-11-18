@@ -142,6 +142,35 @@
     };
   }
 
+  function isAutomatedBotClient() {
+    try {
+      if (typeof navigator !== "undefined" && navigator.webdriver === true) return true;
+      if (typeof window !== "undefined") {
+        if (
+          window._phantom ||
+          window.__nightmare ||
+          window.callPhantom ||
+          window.domAutomation ||
+          window.domAutomationController ||
+          window.__playwright ||
+          window.__pwInitScripts ||
+          window.Cypress
+        ) {
+          return true;
+        }
+      }
+      if (
+        typeof document !== "undefined" &&
+        document.documentElement &&
+        typeof document.documentElement.getAttribute === "function" &&
+        document.documentElement.getAttribute("webdriver") !== null
+      ) {
+        return true;
+      }
+    } catch (_) {}
+    return false;
+  }
+
   if (typeof window !== "undefined") {
     window.maskSensitiveSupportText = maskSensitiveSupportText;
     window.classifyTrafficChannel = classifyTrafficChannel;
@@ -149,6 +178,7 @@
     window.computeRetentionMetrics = computeRetentionMetrics;
     window.hasPureAiTelemetryConsent = hasTelemetryConsent;
     window.setPureAiTelemetryConsent = setTelemetryConsent;
+    window.isPureAiAutomatedBotClient = isAutomatedBotClient;
   }
 
   function recordLocalFunnelEvent(minimizedEvent) {
@@ -178,6 +208,9 @@
       recordLocalFunnelEvent(minimized);
 
       const isExplicitUserSupportAction = Boolean(options && options.explicitUserConsent === true);
+      if (!isExplicitUserSupportAction && isAutomatedBotClient()) {
+        return false;
+      }
       const isAnonCounter = !minimized.msg && !minimized.email;
       try {
         if (
