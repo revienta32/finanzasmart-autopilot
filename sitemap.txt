@@ -56,7 +56,10 @@ https://pureaistudios.com/midjourney-v6-flux-c2pa-metadata-remover.html
 https://pureaistudios.com/mp4-frame-extractor.html
 https://pureaistudios.com/photo-gps-remover.html
 https://pureaistudios.com/pl-ai-photo-detector.html
+https://pureaistudios.com/pl-mp4-frame-extractor.html
+https://pureaistudios.com/pl-photo-gps-remover.html
 https://pureaistudios.com/pl-png-prompt-inspector.html
+https://pureaistudios.com/pl-webp-png-to-jpg-clean.html
 https://pureaistudios.com/png-prompt-inspector.html
 https://pureaistudios.com/privacy-policy.html
 https://pureaistudios.com/pt-ai-photo-detector.html
